@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>面试复习</title>
+  <title>个人笔记</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
@@ -25,7 +25,7 @@
         <div class="flex items-center justify-between px-4 py-3">
           <div class="flex items-center gap-2">
             <span class="inline-flex h-2 w-2 rounded-full bg-sky-400 shadow-[0_0_20px_rgba(56,189,248,0.65)]"></span>
-            <span class="text-sm font-semibold tracking-wide text-slate-100">面试复习</span>
+            <span class="text-sm font-semibold tracking-wide text-slate-100">个人笔记</span>
           </div>
           <button id="navToggle" type="button" class="rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-sm text-slate-100 hover:bg-white/10">
             导航
@@ -39,26 +39,22 @@
           <div class="flex h-full flex-col px-4 py-5">
             <div class="mb-4 hidden items-center gap-2 md:flex">
               <span class="inline-flex h-2 w-2 rounded-full bg-sky-400 shadow-[0_0_20px_rgba(56,189,248,0.65)]"></span>
-              <div class="text-sm font-semibold tracking-wide text-slate-100">面试复习</div>
+              <div class="text-sm font-semibold tracking-wide text-slate-100">个人笔记</div>
             </div>
 
-            <div class="text-xs font-semibold uppercase tracking-wider text-slate-400">基础与数据库</div>
+            <div class="text-xs font-semibold uppercase tracking-wider text-slate-400">Python基础与数据库</div>
             <nav class="mt-2 space-y-1">
               <a class="nav-link" data-src="page/Python.html" href="page/Python.html">Python 基础与进阶</a>
               <a class="nav-link" data-src="page/Postgresql.html" href="page/Postgresql.html">PostgreSQL 高频面试</a>
               <a class="nav-link" data-src="page/Redis.html" href="page/Redis.html">Redis 高频面试</a>
             </nav>
 
-            <div class="mt-5 text-xs font-semibold uppercase tracking-wider text-slate-400">后端框架与分布式</div>
+            <div class="mt-5 text-xs font-semibold uppercase tracking-wider text-slate-400">后端</div>
             <nav class="mt-2 space-y-1">
               <a class="nav-link" data-src="page/Fastapi.html" href="page/Fastapi.html">FastAPI 体系</a>
               <a class="nav-link" data-src="page/celery-lifecycle.html" href="page/celery-lifecycle.html">Celery 生命周期</a>
               <a class="nav-link" data-src="page/Distributed.html" href="page/Distributed.html">分布式专题</a>
             </nav>
-
-            <div class="mt-auto pt-6 text-[11px] text-slate-500">
-              提示：右侧内容为内嵌展示；如需单页打开，可右键在新标签页中打开。
-            </div>
           </div>
         </aside>
 
@@ -73,13 +69,13 @@
               </button>
             </div>
             <div class="px-4 py-4">
-              <div class="text-xs font-semibold uppercase tracking-wider text-slate-400">基础与数据库</div>
+              <div class="text-xs font-semibold uppercase tracking-wider text-slate-400">Python基础与数据库</div>
               <nav class="mt-2 space-y-1">
                 <a class="nav-link" data-src="page/Python.html" href="page/Python.html">Python 基础与进阶</a>
                 <a class="nav-link" data-src="page/Postgresql.html" href="page/Postgresql.html">PostgreSQL 高频面试</a>
                 <a class="nav-link" data-src="page/Redis.html" href="page/Redis.html">Redis 高频面试</a>
               </nav>
-              <div class="mt-5 text-xs font-semibold uppercase tracking-wider text-slate-400">后端框架与分布式</div>
+              <div class="mt-5 text-xs font-semibold uppercase tracking-wider text-slate-400">后端</div>
               <nav class="mt-2 space-y-1">
                 <a class="nav-link" data-src="page/Fastapi.html" href="page/Fastapi.html">FastAPI 体系</a>
                 <a class="nav-link" data-src="page/celery-lifecycle.html" href="page/celery-lifecycle.html">Celery 生命周期</a>
@@ -91,27 +87,13 @@
 
         <!-- Content -->
         <main class="min-w-0">
-          <div class="px-3 py-3 md:px-6 md:py-5">
-            <div class="flex items-center justify-between">
-              <div class="min-w-0">
-                <div class="text-xs font-medium text-slate-400">当前专题</div>
-                <div id="currentTitle" class="truncate text-sm font-semibold tracking-wide text-slate-100">Python 基础与进阶</div>
-              </div>
-              <a id="openInNewTab" class="rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-medium text-slate-100 hover:bg-white/10" href="page/Python.html" target="_blank" rel="noreferrer">
-                新标签打开
-              </a>
-            </div>
-          </div>
-
-          <div class="px-3 pb-4 md:px-6 md:pb-6">
-            <div class="rounded-xl border border-white/10 bg-white/[0.03] shadow-soft">
-              <iframe
-                id="contentFrame"
-                title="content"
-                class="h-[calc(100vh-140px)] w-full rounded-xl bg-slate-900"
-                src="page/Python.html"
-              ></iframe>
-            </div>
+          <div class="h-[calc(100vh-0px)] px-3 py-3 md:px-4 md:py-4">
+            <iframe
+              id="contentFrame"
+              title="content"
+              class="h-[calc(100vh-24px)] w-full rounded-xl border border-white/10 bg-slate-950 shadow-soft md:h-[calc(100vh-32px)]"
+              src="page/Python.html"
+            ></iframe>
           </div>
         </main>
       </div>
@@ -123,12 +105,12 @@
       display: flex;
       align-items: center;
       gap: 10px;
-      padding: 10px 10px;
+      padding: 8px 10px;
       border-radius: 10px;
       border: 1px solid transparent;
       background: transparent;
       color: rgba(226, 232, 240, 0.92);
-      font-size: 13px;
+      font-size: 12px;
       line-height: 1.25;
       transition: background 120ms ease, border-color 120ms ease, transform 120ms ease;
     }
@@ -145,8 +127,6 @@
 
   <script>
     const frame = document.getElementById("contentFrame");
-    const currentTitle = document.getElementById("currentTitle");
-    const openInNewTab = document.getElementById("openInNewTab");
     const navLinks = Array.from(document.querySelectorAll(".nav-link"));
 
     function setActiveBySrc(src) {
@@ -158,10 +138,7 @@
 
     function navigate(a) {
       const src = a.getAttribute("data-src") || a.getAttribute("href");
-      const title = (a.textContent || "").trim() || "专题";
       frame.src = src;
-      currentTitle.textContent = title;
-      openInNewTab.href = src;
       setActiveBySrc(src);
     }
 
@@ -176,6 +153,18 @@
 
     // Initial active state
     setActiveBySrc(frame.getAttribute("src"));
+
+    function cleanupLoadedPage() {
+      try {
+        const doc = frame.contentDocument;
+        if (!doc) return;
+        doc.querySelectorAll(".page-updated").forEach((el) => el.remove());
+      } catch (_) {
+        // ignore cross-origin/permission issues
+      }
+    }
+
+    frame.addEventListener("load", cleanupLoadedPage);
 
     // Mobile drawer
     const navToggle = document.getElementById("navToggle");
