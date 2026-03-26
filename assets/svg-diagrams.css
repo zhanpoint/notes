@@ -1,0 +1,29 @@
+/* Shared SVG text styles (replaces <style> inside <svg><defs>). */
+
+/* Matches original per-SVG <defs><style> exactly */
+svg .t,
+svg .txt,
+svg .t2 {
+  fill: #a8b3cc;
+  font: 12px "Segoe UI", "Microsoft YaHei", sans-serif;
+}
+
+svg .mut,
+svg .t3 {
+  fill: #7c879f;
+  font: 11px "Segoe UI", "Microsoft YaHei", sans-serif;
+}
+
+svg .tt {
+  fill: #d9e4fb;
+  font: 12px "Segoe UI", "Microsoft YaHei", sans-serif;
+  font-weight: 600;
+}
+
+svg .title,
+svg .t1 {
+  fill: #d9e4fb;
+  font: 13px "Segoe UI", "Microsoft YaHei", sans-serif;
+  font-weight: 600;
+}
+

@@ -4,252 +4,10 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>PostgreSQL 面试高频问答（结构化版）</title>
-  <link rel="stylesheet" href="../assets/style.css" />
-  <style>
-    :root {
-      --bg: #0b0f1a;
-      --panel: #121829;
-      --panel-2: #1a2236;
-      --text: #a8b3cc;
-      --muted: #748099;
-      --ok: #7bd8ad;
-      --warn: #dfc978;
-      --danger: #de8c99;
-      --line: #3b4f7a;
-      --line-soft: rgba(102, 132, 188, 0.35);
-      --glow: 0 0 0 1px rgba(102, 132, 188, 0.2);
-    }
-    * { box-sizing: border-box; }
-    html, body {
-      margin: 0;
-      padding: 0;
-      background:
-        radial-gradient(1200px 700px at 12% -8%, rgba(79, 70, 229, 0.18) 0%, transparent 55%),
-        radial-gradient(900px 560px at 92% -10%, rgba(45, 226, 255, 0.14) 0%, transparent 52%),
-        linear-gradient(160deg, #03050b 0%, #070b17 56%, #05070f 100%);
-      color: var(--text);
-      font-family: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
-      line-height: 1.6;
-      font-size: 13px;
-    }
-    .container { width: min(1080px, 92vw); margin: 20px auto 36px; }
-    .hero {
-      background: radial-gradient(1200px 360px at 10% -20%, rgba(120, 128, 186, 0.22) 0%, transparent 60%),
-                  radial-gradient(800px 260px at 90% -30%, rgba(102, 132, 188, 0.18) 0%, transparent 55%),
-                  var(--panel);
-      border: 1px solid var(--line);
-      box-shadow: var(--glow);
-      border-radius: 14px;
-      padding: 16px 18px;
-      margin-bottom: 12px;
-    }
-    h1 { margin: 0 0 8px; font-size: clamp(20px, 2.1vw, 28px); line-height: 1.25; }
-    .subtitle { color: var(--muted); margin: 0; font-size: 12px; }
-    .qa-list { display: grid; gap: 10px; }
-    details {
-      border: 1px solid var(--line);
-      border-radius: 10px;
-      background: linear-gradient(180deg, var(--panel) 0%, #101726 100%);
-      box-shadow: var(--glow);
-      overflow: hidden;
-    }
-    summary {
-      cursor: pointer;
-      list-style: none;
-      padding: 12px 14px;
-      font-weight: 400;
-      font-size: 13px;
-      display: block;
-      background: linear-gradient(180deg, #1b2438, #171f32);
-      border-bottom: 1px solid var(--line-soft);
-      text-shadow: none;
-    }
-    summary::-webkit-details-marker { display: none; }
-    .content { padding: 10px 14px 14px; }
-    .content h3 { margin: 10px 0 6px; color: #d9e4fb; font-size: 12px; font-weight: 550; letter-spacing: 0.2px; }
-    .content > h3:first-child { margin-top: 0; }
-    .content > h3,
-    .content > p,
-    .content > ul,
-    .content > ol,
-    .content > table,
-    .content > pre,
-    .content > .tip,
-    .content > .warn,
-    .content > .danger {
-      margin: 8px 0;
-    }
-    p, li { color: #a8b3cc; font-size: 12px; margin: 0; }
-    ul, ol { margin: 8px 0 8px 0; padding-left: 20px; }
-    li { margin: 4px 0; }
-    .content > ul,
-    .content > ol { padding-left: 22px; }
-    table { width: 100%; border-collapse: collapse; margin-top: 6px; font-size: 11px; }
-    th, td { border: 1px solid rgba(102, 132, 188, 0.35); padding: 6px 8px; vertical-align: top; }
-    th {
-      background: linear-gradient(180deg, #1b2744, #18213a);
-      text-align: left;
-      box-shadow: inset 0 0 6px rgba(102, 132, 188, 0.12);
-    }
-    code {
-      background: rgba(78, 104, 158, 0.14);
-      border: 1px solid rgba(102, 132, 188, 0.35);
-      border-radius: 5px;
-      padding: 1px 5px;
-      font-family: Consolas, "Courier New", monospace;
-      font-size: 11px;
-      color: #9eabc6;
-      box-shadow: none;
-    }
-    pre {
-      background: #0b1222;
-      border: 1px solid rgba(102, 132, 188, 0.35);
-      color: #a3afc8;
-      padding: 10px;
-      border-radius: 8px;
-      overflow-x: auto;
-      margin: 0;
-      font-size: 11px;
-      line-height: 1.45;
-      box-shadow: none;
-    }
-    .tip { border-left: 4px solid var(--ok); background: rgba(123, 216, 173, 0.06); box-shadow: none; padding: 8px 10px; border-radius: 6px; font-size: 12px; }
-    .warn { border-left: 4px solid var(--warn); background: rgba(223, 201, 120, 0.06); box-shadow: none; padding: 8px 10px; border-radius: 6px; font-size: 12px; }
-    .danger { border-left: 4px solid var(--danger); background: rgba(222, 140, 153, 0.06); box-shadow: none; padding: 8px 10px; border-radius: 6px; font-size: 12px; }
-    .mvcc-diagram-wrap {
-      border: 1px solid var(--line-soft);
-      border-radius: 8px;
-      padding: 10px;
-      background: rgba(18, 24, 41, 0.45);
-      overflow-x: auto;
-    }
-    .mvcc-caption { color: var(--muted); font-size: 11px; margin-top: 6px; }
-    .diagram-note {
-      margin: 4px 0 8px 0;
-      padding: 0;
-      width: fit-content;
-      max-width: 100%;
-      border: 1px dashed rgba(159, 183, 232, 0.4);
-      border-radius: 7px;
-      background: rgba(18, 27, 48, 0.48);
-      overflow: hidden;
-    }
-    .diagram-note summary {
-      list-style: none;
-      cursor: pointer;
-      padding: 5px 8px;
-      display: inline-flex;
-      align-items: center;
-      justify-content: flex-start;
-      text-align: left;
-      gap: 6px;
-      background: rgba(26, 35, 64, 0.62);
-      border-bottom: 1px solid rgba(102, 132, 188, 0.22);
-      font-size: 11px;
-      line-height: 1.35;
-    }
-    .diagram-note summary::-webkit-details-marker { display: none; }
-    .diagram-note .note-icon {
-      width: 12px;
-      height: 12px;
-      border-radius: 50%;
-      border: 1px solid #9fb7e8;
-      color: #d9e4fb;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 9px;
-      line-height: 1;
-      flex: 0 0 auto;
-    }
-    .diagram-note .note-body {
-      padding: 8px 10px;
-      font-size: 11px;
-      color: #a8b3cc;
-    }
-    .diagram-note .note-body h4 {
-      margin: 7px 0 3px;
-      color: #d9e4fb;
-      font-size: 11px;
-      font-weight: 600;
-    }
-    .diagram-note .note-body p,
-    .diagram-note .note-body li {
-      font-size: 11px;
-    }
-    .diagram-note .note-body ul,
-    .diagram-note .note-body ol {
-      margin: 5px 0;
-      padding-left: 16px;
-    }
-    .inline-note {
-      display: inline-block;
-      vertical-align: middle;
-      margin-left: 6px;
-      border: 1px dashed rgba(159, 183, 232, 0.42);
-      border-radius: 999px;
-      background: rgba(18, 27, 48, 0.48);
-      overflow: hidden;
-    }
-    .inline-note[open] {
-      display: block;
-      margin: 8px 0 0 0;
-      border-radius: 8px;
-      overflow: visible;
-    }
-    .inline-note summary {
-      list-style: none;
-      cursor: pointer;
-      padding: 1px 7px;
-      font-size: 10px;
-      color: #d9e4fb;
-      background: rgba(26, 35, 64, 0.62);
-      border: 0;
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-      line-height: 1.4;
-    }
-    .inline-note[open] summary {
-      display: flex;
-      width: 100%;
-      border-bottom: 1px solid rgba(102, 132, 188, 0.25);
-      padding: 5px 8px;
-      font-size: 11px;
-    }
-    .inline-note summary::-webkit-details-marker { display: none; }
-    .inline-note .note-icon {
-      width: 11px;
-      height: 11px;
-      border-radius: 50%;
-      border: 1px solid #9fb7e8;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 8px;
-      line-height: 1;
-      color: #d9e4fb;
-    }
-    .inline-note .note-body {
-      display: block;
-      width: min(520px, 78vw);
-      padding: 8px 10px;
-      border-top: 1px solid rgba(102, 132, 188, 0.25);
-      background: rgba(12, 18, 34, 0.96);
-      color: #a8b3cc;
-      font-size: 11px;
-    }
-    .inline-note .note-body h4 {
-      margin: 6px 0 3px;
-      color: #d9e4fb;
-      font-size: 11px;
-    }
-    .inline-note .note-body ul,
-    .inline-note .note-body ol {
-      margin: 4px 0;
-      padding-left: 16px;
-    }
-  </style>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="../assets/page-tailwind.css" />
+  <link rel="stylesheet" href="../assets/svg-diagrams.css" />
+  <script defer src="../assets/page-shell.js"></script>
 </head>
 <body>
   <div class="container">
@@ -302,11 +60,7 @@
           <div class="mvcc-diagram-wrap">
             <svg width="980" height="440" viewBox="0 0 980 440" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="PostgreSQL MVCC 区间判定图">
               <defs>
-                <style>
-                  .t { fill:#a8b3cc; font: 12px 'Segoe UI', 'Microsoft YaHei', sans-serif; }
-                  .tt { fill:#d9e4fb; font: 12px 'Segoe UI', 'Microsoft YaHei', sans-serif; font-weight:600; }
-                  .mut { fill:#7c879f; font: 11px 'Segoe UI', 'Microsoft YaHei', sans-serif; }
-                </style>
+                
               </defs>
 
               <rect x="20" y="20" width="940" height="400" rx="10" fill="#0f1628" stroke="#3b4f7a"/>
@@ -472,11 +226,7 @@
               <h3>B-tree 结构图 1：等值查询</h3>
               <svg width="980" height="620" viewBox="0 0 980 620" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="B-tree 节点结构与查找路径示意图（修正版）">
                 <defs>
-                  <style>
-                    .title { fill:#d9e4fb; font: 13px 'Segoe UI','Microsoft YaHei',sans-serif; font-weight:600; }
-                    .txt { fill:#a8b3cc; font: 12px 'Segoe UI','Microsoft YaHei',sans-serif; }
-                    .mut { fill:#7c879f; font: 11px 'Segoe UI','Microsoft YaHei',sans-serif; }
-                  </style>
+                  
                   <marker id="arr1" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
                     <path d="M0,0 L10,3 L0,6 Z" fill="#8da2cf"/>
                   </marker>
@@ -530,11 +280,7 @@
               <h3>B-tree 结构图 2：范围查询（24~28）</h3>
               <svg width="980" height="330" viewBox="0 0 980 330" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="B-tree 范围查询沿叶子链表扫描示意图">
                 <defs>
-                  <style>
-                    .title { fill:#d9e4fb; font: 13px 'Segoe UI','Microsoft YaHei',sans-serif; font-weight:600; }
-                    .txt { fill:#a8b3cc; font: 12px 'Segoe UI','Microsoft YaHei',sans-serif; }
-                    .mut { fill:#7c879f; font: 11px 'Segoe UI','Microsoft YaHei',sans-serif; }
-                  </style>
+                  
                   <marker id="arrRange" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
                     <path d="M0,0 L10,3 L0,6 Z" fill="#8da2cf"/>
                   </marker>
@@ -609,11 +355,7 @@
               </details>
               <svg width="980" height="500" viewBox="0 0 980 500" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="B-tree 页分裂机制示意图">
                 <defs>
-                  <style>
-                    .title { fill:#d9e4fb; font: 13px 'Segoe UI','Microsoft YaHei',sans-serif; font-weight:600; }
-                    .txt { fill:#a8b3cc; font: 12px 'Segoe UI','Microsoft YaHei',sans-serif; }
-                    .mut { fill:#7c879f; font: 11px 'Segoe UI','Microsoft YaHei',sans-serif; }
-                  </style>
+                  
                   <marker id="arr2" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
                     <path d="M0,0 L10,3 L0,6 Z" fill="#8da2cf"/>
                   </marker>
@@ -725,11 +467,6 @@
           <div class="mvcc-diagram-wrap">
             <svg width="980" height="470" viewBox="0 0 980 470" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="WAL 工作机制：提交路径与崩溃恢复路径">
               <defs>
-                <style>
-                  .title { fill:#d9e4fb; font: 13px 'Segoe UI','Microsoft YaHei',sans-serif; font-weight:600; }
-                  .txt { fill:#a8b3cc; font: 12px 'Segoe UI','Microsoft YaHei',sans-serif; }
-                  .mut { fill:#7c879f; font: 11px 'Segoe UI','Microsoft YaHei',sans-serif; }
-                </style>
                 <marker id="arrWal2" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
                   <path d="M0,0 L10,3 L0,6 Z" fill="#8da2cf"/>
                 </marker>
@@ -850,11 +587,7 @@
           <div class="mvcc-diagram-wrap">
             <svg width="980" height="470" viewBox="0 0 980 470" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="PostgreSQL 分区表：INSERT 路由与 SELECT 分区裁剪示意图">
               <defs>
-                <style>
-                  .t1 { fill:#d9e4fb; font: 13px 'Segoe UI','Microsoft YaHei',sans-serif; font-weight:600; }
-                  .t2 { fill:#a8b3cc; font: 12px 'Segoe UI','Microsoft YaHei',sans-serif; }
-                  .t3 { fill:#7c879f; font: 11px 'Segoe UI','Microsoft YaHei',sans-serif; }
-                </style>
+                
                 <marker id="arrP" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
                   <path d="M0,0 L10,3 L0,6 Z" fill="#8da2cf"/>
                 </marker>
@@ -1056,11 +789,7 @@
           <div class="mvcc-diagram-wrap">
             <svg width="980" height="460" viewBox="0 0 980 460" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="FastAPI 到 PostgreSQL 进程模型协作架构图">
               <defs>
-                <style>
-                  .t1 { fill:#d9e4fb; font: 13px 'Segoe UI','Microsoft YaHei',sans-serif; font-weight:600; }
-                  .t2 { fill:#a8b3cc; font: 12px 'Segoe UI','Microsoft YaHei',sans-serif; }
-                  .t3 { fill:#7c879f; font: 11px 'Segoe UI','Microsoft YaHei',sans-serif; }
-                </style>
+                
                 <marker id="arrProc" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
                   <path d="M0,0 L10,3 L0,6 Z" fill="#8da2cf"/>
                 </marker>

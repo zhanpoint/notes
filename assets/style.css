@@ -1,30 +1,28 @@
 :root {
   --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Roboto, "Helvetica Neue", Arial, sans-serif;
-  --text: #1f2937;
-  --muted: #6b7280;
-  --bg: #f7f8fb;
-  --panel: #ffffff;
-  --line: #e5e7eb;
-  --line-soft: rgba(102, 132, 188, 0.35);
-  --primary: #2563eb;
-  --primary-hover: #1d4ed8;
-}
+  /* Catppuccin Mocha */
+  --bg: #1e1e2e; /* base */
+  --panel: #313244; /* surface0 */
+  --text: #cdd6f4; /* text */
+  --muted: #a6adc8; /* subtext0 */
+  --line: #45475a; /* surface1 */
+  --line-soft: rgba(137, 180, 250, 0.35); /* blue */
+  --primary: #89b4fa; /* blue */
+  --primary-hover: #74c7ec; /* sapphire */
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --text: #e5e7eb;
-    --muted: #94a3b8;
-    --bg: #0b1020;
-    --panel: #111827;
-    --line: #334155;
-    --line-soft: rgba(102, 132, 188, 0.35);
-    --primary: #60a5fa;
-    --primary-hover: #93c5fd;
-  }
+  /* extras used by some pages */
+  --accent: #f38ba8; /* red */
+  --accent-2: #fab387; /* peach */
+  --accent-3: #a6e3a1; /* green */
+  --success: #a6e3a1; /* green */
 }
 
 * {
   box-sizing: border-box;
+}
+
+html {
+  color-scheme: dark;
 }
 
 html,
@@ -32,8 +30,8 @@ body {
   margin: 0;
   padding: 0;
   font-family: var(--font-sans) !important;
-  font-size: 16px !important;
-  line-height: 1.7 !important;
+  font-size: 14px !important;
+  line-height: 1.6 !important;
   color: var(--text);
   background: var(--bg);
   word-break: break-word;
@@ -43,15 +41,7 @@ body {
 .container {
   width: min(92vw, 860px);
   margin: 0 auto;
-  padding: 20px 0 40px;
-}
-
-.hero {
-  background: var(--panel);
-  border: 1px solid var(--line);
-  border-radius: 14px;
-  padding: 16px;
-  margin-bottom: 14px;
+  padding: 14px 0 28px;
 }
 
 h1,
@@ -82,7 +72,7 @@ h3 {
 .meta {
   color: var(--muted);
   margin: 0;
-  font-size: 0.95rem;
+  font-size: 0.88rem;
 }
 
 p,
@@ -98,33 +88,35 @@ summary,
 /* index */
 .index-grid {
   display: grid;
-  gap: 12px;
+  gap: 10px;
 }
 
 .catalog-group {
-  margin-top: 20px;
+  margin-top: 14px;
 }
 
 .catalog-group-title {
-  margin: 0 0 10px;
-  font-size: 1.1rem;
+  margin: 0 0 8px;
+  font-size: 1rem;
+  letter-spacing: 0.2px;
 }
 
 .note-card {
   background: var(--panel);
   border: 1px solid var(--line);
-  border-radius: 12px;
-  padding: 14px;
+  border-radius: 10px;
+  padding: 12px;
 }
 
 .note-title {
   margin: 0 0 6px;
-  font-size: 1.08rem;
+  font-size: 1rem;
 }
 
 .note-description {
   margin: 0 0 10px;
   color: var(--muted);
+  font-size: 0.9rem;
 }
 
 .note-footer {
@@ -140,13 +132,13 @@ summary,
   align-items: center;
   justify-content: center;
   text-decoration: none;
-  border-radius: 10px;
+  border-radius: 9px;
   border: 1px solid transparent;
   background: var(--primary);
   color: #ffffff;
-  min-height: 42px;
-  min-width: 140px;
-  padding: 0 14px;
+  min-height: 36px;
+  min-width: 120px;
+  padding: 0 12px;
   font-weight: 600;
 }
 

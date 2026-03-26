@@ -1,0 +1,27 @@
+/* Shared Tailwind-ish refinements for topic pages (no <style> tags in pages). */
+
+/* Make details/summary look consistent across browsers */
+summary::-webkit-details-marker {
+  display: none;
+}
+
+details > summary {
+  list-style: none;
+}
+
+/* Prevent long code/tables from breaking layout */
+pre,
+code,
+table,
+svg {
+  max-width: 100%;
+}
+
+/* Smooth scrolling for overflow wrappers */
+.tw-scroll-x {
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-gutter: stable;
+}
+

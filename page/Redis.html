@@ -4,104 +4,10 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Redis 面试高频问答</title>
-  <link rel="stylesheet" href="../assets/style.css" />
-  <style>
-    :root {
-      --bg: #0b0f1a;
-      --panel: #121829;
-      --panel-2: #1a2236;
-      --text: #a8b3cc;
-      --muted: #748099;
-      --ok: #7bd8ad;
-      --warn: #dfc978;
-      --danger: #de8c99;
-      --line: #3b4f7a;
-      --line-soft: rgba(102, 132, 188, 0.35);
-      --glow: 0 0 0 1px rgba(102, 132, 188, 0.2);
-    }
-    * { box-sizing: border-box; }
-    html, body {
-      margin: 0;
-      padding: 0;
-      background:
-        radial-gradient(1200px 700px at 12% -8%, rgba(79, 70, 229, 0.18) 0%, transparent 55%),
-        radial-gradient(900px 560px at 92% -10%, rgba(45, 226, 255, 0.14) 0%, transparent 52%),
-        linear-gradient(160deg, #03050b 0%, #070b17 56%, #05070f 100%);
-      color: var(--text);
-      font-family: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
-      line-height: 1.6;
-      font-size: 13px;
-    }
-    .container { width: min(1080px, 92vw); margin: 20px auto 36px; }
-    .hero {
-      background: radial-gradient(1200px 360px at 10% -20%, rgba(120, 128, 186, 0.22) 0%, transparent 60%),
-                  radial-gradient(800px 260px at 90% -30%, rgba(102, 132, 188, 0.18) 0%, transparent 55%),
-                  var(--panel);
-      border: 1px solid var(--line);
-      box-shadow: var(--glow);
-      border-radius: 14px;
-      padding: 16px 18px;
-      margin-bottom: 12px;
-    }
-    h1 { margin: 0 0 6px; font-size: clamp(20px, 2.1vw, 28px); line-height: 1.25; }
-    .subtitle { color: var(--muted); margin: 0; font-size: 12px; }
-    .qa-list { display: grid; gap: 10px; }
-    details {
-      border: 1px solid var(--line);
-      border-radius: 10px;
-      background: linear-gradient(180deg, var(--panel) 0%, #101726 100%);
-      box-shadow: var(--glow);
-      overflow: hidden;
-    }
-    summary {
-      cursor: pointer;
-      list-style: none;
-      padding: 12px 14px;
-      font-weight: 500;
-      font-size: 13px;
-      display: block;
-      background: linear-gradient(180deg, #1b2438, #171f32);
-      border-bottom: 1px solid var(--line-soft);
-    }
-    summary::-webkit-details-marker { display: none; }
-    .content { padding: 10px 14px 14px; }
-    .content h3 { margin: 10px 0 6px; color: #d9e4fb; font-size: 12px; font-weight: 600; }
-    p, li { color: #a8b3cc; font-size: 12px; margin: 0; }
-    ul, ol { margin: 8px 0; padding-left: 20px; }
-    li { margin: 4px 0; }
-    table { width: 100%; border-collapse: collapse; margin-top: 6px; font-size: 11px; }
-    th, td { border: 1px solid rgba(102, 132, 188, 0.35); padding: 6px 8px; vertical-align: top; }
-    th { background: linear-gradient(180deg, #1b2744, #18213a); text-align: left; }
-    code {
-      background: rgba(78, 104, 158, 0.14);
-      border: 1px solid rgba(102, 132, 188, 0.35);
-      border-radius: 5px;
-      padding: 1px 5px;
-      font-family: Consolas, "Courier New", monospace;
-      font-size: 11px;
-      color: #9eabc6;
-    }
-    .tip { border-left: 4px solid var(--ok); background: rgba(123, 216, 173, 0.06); padding: 8px 10px; border-radius: 6px; font-size: 12px; margin-top: 8px; }
-    .warn { border-left: 4px solid var(--warn); background: rgba(223, 201, 120, 0.06); padding: 8px 10px; border-radius: 6px; font-size: 12px; margin-top: 8px; }
-    .danger { border-left: 4px solid var(--danger); background: rgba(222, 140, 153, 0.06); padding: 8px 10px; border-radius: 6px; font-size: 12px; margin-top: 8px; }
-
-    /* SVG 容器：支持横向滚动，避免图被裁剪 */
-    .mvcc-diagram-wrap {
-      border: 1px solid var(--line-soft);
-      border-radius: 8px;
-      padding: 10px;
-      background: rgba(18, 24, 41, 0.45);
-      overflow-x: auto;
-      overflow-y: hidden;
-      -webkit-overflow-scrolling: touch;
-      scrollbar-gutter: stable;
-    }
-    .mvcc-diagram-wrap svg {
-      display: block;
-      min-width: 980px;
-      height: auto;
-    }
-  </style>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="../assets/page-tailwind.css" />
+  <link rel="stylesheet" href="../assets/svg-diagrams.css" />
+  <script defer src="../assets/page-shell.js"></script>
 </head>
 <body>
   <div class="container">
@@ -147,11 +53,7 @@
               <div class="mvcc-diagram-wrap mvcc-diagram-wrap--mt-8">
                 <svg width="980" height="320" viewBox="0 0 980 320" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Redis 7 quicklist 底层结构示意图">
                   <defs>
-                    <style>
-                      .t1 { fill:#d9e4fb; font: 13px 'Segoe UI','Microsoft YaHei',sans-serif; font-weight:600; }
-                      .t2 { fill:#a8b3cc; font: 12px 'Segoe UI','Microsoft YaHei',sans-serif; }
-                      .t3 { fill:#7c879f; font: 11px 'Segoe UI','Microsoft YaHei',sans-serif; }
-                    </style>
+                    
                     <marker id="arrQ" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
                       <path d="M0,0 L10,3 L0,6 Z" fill="#8da2cf"/>
                     </marker>
@@ -736,11 +638,7 @@
           <div class="mvcc-diagram-wrap mvcc-diagram-wrap--mt-8">
             <svg width="980" height="600" viewBox="0 0 980 600" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Redis 主从、哨兵与集群架构总览图">
               <defs>
-                <style>
-                  .t1 { fill:#d9e4fb; font: 13px 'Segoe UI','Microsoft YaHei',sans-serif; font-weight:600; }
-                  .t2 { fill:#a8b3cc; font: 12px 'Segoe UI','Microsoft YaHei',sans-serif; }
-                  .t3 { fill:#7c879f; font: 11px 'Segoe UI','Microsoft YaHei',sans-serif; }
-                </style>
+                
                 <marker id="arrR" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
                   <path d="M0,0 L10,3 L0,6 Z" fill="#8da2cf"/>
                 </marker>
