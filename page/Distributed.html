@@ -503,7 +503,7 @@
                 <ul>
                   <li><strong>① 底层机制：</strong>
                     <ul>
-                      <li style="margin-bottom: 8px;"><strong>Cookie</strong>：
+                      <li class="dist-li--mb-8"><strong>Cookie</strong>：
                         <ul>
                           <li><strong>设置：</strong>由<strong>服务端</strong>通过 HTTP 响应头 <code>Set-Cookie</code> 下发，例如 <code>Set-Cookie: session_id=abc123; HttpOnly; Secure; SameSite=Lax; Max-Age=3600</code>。</li>
                           <li><strong>浏览器：</strong>按<strong>域名 / 路径 / 过期策略</strong>把这条键值对持久化在本地，之后访问同一域名/路径时会<strong>自动</strong>在请求头中附带 <code>Cookie: session_id=abc123</code> 回传给服务端。</li>
@@ -512,7 +512,7 @@
                           <li><strong>时机：</strong>首次访问创建匿名会话、登录成功后建立/升级会话、Session 续期或刷新的时候，框架都会自动下发或更新携带 <code>session_id</code> 的 Cookie。</li>
                         </ul>
                       </li>
-                      <li style="margin-top: 8px; margin-bottom: 8px;"><strong>Session</strong>：
+                      <li class="dist-li--mt-8-mb-8"><strong>Session</strong>：
                         <ul>
                           <li><strong>设置：</strong>当建立会话或登录成功时，服务器会在内存 / Redis / 数据库中为该浏览器创建一条 Session 记录，例如 <code>{ session_id: "abc123", user_id: 123|null, is_login: true|false, expire_at: 1710000000 }</code>，本质上是一个<strong>承载用户状态的容器</strong></li>
                           <li><strong>浏览器：</strong>服务器生成随机 <code>session_id</code>，通过 <code>Set-Cookie: session_id=xyz; HttpOnly; Secure</code> 发给浏览器，之后每次请求浏览器都会自动带上 <code>Cookie: session_id=xyz</code>。</li>
@@ -520,7 +520,7 @@
                           <li><strong>安全实践：</strong>推荐在<strong>登录成功后废弃旧的 session_id、颁发新的 session_id 绑定登录用户</strong>（即 Regenerate Session），以防止 Session Fixation（会话固定攻击）。</li>
                         </ul>
                       </li>
-                      <li style="margin-bottom: 8px;"><strong>JWT</strong>：
+                      <li class="dist-li--mb-8"><strong>JWT</strong>：
                         <ul>
                           <li><strong>本质：</strong>把用户标识与权限声明打包成一段<strong>自包含的 Token</strong>。JWT 字符串形如 <code>xxxxx.yyyyy.zzzzz</code>——用<strong>两个点</strong>切成三段 <code>header.payload.signature</code>，由服务器用密钥签名后发给前端；后续请求在请求头里带上 <code>Authorization: Bearer &lt;token&gt;</code>，后端<strong>校验签名</strong>即可确认用户身份。
                             <ul>
@@ -550,7 +550,7 @@
                           <li><strong>JWT 的代价与场景决策：</strong>Token 一旦签发，除非过期或配合黑名单，很难像 Session 那样立即撤销；一旦泄露，攻击者可在有效期内直接调用 API；payload 可读、体积也比 <code>session_id</code> 大；因此在<strong>单体、强安全、并发压力一般的后台</strong>里仍然适合用 Cookie + Session，而在<strong>前后端分离、微服务、高并发 API、移动端/第三方接入、需要跨域的系统</strong>里，JWT 带来的“无状态、高扩展、跨端统一”优势更大，通常会选用“短期 access_token（JWT）+ 较长期 refresh_token”的组合方案。</li>
                         </ul>
                       </li>
-                      <li style="margin-bottom: 6px;"><strong>OAuth2</strong>：
+                      <li class="dist-li--mb-6"><strong>OAuth2</strong>：
                         <ul>
                           <li><strong>总结：</strong>OAuth 2.0是主流的<strong>授权（Authorization）</strong>标准：在<strong>不把用户密码交给第三方</strong>的前提下，让第三方应用获得对用户资源的<strong>有限访问权限</strong></li>
                           <li><strong>类比理解：</strong>你在柜台（授权服务器）出示身份证并确认入住 → 拿到房卡（<code>access_token</code>）→ 用房卡开门（访问资源）。门锁只认卡，不需要你反复出示身份证。</li>
@@ -623,26 +623,26 @@
           <div class="index">2</div>
           <div>
             <strong>CDN / WAF / Rate Limit</strong>
-            <div style="display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px; margin-top:8px;">
-              <div style="padding:10px; border:1px solid rgba(148,163,184,.2); border-radius:10px; background:rgba(15,23,42,.55);">
-                <strong style="font-size:12px; margin-bottom:6px; display:block; color:#67e8f9;">CDN（内容分发）</strong>
-                <p style="font-size:11.5px; color:var(--muted); line-height:1.7; margin:0;">
+            <div class="dist-three-card-grid">
+              <div class="dist-mini-card">
+                <strong class="dist-mini-card-title dist-mini-card-title--cdn">CDN（内容分发）</strong>
+                <p class="dist-mini-card-desc">
                   将静态资源缓存到边缘节点，用户就近访问，显著降低首包时间与跨地域时延；
                   其中“边缘节点”是部署在离用户更近网络位置的 CDN 服务器，用于在源站之外提前响应内容请求；
                   源站是内容的权威来源与回源入口（负责生成/更新数据），CDN 服务器是其缓存与分发副本（命中则直接返回，未命中再回源拉取）；
                   同时 CDN 还能吸收大规模突发流量，减少源站带宽与连接压力。
                 </p>
               </div>
-              <div style="padding:10px; border:1px solid rgba(148,163,184,.2); border-radius:10px; background:rgba(15,23,42,.55);">
-                <strong style="font-size:12px; margin-bottom:6px; display:block; color:#c084fc;">WAF（Web 应用防火墙）</strong>
-                <p style="font-size:11.5px; color:var(--muted); line-height:1.7; margin:0;">
+              <div class="dist-mini-card">
+                <strong class="dist-mini-card-title dist-mini-card-title--waf">WAF（Web 应用防火墙）</strong>
+                <p class="dist-mini-card-desc">
                   基于规则与行为分析拦截 SQL 注入、XSS、命令注入、恶意爬虫等应用层攻击；
                   通过虚拟补丁与策略更新，在业务未发版时快速降低漏洞暴露风险。
                 </p>
               </div>
-              <div style="padding:10px; border:1px solid rgba(148,163,184,.2); border-radius:10px; background:rgba(15,23,42,.55);">
-                <strong style="font-size:12px; margin-bottom:6px; display:block; color:#fb7185;">Rate Limit（流量限速）</strong>
-                <p style="font-size:11.5px; color:var(--muted); line-height:1.7; margin:0;">
+              <div class="dist-mini-card">
+                <strong class="dist-mini-card-title dist-mini-card-title--rate">Rate Limit（流量限速）</strong>
+                <p class="dist-mini-card-desc">
                   按 IP、用户、Token、接口维度施加 QPS/并发阈值（
                   令牌桶<span class="tip-icon" tabindex="0" aria-label="令牌桶说明" data-tip="令牌桶（Token Bucket）
 

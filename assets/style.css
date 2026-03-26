@@ -5,6 +5,7 @@
   --bg: #f7f8fb;
   --panel: #ffffff;
   --line: #e5e7eb;
+  --line-soft: rgba(102, 132, 188, 0.35);
   --primary: #2563eb;
   --primary-hover: #1d4ed8;
 }
@@ -16,6 +17,7 @@
     --bg: #0b1020;
     --panel: #111827;
     --line: #334155;
+    --line-soft: rgba(102, 132, 188, 0.35);
     --primary: #60a5fa;
     --primary-hover: #93c5fd;
   }
@@ -218,4 +220,112 @@ table {
   .enter-btn {
     width: 100%;
   }
+}
+
+/* Reused inline-style fragments across pages */
+
+/* FastAPI inline note */
+.fastapi-opacity-09 {
+  opacity: 0.9;
+}
+
+/* Distributed page mini-card */
+.dist-three-card-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.dist-mini-card {
+  padding: 10px;
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  border-radius: 10px;
+  background: rgba(15, 23, 42, 0.55);
+}
+
+.dist-mini-card-title {
+  font-size: 12px;
+  margin-bottom: 6px;
+  display: block;
+}
+
+.step .dist-mini-card-title {
+  font-size: 12px;
+  margin-bottom: 6px;
+  display: block;
+}
+
+.step .dist-mini-card-title--cdn {
+  color: #67e8f9;
+}
+
+.step .dist-mini-card-title--waf {
+  color: #c084fc;
+}
+
+.step .dist-mini-card-title--rate {
+  color: #fb7185;
+}
+
+.step .dist-mini-card-desc {
+  font-size: 11.5px;
+  color: var(--muted);
+  line-height: 1.7;
+  margin: 0;
+}
+
+.step .dist-li--mb-8 {
+  margin-bottom: 8px;
+  margin-top: 4px;
+}
+
+.step .dist-li--mt-8-mb-8 {
+  margin-top: 8px;
+  margin-bottom: 8px;
+}
+
+.step .dist-li--mb-6 {
+  margin-bottom: 6px;
+  margin-top: 4px;
+}
+
+/* Redis SVG/diagram wrapper spacing */
+.mvcc-diagram-wrap--mt-8 {
+  margin-top: 8px;
+}
+
+/* Python SVG diagram wrappers */
+.diagram-svg {
+  margin-top: 8px;
+  border: 1px solid var(--line-soft);
+  border-radius: 8px;
+  background: rgba(102, 132, 188, 0.05);
+}
+
+.diagram-svg--lg {
+  margin-top: 10px;
+  border-radius: 10px;
+}
+
+/* Celery legend colors */
+.legend-dot--client {
+  background: var(--accent);
+}
+
+.legend-dot--broker {
+  background: var(--accent-2);
+}
+
+.legend-dot--worker {
+  background: var(--accent-3);
+}
+
+.legend-dot--backend {
+  background: var(--success);
+}
+
+/* Celery timeline block spacing override */
+.flow.flow--mt-16 {
+  margin-top: 16px;
 }

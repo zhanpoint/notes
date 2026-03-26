@@ -144,7 +144,7 @@
               <b>存储过程示例</b>：写入 <code>["apple","banana","cherry"]</code> 时，会优先塞进同一个 <code>quicklistNode</code> 的 <code>listpack</code> 连续空间；当该块达到配置上限（常见默认约 8KB，受 <code>list-max-listpack-size</code> 影响）才会新建下一个节点。<br/>
               <b>场景</b>：<code>LPUSH</code> + <code>BRPOP</code> 实现轻量消息队列、时间线流式拉取。
 
-              <div class="mvcc-diagram-wrap" style="margin-top:8px;">
+              <div class="mvcc-diagram-wrap mvcc-diagram-wrap--mt-8">
                 <svg width="980" height="320" viewBox="0 0 980 320" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Redis 7 quicklist 底层结构示意图">
                   <defs>
                     <style>
@@ -733,7 +733,7 @@
           </ul>
 
           <h3>架构图：</h3>
-          <div class="mvcc-diagram-wrap" style="margin-top:8px;">
+          <div class="mvcc-diagram-wrap mvcc-diagram-wrap--mt-8">
             <svg width="980" height="600" viewBox="0 0 980 600" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Redis 主从、哨兵与集群架构总览图">
               <defs>
                 <style>

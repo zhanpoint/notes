@@ -864,7 +864,7 @@ async def read_items(
           <h3 class="q-title">Q2：官方推荐写法是什么？</h3>
           <p>推荐：<code>Annotated[Model, Query()]</code>。这是当前官方最佳实践风格。</p>
           <ul>
-            <li><code>Field()</code> 来自 Pydantic，用于给模型字段加“约束 + 元数据”。<span style="opacity:.9;">（注：在底层，FastAPI 的 <code>Query</code>/<code>Path</code>/<code>Body</code> 与 Pydantic 的 <code>Field</code> 都可追溯到同一“家族”（<code>FieldInfo</code>）；因此它们共享大量通用参数，如 <code>title</code>、<code>description</code>、<code>default</code>、<code>alias</code> 等。）</span></li>
+            <li><code>Field()</code> 来自 Pydantic，用于给模型字段加“约束 + 元数据”。<span class="fastapi-opacity-09">（注：在底层，FastAPI 的 <code>Query</code>/<code>Path</code>/<code>Body</code> 与 Pydantic 的 <code>Field</code> 都可追溯到同一“家族”（<code>FieldInfo</code>）；因此它们共享大量通用参数，如 <code>title</code>、<code>description</code>、<code>default</code>、<code>alias</code> 等。）</span></li>
             <li><code>Field</code> 的第一个位置参数通常是默认值</li>
             <li><code>Literal</code> 来自 <code>typing</code>，用于把值限制在固定字面量集合内。</li>
             <li>例如 <code>Literal["created_at", "updated_at"]</code> 表示只能二选一。</li>
