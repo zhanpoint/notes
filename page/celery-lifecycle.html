@@ -1,0 +1,945 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Celery 生产环境全流程调用链</title>
+  <link rel="stylesheet" href="../assets/style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Source+Han+Sans+CN:wght@300;400;600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #0c0f1a;
+      --panel: #111827;
+      --panel-2: #0f172a;
+      --ink: #e2e8f0;
+      --muted: #94a3b8;
+      --accent: #22d3ee;
+      --accent-2: #a855f7;
+      --accent-3: #f97316;
+      --success: #34d399;
+      --danger: #f43f5e;
+      --line: rgba(148, 163, 184, 0.35);
+      --glow: 0 0 30px rgba(34, 211, 238, 0.35);
+      --scale: 0.92;
+      --card-w: 280px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: "Source Han Sans CN", system-ui, sans-serif;
+      color: var(--ink);
+      background: radial-gradient(circle at top, rgba(34, 211, 238, 0.1), transparent 45%),
+        radial-gradient(circle at 15% 20%, rgba(168, 85, 247, 0.2), transparent 50%),
+        radial-gradient(circle at 90% 15%, rgba(249, 115, 22, 0.18), transparent 50%),
+        var(--bg);
+      min-height: 100vh;
+      padding: 18px 24px 26px;
+      overflow-x: hidden;
+    }
+
+    header {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      margin-bottom: 18px;
+      gap: 24px;
+    }
+
+    header h1 {
+      font-family: "Source Han Sans CN", system-ui, sans-serif;
+      font-size: 28px;
+      letter-spacing: 0.5px;
+      font-weight: 700;
+      text-shadow: 0 0 18px rgba(56, 189, 248, 0.35);
+    }
+
+    header p {
+      max-width: 520px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.7;
+    }
+
+    .legend {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    .legend span {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .legend i {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      display: inline-block;
+    }
+
+    .canvas {
+      position: relative;
+      background: linear-gradient(140deg, rgba(15, 23, 42, 0.92), rgba(2, 6, 23, 0.92));
+      border-radius: 24px;
+      padding: 16px 16px 18px;
+      box-shadow: 0 20px 60px rgba(8, 10, 24, 0.55);
+      border: 1px solid rgba(148, 163, 184, 0.2);
+      overflow: hidden;
+    }
+
+    .flow-lines {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      z-index: 3;
+      pointer-events: none;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 18px;
+      position: relative;
+      z-index: 2;
+    }
+
+    .lane {
+      background: rgba(15, 23, 42, 0.75);
+      border-radius: 16px;
+      padding: 10px 10px 12px;
+      border: 1px solid rgba(148, 163, 184, 0.18);
+      min-height: unset;
+      display: grid;
+      grid-template-rows: auto 1fr;
+      gap: 8px;
+    }
+
+    .lane h3 {
+      font-size: 12px;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: var(--muted);
+      font-weight: 600;
+    }
+
+    .lane-cards {
+      display: flex;
+      gap: 52px;
+      align-items: stretch;
+      justify-content: flex-start;
+      width: fit-content;
+      max-width: calc(100% - 220px);
+      padding-left: 22px; /* left gutter for vertical lane arrows */
+      padding-right: 0; /* keep right whitespace for dashed arrows */
+      overflow: hidden; /* no horizontal scrollbar */
+    }
+
+    .lane-cards .card {
+      flex: 0 0 var(--card-w);
+      max-width: var(--card-w);
+    }
+
+    .card {
+      background: linear-gradient(160deg, rgba(30, 41, 59, 0.9), rgba(17, 24, 39, 0.9));
+      border-radius: 12px;
+      padding: 9px 10px;
+      border: 1px solid rgba(148, 163, 184, 0.15);
+      box-shadow: 0 8px 18px rgba(15, 23, 42, 0.38);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .card::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at top, rgba(34, 211, 238, 0.2), transparent 60%);
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    .card:hover::after {
+      opacity: 1;
+    }
+
+    .card strong {
+      display: block;
+      font-size: 12.5px;
+      margin-bottom: 4px;
+    }
+
+    .card p {
+      font-size: 11.5px;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 3px 6px;
+      border-radius: 999px;
+      font-size: 9.5px;
+      font-weight: 600;
+      margin-bottom: 6px;
+      color: #0f172a;
+    }
+
+    .badge.client { background: #22d3ee; }
+    .badge.broker { background: #a855f7; }
+    .badge.worker { background: #f97316; }
+    .badge.backend { background: #34d399; }
+
+    .flow {
+      margin-top: 14px;
+      border-radius: 22px;
+      border: 1px solid rgba(148, 163, 184, 0.18);
+      padding: 14px 16px;
+      background: rgba(2, 6, 23, 0.6);
+      position: relative;
+      z-index: 2;
+    }
+
+    .timeline {
+      display: grid;
+      gap: 12px;
+    }
+
+    .step {
+      display: grid;
+      grid-template-columns: 26px 1fr;
+      gap: 14px;
+      align-items: start;
+      padding: 10px 12px;
+      background: rgba(15, 23, 42, 0.75);
+      border-radius: 12px;
+      border: 1px solid rgba(148, 163, 184, 0.12);
+    }
+
+    .step .index {
+      width: 20px;
+      height: 20px;
+      border-radius: 7px;
+      display: grid;
+      place-items: center;
+      font-weight: 700;
+      font-size: 11px;
+      background: rgba(34, 211, 238, 0.15);
+      color: var(--accent);
+      border: 1px solid rgba(34, 211, 238, 0.4);
+    }
+
+    .step strong {
+      font-size: 12.5px;
+      line-height: 1.25;
+      display: inline-block;
+      margin-bottom: 2px;
+    }
+
+    .step p {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.6;
+    }
+
+    .step ul {
+      margin: 6px 0 0;
+      padding-left: 18px;
+      color: var(--muted);
+      font-size: 11.5px;
+      line-height: 1.6;
+    }
+
+    .step li { margin: 2px 0; }
+    .step ul ul { margin-top: 4px; }
+    .step code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      font-size: 11px;
+      color: rgba(226, 232, 240, 0.92);
+      background: rgba(148, 163, 184, 0.12);
+      border: 1px solid rgba(148, 163, 184, 0.16);
+      padding: 1px 6px;
+      border-radius: 999px;
+      white-space: nowrap;
+    }
+
+    svg {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      pointer-events: none;
+      z-index: 3;
+    }
+
+    .flow-lines path {
+      stroke-width: 2.6;
+      filter: drop-shadow(0 0 8px rgba(56, 189, 248, 0.28));
+      stroke-linecap: round;
+      opacity: 0.88;
+    }
+
+    .flow-lines .lane-link {
+      stroke: rgba(56, 189, 248, 0.65);
+      stroke-dasharray: 5 12;
+      animation: dashFlow 10s linear infinite;
+    }
+
+    .flow-lines .lane-down {
+      stroke: rgba(56, 189, 248, 0.55);
+      stroke-width: 1.7;
+      opacity: 0.78;
+      stroke-dasharray: 4 10;
+      animation: dashFlow 10s linear infinite;
+      filter: drop-shadow(0 0 7px rgba(56, 189, 248, 0.18));
+    }
+
+    .flow-lines .group-link {
+      stroke: rgba(168, 85, 247, 0.78);
+      stroke-width: 3.1;
+      animation: groupPulse 6s ease-in-out infinite;
+    }
+
+    .flow-lines .group-link.return {
+      stroke: rgba(52, 211, 153, 0.75);
+      stroke-width: 2.6;
+      stroke-dasharray: 10 14;
+      animation: returnFlow 12s linear infinite;
+    }
+
+    .flow-lines .intra-link {
+      stroke: rgba(226, 232, 240, 0.62);
+      stroke-width: 2.0;
+      opacity: 0.9;
+      stroke-dasharray: 4 8;
+      filter: drop-shadow(0 0 6px rgba(226, 232, 240, 0.14));
+    }
+
+    .flow-lines circle {
+      opacity: 0.85;
+      filter: drop-shadow(0 0 6px rgba(56, 189, 248, 0.35));
+    }
+
+    @keyframes dashFlow {
+      from { stroke-dashoffset: 0; }
+      to { stroke-dashoffset: -160; }
+    }
+
+    @keyframes groupPulse {
+      0%, 100% { opacity: 0.25; }
+      50% { opacity: 0.7; }
+    }
+
+    @keyframes returnFlow {
+      from { stroke-dashoffset: 0; }
+      to { stroke-dashoffset: 200; }
+    }
+
+    .footer {
+      margin-top: 24px;
+      color: var(--muted);
+      font-size: 12px;
+      text-align: right;
+    }
+
+    @media (max-width: 1100px) {
+      header { flex-direction: column; align-items: flex-start; }
+      .lane-cards { width: 100%; max-width: 100%; flex-wrap: wrap; overflow: visible; }
+      .lane-cards .card { flex: 1 1 280px; max-width: none; }
+    }
+
+    @media (max-width: 700px) {
+      body { padding: 28px 20px 40px; }
+      header h1 { font-size: 32px; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div>
+      <h1>Celery 异步任务全生命周期调用链</h1>
+      <p class="page-updated">最后更新：2026-03-26</p>
+      <p>
+        生产环境下一个异步任务从“出生”到“消亡”的完整旅程：由客户端触发，进入 Broker 队列，
+        被 Worker 执行并写入 ResultBackend，最终由客户端查询结果。
+      </p>
+    </div>
+    <div class="legend">
+      <span><i style="background: var(--accent)"></i>Client</span>
+      <span><i style="background: var(--accent-2)"></i>Broker</span>
+      <span><i style="background: var(--accent-3)"></i>Worker</span>
+      <span><i style="background: var(--success)"></i>ResultBackend</span>
+    </div>
+  </header>
+
+  <section class="canvas" id="flowCanvas">
+    <svg class="flow-lines" viewBox="0 0 1200 520" preserveAspectRatio="none">
+      <defs>
+        <linearGradient id="flowLine" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stop-color="#22d3ee" />
+          <stop offset="50%" stop-color="#a855f7" />
+          <stop offset="100%" stop-color="#f97316" />
+        </linearGradient>
+        <marker id="arrow" viewBox="0 0 14 14" refX="12" refY="7" markerWidth="10" markerHeight="10" orient="auto" markerUnits="strokeWidth">
+          <path d="M 0 0 L 14 7 L 0 14 z" fill="rgba(226, 232, 240, 0.95)" />
+        </marker>
+        <marker id="arrowSmall" viewBox="0 0 14 14" refX="12" refY="7" markerWidth="7" markerHeight="7" orient="auto" markerUnits="strokeWidth">
+          <path d="M 0 0 L 14 7 L 0 14 z" fill="context-stroke" />
+        </marker>
+        <marker id="arrowTipSmall" viewBox="0 0 14 14" refX="14" refY="7" markerWidth="7" markerHeight="7" orient="auto" markerUnits="strokeWidth">
+          <path d="M 0 0 L 14 7 L 0 14 z" fill="context-stroke" />
+        </marker>
+        <marker id="arrowTipTiny" viewBox="0 0 14 14" refX="14" refY="7" markerWidth="4.4" markerHeight="4.4" orient="auto" markerUnits="strokeWidth">
+          <path d="M 0 0 L 14 7 L 0 14 z" fill="context-stroke" />
+        </marker>
+      </defs>
+    </svg>
+
+    <div class="grid" id="flowGrid">
+      <div class="lane">
+        <h3>Client / Producer</h3>
+        <div class="lane-cards">
+          <div class="card">
+            <span class="badge client">任务定义</span>
+            <strong>@app.task 装饰普通函数</strong>
+            <p>将业务函数注册为 Celery Task，生成唯一任务名。</p>
+          </div>
+          <div class="card">
+            <span class="badge client">任务调用</span>
+            <strong>task.delay() / apply_async()</strong>
+            <p>序列化任务名称、参数、ETA、重试策略等元数据。</p>
+          </div>
+          <div class="card">
+            <span class="badge client">立即返回</span>
+            <strong>异步解耦</strong>
+            <p>客户端立刻返回 AsyncResult，不阻塞主业务。</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="lane">
+        <h3>Broker / Queue</h3>
+        <div class="lane-cards">
+          <div class="card">
+            <span class="badge broker">消息发送</span>
+            <strong>Client -> Broker</strong>
+            <p>消息进入 RabbitMQ / Redis，路由到指定队列。</p>
+          </div>
+          <div class="card">
+            <span class="badge broker">消息排队</span>
+            <strong>Queue 缓冲</strong>
+            <p>Broker 维护队列顺序，等待 Worker 领取。</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="lane">
+        <h3>Worker / Consumer</h3>
+        <div class="lane-cards">
+          <div class="card">
+            <span class="badge worker">消息获取</span>
+            <strong>prefetch 拉取任务</strong>
+            <p>Worker 常驻 TCP 连接，轮询获取可执行消息。</p>
+          </div>
+          <div class="card">
+            <span class="badge worker">任务执行</span>
+            <strong>反序列化 + 运行函数</strong>
+            <p>执行任务逻辑，处理重试、超时、异常策略。</p>
+          </div>
+          <div class="card">
+            <span class="badge worker">状态落盘</span>
+            <strong>SUCCESS / FAILURE</strong>
+            <p>执行完成后写入结果后端，或更新重试状态。</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="lane">
+        <h3>ResultBackend</h3>
+        <div class="lane-cards">
+          <div class="card">
+            <span class="badge backend">结果存储</span>
+            <strong>Redis / DB</strong>
+            <p>保存状态、返回值、异常堆栈等。</p>
+          </div>
+          <div class="card">
+            <span class="badge backend">结果查询</span>
+            <strong>AsyncResult.get()</strong>
+            <p>客户端使用任务 ID 查询状态与结果。</p>
+          </div>
+          <div class="card">
+            <span class="badge backend">生命周期结束</span>
+            <strong>过期清理</strong>
+            <p>结果过期或被清理，任务生命周期结束。</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="flow">
+      <div class="timeline">
+        <div class="step">
+          <div class="index">1</div>
+          <div>
+            <strong>任务定义</strong>
+            <p>把一个普通函数用 @app.task 标记后，Celery 会把它“登记成任务”：给它分配一个唯一的任务名（后续靠任务名找到并执行它）。同时也会记录“发消息的默认规则”：当你调用 delay/apply_async 时，要把任务名、参数、task_id、倒计时/ETA、以及需要的元信息打包成一条可传输的字符串（常见是 JSON）。另外还会记录“发到哪里”：默认走哪个 queue、使用什么 routing_key（或在代码里显式指定），这样 Broker 才知道把消息放进哪个队列，Worker 才会从对应队列里取到并执行。最后再记录任务在执行生命周期里没有成功完成即任务失败时怎么处理（重试次数/间隔、超时等）。</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="index">2</div>
+          <div>
+            <strong>任务调用</strong>
+            <p>调用 delay/apply_async：把“执行意图”封装成异步指令——任务名、Args/Kwargs、task_id、routing_key、ETA/countdown 等元数据；再通过 Kombu 将消息非阻塞投递到 Broker。调用会立刻返回 AsyncResult（追踪句柄，持有 task_id），之后可用它查询状态（PENDING/STARTED/SUCCESS/FAILURE）或取结果；同时 apply_async 还能在调用时覆盖默认路由（指定 queue/priority 等），把同一任务按场景分发到不同 Worker 集群。</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="index">3</div>
+          <div>
+            <strong>投递到 Broker：RabbitMQ / Redis</strong>
+            <p>生产者把消息推给 Broker：RabbitMQ 遵循 AMQP，把消息先投递到 Exchange（默认 celery），再由 Exchange 按 routing_key + binding 规则决定进入哪个 Queue；Redis 没有 Exchange 层，通常把“队列名”直接映射为一个 List Key，消息会直接写入该 Key 对应的列表。</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="index">4</div>
+          <div>
+            <strong>RabbitMQ：交换机路由 (Exchange → Queue)</strong>
+            <p>核心动作：<strong>队列（Queue）主动绑定（Binding）到交换机（Exchange）</strong>，并在绑定时写下自己的过滤规则（Routing Key）。</p>
+            <ul>
+              <li><strong>工作流：</strong>
+                <ul>
+                  <li>Producer 发消息到 Exchange，并给消息贴一个 <code>routing_key</code></li>
+                  <li>Exchange 遍历自己所有 Binding（哪些 Queue 绑定了我、各自写了什么规则）</li>
+                  <li>对比“消息的 key”和“绑定的 key”，匹配成功就把消息投递到对应 Queue</li>
+                </ul>
+              </li>
+              <li><strong>不同 Exchange 的绑定匹配方式</strong>
+                <ul>
+                  <li><strong>Direct</strong>：严格匹配。例：Queue A 绑定 key=<code>error</code>，只有消息 key=<code>error</code> 才进入</li>
+                  <li><strong>Topic</strong>：通配匹配。例：绑定 <code>stock.#</code>，可匹配 <code>stock.usd</code>/<code>stock.cn</code></li>
+                  <li><strong>Fanout</strong>：忽略 key。只要绑定了，就给所有绑定队列各发一份拷贝（广播）</li>
+                </ul>
+              </li>
+            </ul>
+          </div>
+        </div>
+        <div class="step">
+          <div class="index">5</div>
+          <div>
+            <strong>Redis：入队与阻塞消费</strong>
+            <p>Redis 用 List 模拟队列：Producer 执行 LPUSH 把消息塞到列表左端；Worker 执行 BRPOP 阻塞式从右端弹出消息（队列为空时连接挂起，不消耗 CPU；有新消息时立刻被“弹醒”）。因为没有 Exchange，路由通常在客户端侧就决定好写入哪个 List Key。</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="index">6</div>
+          <div>
+            <strong>Broker 存储</strong>
+            <ul>
+              <li><strong>存储架构（内存 vs 分层）</strong>
+                <ul>
+                  <li><strong>Redis</strong>：消息就是 List 里的元素，主要驻留在 <strong>RAM</strong>，读写极快，但堆积大了会吃满内存，极端会 内存溢出OOM。</li>
+                  <li><strong>RabbitMQ</strong>：同时管理 <strong>内存 + 磁盘</strong>。消息可写入磁盘 <code>segment</code> 文件并维护索引；堆积很大时会触发 paging，把部分消息从内存换到磁盘，用“变慢”换“服务不挂”。</li>
+                </ul>
+              </li>
+              <li><strong>持久化策略</strong>
+                <ul>
+                  <li><strong>Redis</strong>
+                    <ul>
+                      <li><strong>RDB</strong>：定时快照（像“拍照”）。间隔内断电可能丢最近一段时间的新任务。</li>
+                      <li><strong>AOF</strong>：追加写命令（像“记账”）。高频 LPUSH 会让日志迅速膨胀，磁盘 IO 压力变大，极端会拖慢 Redis。</li>
+                    </ul>
+                  </li>
+                  <li><strong>RabbitMQ</strong>
+                    <ul>
+                      <li><strong>delivery_mode=2（persistent）</strong>：消息到达 Exchange/Queue 后，RabbitMQ 不只放内存(默认（非持久化）)，而是会把该消息写入磁盘（segment 文件）；必要时调用 <code>fsync</code> 强制把 OS 缓存刷到物理磁盘。只有在“已经安全落盘”之后，RabbitMQ 才会向生产者确认收到——因此断电重启后还能从磁盘把未完成消息恢复回来。代价是吞吐下降（磁盘 IOPS 限制）。在 Celery 中通常可通过 <code>app.conf.task_default_delivery_mode = 'persistent'</code> 开启。</li>
+                      <li><strong>watermark + paging</strong>：内存逼近水位线时强制刷盘，只在内存保留必要索引，避免内存中积压的消息太多导致内存溢出 OOM。</li>
+                    </ul>
+                  </li>
+                </ul>
+              </li>
+              <li><strong>总结建议</strong>
+                <ul>
+                  <li><strong>Redis</strong>：像高速缓存区——适合高频轻量、偶发丢几条可接受的任务（验证码/通知等）。</li>
+                  <li><strong>RabbitMQ</strong>：像专业仓库——适合波动大、关键任务“绝对不能丢”的场景（订单/计费等，建议开启持久化）。</li>
+                </ul>
+              </li>
+            </ul>
+          </div>
+        </div>
+        <div class="step">
+          <div class="index">7</div>
+          <div>
+            <strong>分发与背压  </strong>
+            <p><strong>分发</strong>：Broker 把队列里的消息“交给”哪些 Worker、以什么节奏交付。<strong>背压</strong>：当 Worker 忙/慢时，限制消息从 Broker（中间件）进入 Worker（执行进程）内存的速度，避免内存被撑爆或延迟失控。</p>
+            <ul>
+              <li><strong>RabbitMQ：Push（主动推）+ 配额控制（QoS/Prefetch）</strong>
+                <ul>
+                  <li><strong>机制</strong>：Worker 建连后声明 <code>prefetch_count</code>（预取数量），RabbitMQ 会按配额把消息推过去。</li>
+                  <li><strong>在途消息</strong>：推送给 Worker 但尚未 ACK 的消息属于 Unacked（在途）。</li>
+                  <li><strong>例子</strong>：<code>prefetch=4</code> 时，RabbitMQ 最多同时让该 Worker 持有 4 条未确认消息；只要 Worker ACK 了一条，才再补推下一条。</li>
+                  <li><strong>背压效果</strong>：受控涌入。重任务（AI 推理/生图）常把 prefetch 设小（甚至 1）；轻任务（发邮件）可设大提高吞吐。</li>
+                </ul>
+              </li>
+              <li><strong>Redis：Pull（按需拉）+ 自适应（BRPOP）</strong>
+                <ul>
+                  <li><strong>机制</strong>：Worker 用 <code>BRPOP</code> 阻塞式拉取：有任务立即弹出；没任务就挂起等待，不忙轮询。</li>
+                  <li><strong>背压效果</strong>：天然“按需取货”。Worker 处理慢 → 发起下一次拉取更晚；Worker 挂了 → 不再拉取，Broker 侧无需做复杂配额控制。</li>
+                </ul>
+              </li>
+            </ul>
+          </div>
+        </div>
+        <div class="step">
+          <div class="index">8</div>
+          <div>
+            <strong>可靠性：ACK / 备份队列</strong>
+            <p>目标：防止 Worker 中途挂掉导致“任务丢失”。两种 Broker 的实现思路不同：</p>
+            <ul>
+              <li><strong>RabbitMQ：内置 ACK</strong>
+                <ul>
+                  <li><strong>Unacked</strong>：消息投递给 Worker 后不会立刻删除，而是标记为 <code>Unacked</code>（待确认），对其他 Worker 不可见。</li>
+                  <li><strong>ACK 才删除</strong>：Worker 完成任务后发送 <code>ACK</code>，RabbitMQ 才真正从队列/磁盘中移除该消息。</li>
+                  <li><strong>断连即重投</strong>：若 Worker 崩溃导致 TCP 连接断开且未 ACK，RabbitMQ 会把消息状态从 Unacked 立刻改回 <code>Ready</code>，重新排队并投递给其他健康 Worker（Redelivery）。</li>
+                </ul>
+              </li>
+              <li><strong>Redis：备份队列 + 超时捞回</strong>
+                <ul>
+                  <li><strong>原子位移</strong>：因为直接弹出会“消失”，Celery 往往用 <code>RPOPLPUSH</code>（或新版 <code>BLMOVE</code>）把消息从主队列原子移动到“处理中/备份队列”（常见 key 形如 <code>unacked:*</code>）。</li>
+                  <li><strong>完成后删除备份</strong>：Worker 真正执行完成后，再把备份队列里的那条记录删掉，相当于“确认”。</li>
+                  <li><strong>visibility_timeout</strong>：Redis 不能像 RabbitMQ 一样实时感知断连，Celery 依赖超时（例如 1h）判断“处理太久=可能挂了”，再把备份队列里的消息捞回主队列实现重投（恢复速度取决于超时配置）。</li>
+                </ul>
+              </li>
+              <li><strong>核心差异</strong>：RabbitMQ 是“实时感应（断连触发）+ 立即重投”；Redis 是“延迟感应（超时触发）+ 备份队列捞回”。</li>
+            </ul>
+          </div>
+        </div>
+        <div class="step">
+          <div class="index">9</div>
+          <div>
+            <strong>Worker 执行任务</strong>
+            <p>这是任务的“高光时刻”：消息进入 Worker 后，会被还原为可执行的调用，并按以下阶段推进：</p>
+            <ul>
+              <li><strong>1) 反序列化</strong>
+                <ul>
+                  <li>校验 <code>content-type</code>（如 <code>application/json</code>），把消息体解包为 <code>args</code>/<code>kwargs</code></li>
+                  <li>根据任务名/任务ID定位本地函数引用；若代码版本不一致/任务未注册，可能报 KeyError</li>
+                </ul>
+              </li>
+              <li><strong>2) 执行业务逻辑</strong>
+                <ul>
+                  <li>按并发模型运行：子进程 / 线程 / 协程</li>
+                  <li>超时控制：soft time limit 先抛 <code>SoftTimeLimitExceeded</code> 给清理机会；hard time limit 可能强制终止</li>
+                  <li>异常与重试：捕获异常准备 traceback；代码里调用 <code>self.retry()</code> 会按策略（如指数退避）重新投递带 ETA（预计到达时间） 的任务</li>
+                </ul>
+              </li>
+              <li><strong>3) 结果落盘</strong>
+                <ul>
+                  <li><strong>可选</strong>：如果你需要查询结果，Worker 会把返回值/异常信息写到 Result Backend，并更新状态为 <code>SUCCESS</code>/<code>FAILURE</code></li>
+                  <li>如果业务不需要返回值，建议开启 <code>task_ignore_result=True</code>（或任务级 <code>ignore_result=True</code>），避免结果在 Backend 大量堆积</li>
+                </ul>
+              </li>
+              <li><strong>4) ACK</strong>
+                <ul>
+                  <li>Worker 向 Broker 确认“这条消息我已处理完”，Broker 才会彻底删除/释放这条消息</li>
+                  <li><code>acks_late=True</code>：执行完成后再 ACK（更可靠，Worker 中途挂了可触发重投）；相对地“收到即 ACK”吞吐更高但更易丢</li>
+                </ul>
+              </li>
+            </ul>
+          </div>
+        </div>
+        <div class="step">
+          <div class="index">10</div>
+          <div>
+            <strong>查询与清理</strong>
+            <p>当你调用 <code>AsyncResult.get()</code> 时，本质是在“查任务结果 + 等它就绪”，以及在结果写入后“按策略回收”。</p>
+            <ul>
+              <li><strong>客户端查询：get() 的两种模式</strong>
+                <ul>
+                  <li><strong>轮询</strong>：按 <code>interval</code>（默认约 0.5s）循环向 Backend 发起读取（例如 Redis 的 <code>GET celery-task-meta-&lt;task_id&gt;</code> 或查询 DB 记录）。</li>
+                  <li><strong>控制参数</strong>：<code>timeout</code> 防止无限等待；<code>propagate</code> 决定任务失败时是否把异常在客户端重新抛出。</li>
+                  <li><strong>事件唤醒</strong>：以 Redis 为 Backend 时，可通过发布/订阅减少“频繁敲门”。客户端订阅与 <code>task_id</code> 相关的通知通道；Worker 写完结果后发布消息，客户端被瞬间唤醒，显著降低无效请求与 CPU 压力。</li>
+                </ul>
+              </li>
+              <li><strong>结果清理：TTL 与自动回收</strong>
+                <ul>
+                  <li><strong>Redis</strong>：写结果时顺带设置 <code>EXPIRE</code>，由 <code>result_expires</code> 控制保留时间（默认通常是 1 天）。时间到后 Key 自动物理删除。</li>
+                  <li><strong>数据库</strong>：没有行级 TTL。结果会一直存在，需要周期性清理：常见由 <code>celery.backend_cleanup</code>（通常配合 celery beat）定时执行删除过期行。</li>
+                </ul>
+              </li>
+              <li><strong>核心配置与避坑</strong>
+                <ul>
+                  <li><code>task_ignore_result</code>：最关键优化。默认建议全局开启；只在确实需要返回值的任务上用 <code>@app.task(ignore_result=False)</code> 显式打开。</li>
+                  <li><code>result_expires</code>：结果保留时长（秒）。并发高时建议设短一些（例如 3600=1h）以降低堆积风险。</li>
+                  <li><strong>经典坑</strong>：不启用 <code>task_ignore_result=True</code>，又从不调用 <code>.get()</code>/<code>.forget()</code>，结果会在 Backend 持续堆积直到过期，最终导致缓存/数据库被撑爆。</li>
+                </ul>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="flow" style="margin-top:16px;">
+    <div class="timeline">
+      <div class="step">
+        <div class="index">1</div>
+        <div>
+          <strong>Q1：至少一次如何落地？请分别给出 RabbitMQ 与 Redis 的详细技术方案</strong>
+          <p><strong>A：</strong>目标是“消息至少成功处理一次”，允许重复，不允许静默丢失。关键是把 <strong>发送确认 → 存储持久化 → 消费确认 → 崩溃恢复 → 幂等去重</strong> 串成闭环。</p>
+          <ul>
+            <li><strong>RabbitMQ 方案</strong>
+              <ul>
+                <li><strong>生产端</strong>：开启 Publisher Confirm，发送成功以 broker confirm 为准，不以内存写入为准。</li>
+                <li><strong>队列端</strong>：队列建议设为 <code>durable=true</code>（RabbitMQ 重启后队列定义仍保留）；同时消息设为 <code>delivery_mode=2</code>（消息持久化），两者都开启才具备“重启后可恢复”的基础。另一个关键点是队列类型：<strong>classic queue</strong> 更轻更快但高可用能力相对弱，<strong>quorum queue</strong> 会在多节点间复制队列日志（类似 Raft 的主从一致性思路），单点故障下更抗风险，适合订单/支付/计费等关键链路。</li>
+                <li><strong>消费端</strong>：关闭 auto-ack，使用手动 ACK；业务成功后 ACK，失败时 NACK（按策略 requeue 或送死信）。</li>
+                <li><strong>崩溃恢复</strong>：Worker 挂掉导致连接断开时，Unacked 消息自动回到 Ready 并重投给其他消费者。</li>
+                <li><strong>流控参数</strong>：设置合理 prefetch（重任务建议 1~4），避免单 Worker 堆积过多 Unacked。</li>
+              </ul>
+            </li>
+            <li><strong>Redis 方案</strong>
+              <ul>
+                <li><strong>生产端</strong>：写入主队列（List 或 Stream），生产成功以 Redis 写成功为准；持久化建议优先 AOF，并结合 fsync 策略做权衡：
+                  <ul>
+                    <li><code>appendfsync always</code>：每次写命令都执行一次 fsync，数据安全性最高（几乎不丢），但磁盘 I/O 开销极大，吞吐容易受限。</li>
+                    <li><code>appendfsync everysec</code>：每秒执行一次 fsync，通常最多丢 1~2 秒数据，安全与性能折中，生产最常用。</li>
+                    <li><code>appendfsync no</code>：交由操作系统决定刷盘时机，性能最好，但可能丢几十秒数据，不建议关键链路使用。</li>
+                  </ul>
+                </li>
+                <li><strong>消费端（List 模式）</strong>：用 <code>BRPOPLPUSH</code>/<code>BLMOVE</code> 将消息从 main 原子移动到 processing（处理中队列），避免“弹出即丢”。</li>
+                <li><strong>消费端（Stream 模式）</strong>：使用 Consumer Group 的 <code>XREADGROUP</code> + <code>XACK</code>，未确认消息进入 PEL（pending entries list）。</li>
+                <li><strong>超时回收</strong>：后台巡检 processing/PEL，超过 <code>visibility_timeout</code> 的消息回捞到主队列（或转移给其他消费者）。</li>
+                <li><strong>持久化权衡</strong>：RDB 可能丢快照窗口数据；AOF 更可靠但写放大更高，需压测磁盘与恢复时间。</li>
+              </ul>
+            </li>
+            <li><strong>重复消费与幂等（两者通用）</strong>
+              <ul>
+                <li>每条消息携带 <code>Business_ID</code>（业务主键），消费前先落“去重记录”（唯一索引冲突即判重）。</li>
+                <li>采用状态机门禁：仅允许状态合法迁移（如“待支付→已支付”），非法迁移直接幂等返回。</li>
+                <li>外部副作用（扣款、发券、回调）必须附带幂等 token，避免下游重复执行。</li>
+              </ul>
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="index">2</div>
+        <div>
+          <strong>Q2：死信队列如何设计与处理？请分别给出 RabbitMQ 与 Redis 的详细方案</strong>
+          <p><strong>A：</strong>死信队列不是“失败终点”，而是“故障隔离 + 诊断补偿入口”。目标是：主链路持续可用，异常消息可追踪、可回放、可审计。</p>
+          <ul>
+            <li><strong>RabbitMQ 方案</strong>
+              <ul>
+                <li><strong>触发条件</strong>：
+                  <ul>
+                    <li>1. 当消费者拿到消息发现消息逻辑错误，消费者发送一个 Basic.Reject 或 Basic.Nack 指令给 RabbitMQ，如果设置 requeue=true，消息会重新回到原队列排队（可能导致死循环）；如果设置 requeue=false，RabbitMQ 就会把这条消息丢进死信交换机。</li>
+                    <li>2. 给消息或者队列设置一个 TTL消息，如果一条消息在队列里躺了太久还没有消费，一旦到期，它不会被物理删除，而是被投递到死信队列。 </li>
+                    <li>3. 队列可以设置 x-max-length，当队列已经满了，又有新消息进来时，RabbitMQ 会根据策略把最前面（最老）的消息踢出去，被踢出的消息如果配置了死信交换机，就会进入死信队列，而不是直接消失。</li>
+                  </ul>
+                </li>
+                <li><strong>拓扑</strong>：
+                  <ul>
+                    <li><strong>第一层：业务层</strong>
+                      <ul>
+                        <li>准备业务 Exchange + 业务 Queue（消费者平时从这里消费）。</li>
+                        <li>在业务 Queue 的参数里声明 <code>x-dead-letter-exchange</code>（必填，指定“消息出事后要转投到哪个交换机”）。</li>
+                        <li>可选声明 <code>x-dead-letter-routing-key</code>（选填，指定“转投时改用哪个路由键”；不填则沿用原路由键）。</li>
+                      </ul>
+                    </li>
+                    <li><strong>第二层：死信层</strong>
+                      <ul>
+                        <li>准备独立的死信 Exchange（DLX）和死信 Queue（DLQ）。</li>
+                        <li>把 DLQ 用指定 routing key 绑定到 DLX（确保“死信交换机后面真的有桶接住消息”）。</li>
+                      </ul>
+                    </li>
+                  </ul>
+                </li>
+                <li><strong>运维流程</strong>：
+                  <ul>
+                    <li>DLQ 仅存放失败消息，不直接业务消费；</li>
+                    <li>运维/平台任务读取 DLQ，按错误类型分流：数据修复、代码修复、人工审批后回放；</li>
+                    <li>回放时必须限流并记录 replay_id，避免“故障放大 + 重复污染”。</li>
+                  </ul>
+                </li>
+              </ul>
+            </li>
+            <li><strong>Redis 方案</strong>
+              <ul>
+                <li><strong>落死信方式</strong>：消费异常达到阈值后，将消息写入 <code>dead_letter_key</code>（List/Stream/ZSet 均可）。</li>
+                <li><strong>死信元数据</strong>：建议包含 <code>business_id</code>、<code>retry_count</code>、<code>first_fail_at</code>、<code>last_error</code>、<code>origin_queue</code>、<code>trace_id</code>。</li>
+                <li><strong>处理流</strong>：
+                  <ul>
+                    <li>补偿服务订阅 dead_letter_key；</li>
+                    <li>按错误类别执行修复/重试/人工介入；</li>
+                    <li>成功后写审计日志并从死信结构移除。</li>
+                  </ul>
+                </li>
+              </ul>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <script>
+    const flowCanvas = document.getElementById("flowCanvas");
+    const flowGrid = document.getElementById("flowGrid");
+    const flowSvg = flowCanvas.querySelector(".flow-lines");
+
+    const pointFor = (card) => {
+      const canvasBox = flowCanvas.getBoundingClientRect();
+      const cardBox = card.getBoundingClientRect();
+      return {
+        x: cardBox.left - canvasBox.left + cardBox.width / 2,
+        y: cardBox.top - canvasBox.top + cardBox.height / 2,
+      };
+    };
+
+    const buildFlowPath = (start, end, bend = 0.28) => {
+      const dx = end.x - start.x;
+      const dy = end.y - start.y;
+      const offset = Math.max(26, Math.abs(dx) * bend);
+      const cx1 = start.x + offset;
+      const cy1 = start.y + dy * 0.1;
+      const cx2 = end.x - offset;
+      const cy2 = end.y - dy * 0.1;
+      return `M${start.x} ${start.y} C ${cx1} ${cy1}, ${cx2} ${cy2}, ${end.x} ${end.y}`;
+    };
+
+    const laneCenter = (lane) => {
+      const canvasBox = flowCanvas.getBoundingClientRect();
+      const laneBox = lane.getBoundingClientRect();
+      return {
+        x: laneBox.left - canvasBox.left + laneBox.width / 2,
+        y: laneBox.top - canvasBox.top + laneBox.height / 2,
+      };
+    };
+
+    const laneCardEdgePoint = (lane, which, edge) => {
+      const cards = lane.querySelectorAll(".lane-cards .card");
+      if (!cards.length) return null;
+      const card = which === "last" ? cards[cards.length - 1] : cards[0];
+      return cardEdgePoint(card, edge);
+    };
+
+    const cardEdgePoint = (card, edge, override) => {
+      const canvasBox = flowCanvas.getBoundingClientRect();
+      const cardBox = card.getBoundingClientRect();
+      const x =
+        edge === "left"
+          ? cardBox.left - canvasBox.left
+          : edge === "right"
+            ? cardBox.right - canvasBox.left
+            : cardBox.left - canvasBox.left + cardBox.width / 2;
+      const y = cardBox.top - canvasBox.top + cardBox.height / 2;
+      const xFinal = typeof override?.x === "number" ? override.x : x;
+      const yFinal = typeof override?.y === "number" ? override.y : y;
+      return { x: xFinal, y: yFinal };
+    };
+
+    const buildIntraPath = (start, end) => {
+      const gap = Math.max(10, end.x - start.x);
+      const k = Math.min(22, gap * 0.35);
+      return `M${start.x} ${start.y} C ${start.x + k} ${start.y}, ${end.x - k} ${end.y}, ${end.x} ${end.y}`;
+    };
+
+    const createPath = (d, className, withArrow = true, markerId = "arrow") => {
+      const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+      path.setAttribute("d", d);
+      path.setAttribute("fill", "none");
+      if (withArrow) path.setAttribute("marker-end", `url(#${markerId})`);
+      path.classList.add(className);
+      return path;
+    };
+
+    const createNode = (point, color) => {
+      const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+      circle.setAttribute("cx", point.x);
+      circle.setAttribute("cy", point.y);
+      circle.setAttribute("r", 5.5);
+      circle.setAttribute("fill", color);
+      return circle;
+    };
+
+    const drawFlowLines = () => {
+      const lanes = flowGrid.querySelectorAll(".lane");
+      if (lanes.length < 2) return;
+
+      const canvasBox = flowCanvas.getBoundingClientRect();
+      const gridBox = flowGrid.getBoundingClientRect();
+      const svgHeight = Math.max(220, gridBox.bottom - canvasBox.top + 10);
+      flowSvg.style.height = `${svgHeight}px`;
+      flowSvg.setAttribute("viewBox", `0 0 ${canvasBox.width} ${svgHeight}`);
+
+      const defs = flowSvg.querySelector("defs");
+      flowSvg.innerHTML = "";
+      flowSvg.appendChild(defs);
+
+      // Inter-lane: last card of current -> first card of next (execution logic)
+      for (let i = 0; i < lanes.length - 1; i++) {
+        const fromLane = lanes[i];
+        const toLane = lanes[i + 1];
+        const start = laneCardEdgePoint(fromLane, "last", "right");
+        const end = laneCardEdgePoint(toLane, "first", "left");
+        if (!start || !end) continue;
+
+        // keep a tiny gap away from card borders
+        start.x += 1;
+        end.x -= 1;
+
+        const path = buildFlowPath(start, end, 0.18);
+        flowSvg.appendChild(createPath(path, "lane-down", true, "arrowTipTiny"));
+      }
+
+      // Intra-lane: connect cards horizontally in the gap (no overlap)
+      const laneStrokeByIndex = [
+        "rgba(34, 211, 238, 0.75)",  // client
+        "rgba(168, 85, 247, 0.75)",  // broker
+        "rgba(249, 115, 22, 0.78)",  // worker
+        "rgba(52, 211, 153, 0.75)",  // backend
+      ];
+
+      Array.from(lanes).forEach((lane, laneIndex) => {
+        const cards = lane.querySelectorAll(".lane-cards .card");
+        if (cards.length < 2) return;
+
+        for (let i = 0; i < cards.length - 1; i++) {
+          const from = cards[i];
+          const to = cards[i + 1];
+          const start = cardEdgePoint(from, "right");
+          const end = cardEdgePoint(to, "left");
+
+          // Border-midpoint -> border-midpoint (arrow tip touches the target border)
+          if (end.x - start.x < 2) continue;
+
+          const path = createPath(buildIntraPath(start, end), "intra-link", true, "arrowTipTiny");
+          path.style.stroke = laneStrokeByIndex[laneIndex] ?? "rgba(226, 232, 240, 0.6)";
+          flowSvg.appendChild(path);
+        }
+      });
+
+      // (Removed) group overview line + decorative nodes to avoid stray lines/dots.
+    };
+
+    const updateFlowLines = () => requestAnimationFrame(drawFlowLines);
+
+    window.addEventListener("load", updateFlowLines);
+    window.addEventListener("resize", updateFlowLines);
+    new ResizeObserver(updateFlowLines).observe(flowCanvas);
+  </script>
+</body>
+</html>

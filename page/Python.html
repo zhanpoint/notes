@@ -1,0 +1,1879 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Python 面试高频问答</title>
+  <link rel="stylesheet" href="../assets/style.css" />
+</head>
+<body>
+  <div class="container">
+    <section class="hero">
+      <h1>Python 高频面试题</h1>
+      <p class="page-updated">最后更新：2026-03-26</p>
+    </section>
+
+    <section class="qa-list">
+      <details>
+        <summary>1. Python 是什么？</summary>
+        <div class="content">
+          <div class="chips">
+            <span class="chip chip--with-note">解释型
+              <button class="chip-note-btn" type="button" aria-expanded="false" aria-controls="chip-note-interpreted" title="查看解释型与编译型区别">i</button>
+            </span>
+            <span class="chip">动态语义</span>
+            <span class="chip">面向对象</span>
+            <span class="chip">高层次</span>
+            <span class="chip">胶水语言</span>
+          </div>
+
+          <div id="chip-note-interpreted" class="chip-note-panel" role="region" aria-label="解释型与编译型区别说明">
+            <p><b>解释型语言</b>和<b>编译型语言</b>的区别在于：源代码是“边翻译边执行”，还是“翻译好了再执行”。</p>
+
+            <h4>1. 解释型语言（Interpreted Language）</h4>
+            <p><b>原理</b>：源代码不是直接由处理器执行，而是由解释器逐行读取、转换并立即执行。</p>
+            <ul>
+              <li><b>工作流程</b>：它不产生机器码，而是由Python 解释器内部的 编译器产生中间代码（字节码）即__pycache__ 文件夹下的 .pyc 文件，字节码比源代码更接近机器语言，但又是平台无关的。这样下次运行同一份代码时，如果源码没改，Python 就可以跳过编译步骤，直接加载 .pyc 文件，从而加快启动速度，字节码并不能直接在你的 CPU 上跑，它需要一个“运行环境”，这就是 Python 虚拟机 (简称 PVM)。PVM 是 Python 解释器的核心部分。它维持着一个巨大的循环，不停地读取字节码指令，并将其映射到具体的 C 语言函数调用，最终由 CPU 执行。</li>
+              <li><b>典型代表</b>：Python、JavaScript、Ruby、PHP。</li>
+              <li><b>特点</b>：跨平台性强；运行速度相对较慢。</li>
+            </ul>
+
+            <h4>2. 编译型语言（Compiled Language）</h4>
+            <p><b>原理</b>：运行前由编译器一次性把源码转换成机器可执行文件，再执行该文件。</p>
+            <ul>
+              <li><b>工作流程</b>：编译器直接将源代码翻译成针对特定 CPU 架构（如 x86, ARM）和操作系统（Windows, Linux）的二进制机器码</li>
+              <li><b>典型代表</b>：C、C++、Go、Rust、Swift。</li>
+              <li><b>特点</b>：平台依赖更强；改动后通常需要重新编译。</li>
+            </ul>
+
+            <h4>3. 为什么解释型语言运行速度慢</h4>
+            <ul>
+              <li><b>额外的开销</b>：解释器在执行每一行代码时，都要经历：读取 → 解析 → 转换 → 执行。而编译型语言在运行阶段只有“执行”这一个动作。</li>
+              <li><b>动态检查</b>：Python 等解释型语言通常是动态类型的。这意味着在运行时，解释器必须不断检查变量是什么类型（是数字还是字符串？），能不能做加法？这种“边跑边想”的过程极其耗时。</li>
+              <li><b>无法深度优化</b>：编译器在编译阶段可以通览全局，进行复杂的逻辑优化（比如删掉永远不会运行的代码，或者合并重复计算）。解释器“走一步看一步”，很难进行这种全局层面的极限优化。</li>
+            </ul>
+
+            <h4>4. 为什么编译型语言“平台依赖强”？</h4>
+            <ul>
+              <li><b>硬件绑定</b>：不同 CPU 识别的指令集不同（如 x86 与 ARM）。</li>
+              <li><b>系统绑定</b>：不同操作系统的系统调用接口不同（Windows 与 Linux 机制差异明显）。</li>
+              <li><b>结果</b>：编译时硬件与系统细节已被写入二进制文件，因此 Windows 的 <code>.exe</code> 不能直接在 Linux 上运行。</li>
+            </ul>
+
+            <h4>5. 为什么编译型语言“改动后通常要重新编译”？</h4>
+            <p><b>核心逻辑</b>：编译产物是整体性、静态关联的结果。</p>
+            <ul>
+              <li><b>整体流程</b>：预处理 → 编译 → 汇编 → 链接，编译器要统一处理源码与依赖并建立地址映射。</li>
+              <li><b>静态关联</b>：函数调用关系和符号地址在构建阶段已确定。</li>
+              <li><b>蝴蝶效应</b>：即使只改很小一处，也可能引发内存偏移、符号表与链接关系变化，因此需要重新生成可执行文件。</li>
+            </ul>
+
+            <h4>6. 现代趋势：JIT（即时编译）的中间路线</h4>
+            <ul>
+              <li><b>启动阶段</b>：先解释执行，保留跨平台和开发效率优势。</li>
+              <li><b>热点识别</b>：PVM 不再仅仅是死板地逐行解释字节码。如果它发现某段字节码被反复执行（比如一个循环），JIT 编译器会介入，把这段热点字节码直接编译成 机器码。</li>
+            </ul>
+
+          </div>
+
+          <h3>1. 核心特性（Core Features）</h3>
+          <h3>A. 语法与编程范式</h3>
+          <ul>
+            <li><b>简洁易读</b>：强制缩进定义代码块，提升可读性并降低维护成本。</li>
+            <li><b>多范式支持</b>：支持面向对象与结构化编程，并融合函数式（<code>lambda</code>、<code>map</code>、<code>filter</code>、<code>itertools</code>）与元编程。</li>
+            <li><b>动态类型与内存管理</b>：动态类型 + 延迟绑定；引用计数与增量 GC（3.14 优化）自动管理内存。</li>
+          </ul>
+
+          <h3>B. 性能与底层优化</h3>
+          <ul>
+            <li><b>实验性 JIT</b>：3.13 引入、3.14 持续优化，提升部分计算密集型任务性能。</li>
+            <li><b>自由线程模式</b>：逐步支持关闭 GIL，实现多核并行。</li>
+          </ul>
+
+      </details>
+
+      <details>
+        <summary>2. list 和 tuple 的区别？</summary>
+        <div class="content">
+          <h3>1. 核心区别对比</h3>
+          <ul>
+            <li><b>可变性</b>：<code>list</code> 可变 <button class="chip-note-btn" type="button" aria-expanded="false" aria-controls="list-mutable-note" title="查看 list 增删查改方法">i</button>；<code>tuple</code> 不可变。</li>
+            <li><b>语法</b>：<code>list</code> 使用 <code>[]</code>，<code>tuple</code> 使用 <code>()</code>。</li>
+            <li><b>内存占用</b>：<code>list</code> 通常更大（为扩容预留空间）；<code>tuple</code> 更紧凑。</li>
+            <li><b>哈希性</b>：<code>list</code> 不可哈希，不能做字典键；<code>tuple</code> 在元素可哈希时可作为键 <button class="chip-note-btn" type="button" aria-expanded="false" aria-controls="tuple-key-note" title="查看 tuple 作为字典键的条件">i</button>。</li>
+          </ul>
+
+          <div id="tuple-key-note" class="chip-note-panel" role="region" aria-label="tuple 作为字典键说明">
+            <p><b>总结</b>：元组想作为字典键，里面的每个元素都必须是不可变（可哈希）的。</p>
+
+            <h4>1. 什么是可哈希（Hashable）？</h4>
+            <ul>
+              <li><b>不可变</b>：对象生命周期内值不会变化（如 <code>int</code>、<code>str</code>、<code>float</code>、<code>bool</code>）。</li>
+              <li><b>可计算哈希</b>：支持 <code>__hash__()</code>，可生成稳定哈希值供字典定位。</li>
+              <li>元组本身不可变，但若内部元素可变（如 <code>list</code>），整个元组就不可哈希。</li>
+            </ul>
+
+            <h4>2. 常见类型可变性对比</h4>
+            <table>
+              <thead>
+                <tr>
+                  <th>数据类型</th>
+                  <th>是否可变</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr><td><code>int</code> / <code>float</code> / <code>complex</code></td><td>否（不可变）</td></tr>
+                <tr><td><code>str</code></td><td>否（不可变）</td></tr>
+                <tr><td><code>tuple</code></td><td>否（不可变）</td></tr>
+                <tr><td><code>frozenset</code></td><td>否（不可变）</td></tr>
+                <tr><td><code>bytes</code></td><td>否（不可变）</td></tr>
+                <tr><td><code>list</code></td><td>是（可变）</td></tr>
+                <tr><td><code>dict</code></td><td>是（可变）</td></tr>
+                <tr><td><code>set</code></td><td>是（可变）</td></tr>
+                <tr><td><code>bytearray</code></td><td>是（可变）</td></tr>
+              </tbody>
+            </table>
+            <p>不可变对象一旦创建，值不能原地修改；“修改”本质上是创建新对象。可变对象可以原地修改内容，通常对象 <code>id</code> 不变。</p>
+            
+            <h4>3. 经典陷阱：可变对象作为默认参数</h4>
+            <p>下面代码会在多次调用间共享同一个列表对象：</p>
+            <pre><code>def add_item(item, box=[]):
+    box.append(item)
+    return box
+
+print(add_item(1))  # [1]
+print(add_item(2))  # [1, 2] 不是 [2]</code></pre>
+            <p>正确写法通常是默认值使用 <code>None</code>，在函数内部再初始化。</p>
+          </div>
+
+          <div id="list-mutable-note" class="chip-note-panel" role="region" aria-label="list 可变增删查改说明">
+            <h4>1. 增</h4>
+            <ul>
+              <li><code>append(obj)</code>：在列表末尾添加一个元素。示例：<code>ls.append(4)</code> → <code>[1, 2, 3, 4]</code>。</li>
+              <li><code>insert(index, obj)</code>：在指定索引位置插入元素，原位置及之后的元素后移。示例：<code>ls.insert(1, 'a')</code> → <code>[1, 'a', 2, 3]</code>。</li>
+              <li><code>extend(iterable)</code>：将另一个序列内容合并到当前列表末尾（相当于 <code>+=</code>）。示例：<code>ls.extend([5, 6])</code> → <code>[1, 2, 3, 5, 6]</code>。</li>
+            </ul>
+
+            <h4>2. 删</h4>
+            <ul>
+              <li><code>pop([index])</code>：删除并返回指定索引的元素（默认最后一个）。示例：<code>item = ls.pop()</code>。</li>
+              <li><code>remove(obj)</code>：删除列表中第一个匹配到的值（不匹配会报 <code>ValueError</code>）。示例：<code>ls.remove(2)</code>。</li>
+              <li><code>clear()</code>：清空整个列表，使其变成 <code>[]</code>。</li>
+              <li><code>del</code> 语句：可以按索引/切片删除，也可删除变量。示例：<code>del ls[0]</code>、<code>del ls[1:3]</code>。</li>
+            </ul>
+
+            <h4>3. 查</h4>
+            <ul>
+              <li>索引访问 <code>ls[i]</code>：通过下标获取元素（支持负数索引，如 <code>-1</code> 为最后一个）。</li>
+              <li>切片 <code>ls[start:stop:step]</code>：获取子列表。示例：<code>ls[1:3]</code>。</li>
+              <li><code>index(obj)</code>：返回第一个匹配值的索引。</li>
+              <li><code>count(obj)</code>：统计某个元素出现次数。</li>
+              <li><code>in</code> 关键字：判断元素是否存在。示例：<code>if 2 in ls: print("Found")</code>。</li>
+            </ul>
+
+            <h4>4. 改</h4>
+            <ul>
+              <li>直接赋值：通过索引覆盖原有值。示例：<code>ls[0] = 100</code>。</li>
+              <li>切片赋值：一次性替换一段范围元素。示例：<code>ls[1:3] = [7, 8]</code>。</li>
+              <li><code>reverse()</code>：反转列表中的元素顺序。</li>
+              <li><code>sort()</code>：对列表进行原地排序（升序或自定义规则）。</li>
+            </ul>
+          </div>
+
+          <h3>2. 为什么元组常更快、更省内存？</h3>
+
+          <h4>2.1 结构精简：减少间接寻址</h4>
+          <ul>
+            <li><b>list</b>：为支持动态扩容，通常维护可增长数组并采用 over-allocation（预留容量）。</li>
+            <li><b>tuple</b>：长度固定，布局紧凑，元素槽位与对象结构绑定更稳定。</li>
+            <li><b>迭代差异</b>：<code>list</code> 在访问路径上常有更多间接跳转；<code>tuple</code> 偏移关系更固定</li>
+          </ul>
+
+          <h4>2.2 缓存与复用：不可变对象更容易优化</h4>
+          <ul>
+            <li><b>空元组单例</b>：<code>()</code> 全局复用。</li>
+            <li><b>常量池友好</b>：常量元组可在编译阶段进入常量池。</li>
+            <li><b>分配复用潜力</b>：不可变语义使某些场景下对象管理更高效；而 <code>list</code> 因可变性通常需要保持独立实例语义。</li>
+          </ul>
+
+          <h4>2.5 底层结构示意（SVG）</h4>
+          <svg viewBox="0 0 940 260" width="100%" role="img" aria-label="list 与 tuple 底层结构示意图" style="margin-top:8px;border:1px solid var(--line-soft);border-radius:8px;background:rgba(102,132,188,0.05)">
+            <defs>
+              <marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+                <path d="M0,0 L8,4 L0,8 Z" fill="#9bb5e8"></path>
+              </marker>
+            </defs>
+
+            <text x="28" y="30" fill="#d9e4fb" font-size="13" font-weight="600">list（动态数组，支持扩容）</text>
+            <rect x="26" y="42" width="240" height="58" rx="8" fill="#1b2438" stroke="#5c74a8"/>
+            <text x="40" y="66" fill="#c8d6f1" font-size="11">PyListObject 头部</text>
+            <text x="40" y="84" fill="#8fa7d8" font-size="10">长度、容量、指针等元信息</text>
+
+            <line x1="266" y1="71" x2="348" y2="71" stroke="#9bb5e8" stroke-width="2" marker-end="url(#arrow)"/>
+            <text x="275" y="62" fill="#9bb5e8" font-size="10">ob_item 指针</text>
+
+            <rect x="352" y="42" width="430" height="58" rx="8" fill="#162033" stroke="#5c74a8"/>
+            <rect x="366" y="56" width="72" height="30" rx="4" fill="#223252" stroke="#6d87c1"/>
+            <rect x="444" y="56" width="72" height="30" rx="4" fill="#223252" stroke="#6d87c1"/>
+            <rect x="522" y="56" width="72" height="30" rx="4" fill="#223252" stroke="#6d87c1"/>
+            <rect x="600" y="56" width="72" height="30" rx="4" fill="#1a2a46" stroke="#4f6797" stroke-dasharray="4 3"/>
+            <rect x="678" y="56" width="72" height="30" rx="4" fill="#1a2a46" stroke="#4f6797" stroke-dasharray="4 3"/>
+            <text x="387" y="75" fill="#c7d4ef" font-size="10">elem0*</text>
+            <text x="465" y="75" fill="#c7d4ef" font-size="10">elem1*</text>
+            <text x="543" y="75" fill="#c7d4ef" font-size="10">elem2*</text>
+            <text x="613" y="75" fill="#90a6d3" font-size="10">预留</text>
+            <text x="691" y="75" fill="#90a6d3" font-size="10">预留</text>
+
+            <text x="28" y="152" fill="#d9e4fb" font-size="13" font-weight="600">tuple（定长、紧凑、不可变）</text>
+            <rect x="26" y="164" width="756" height="58" rx="8" fill="#172536" stroke="#63bca3"/>
+            <rect x="40" y="178" width="190" height="30" rx="4" fill="#223646" stroke="#67c9ad"/>
+            <rect x="236" y="178" width="72" height="30" rx="4" fill="#1e3242" stroke="#67c9ad"/>
+            <rect x="314" y="178" width="72" height="30" rx="4" fill="#1e3242" stroke="#67c9ad"/>
+            <rect x="392" y="178" width="72" height="30" rx="4" fill="#1e3242" stroke="#67c9ad"/>
+            <text x="52" y="197" fill="#cbf6e7" font-size="10">PyTupleObject 头部</text>
+            <text x="253" y="197" fill="#cbf6e7" font-size="10">e0*</text>
+            <text x="331" y="197" fill="#cbf6e7" font-size="10">e1*</text>
+            <text x="409" y="197" fill="#cbf6e7" font-size="10">e2*</text>
+
+          </svg>
+
+          <h3>3. 场景适配？</h3>
+          <h3>使用 List 的场景 <button class="chip-note-btn" type="button" aria-expanded="false" aria-controls="list-hetero-note" title="查看 list 异构元素说明">i</button></h3>
+          <ul>
+            <li><b>长度不固定</b>：需要频繁增删元素。</li>
+            <li><b>原地修改</b>：需要 <code>.sort()</code>、<code>.reverse()</code> 等操作。</li>
+          </ul>
+
+          <div id="list-hetero-note" class="chip-note-panel" role="region" aria-label="list 异构元素说明">
+            <h4>4. 列表中所有元素类型必须相同吗？</h4>
+            <p><b>不必须。</b>Python 的 <code>list</code>可以同时装入不同类型的对象。</p>
+
+            <h4>4.1 为什么 Python 允许异构列表？</h4>
+            <ul>
+              <li><b>万物皆对象</b>：Python 中每个值本质都是对象。</li>
+              <li><b>list 存的是引用</b>：CPython 的列表底层可理解为“对象指针数组”（保存对象地址）。</li>
+              <li><b>间接访问</b>：列表不关心元素具体类型，只保存地址；取值时再根据地址找到真实对象并按其类型处理。</li>
+            </ul>
+            <p>这与 C/Java 传统数组不同：后者通常强调同类型、固定布局，便于按偏移量快速定位。</p>
+
+            <h4>4.2 混合类型的代价</h4>
+            <ul>
+              <li><b>逻辑风险</b>：循环里做统一运算（如 <code>item + 1</code>）时，若混入字符串会触发 <code>TypeError</code>。</li>
+              <li><b>性能损耗</b>：类型不统一会降低解释器优化空间，不利于向量化与批量数值计算。</li>
+            </ul>
+
+            <h4>4.3 什么时候应该保持类型统一？</h4>
+            <ul>
+              <li><b>数值计算</b>：建议使用 <code>array.array</code> 或 <code>NumPy</code>（同构类型，计算效率高）。</li>
+              <li><b>结构化异构数据</b>：如“姓名、年龄、体重”，更推荐 <code>dict</code>、<code>dataclass</code>，语义更清晰。</li>
+            </ul>
+          </div>
+
+          <h3>使用 Tuple 的场景</h3>
+          <ul>
+            <li><b>记录型数据</b>：表达不可拆分结构单元，如经纬度 <code>(39.9, 116.4)</code>。</li>
+            <li><b>安全传递</b>：避免函数内部意外修改。</li>
+            <li><b>字典键</b>：组合键必须是可哈希对象，元组更合适。</li>
+            <li><b>函数多返回值</b>：Python 默认会将多返回值打包为元组。</li>
+          </ul>
+
+        </div>
+      </details>
+
+      <details>
+        <summary>3. == 和 is 的区别？</summary>
+        <div class="content">
+          <h3>1. 核心区别：</h3>
+          <ul>
+            <li><b><code>==</code>（相等运算符）</b>：调用 <code>__eq__()</code>，判断两个对象的值是否相等 <button class="chip-note-btn" type="button" aria-expanded="false" aria-controls="eq-type-note" title="查看 == 是否包含类型判断">i</button>。</li>
+            <li><b><code>is</code>（身份运算符）</b>：比较对象内存地址（<code>id</code>），判断是否是同一个对象。</li>
+          </ul>
+
+          <div id="eq-type-note" class="chip-note-panel" role="region" aria-label="== 是否包含类型判断说明">
+            <p><b>结论</b>：<code>==</code> 是否包含类型判断，取决于对象内部如何实现 <code>__eq__()</code>。</p>
+
+            <h4>1. 默认行为</h4>
+            <p>若不同类没有自定义 <code>__eq__</code>，通常按对象身份比较，结果一般为 <code>False</code>。</p>
+
+            <h4>2. 内置类型常见实现</h4>
+            <p>很多内置容器会先看类型是否匹配，再比较值。例如：</p>
+            <pre><code>print([1, 2] == (1, 2))  # False</code></pre>
+
+            <h4>3. 数值类型特例（跨类型）</h4>
+            <pre><code>print(1 == 1.0)     # True
+print(1 == (1+0j))  # True</code></pre>
+            <p>数字比较更偏向“数学值是否相等”，而非类型必须一致。</p>
+
+            <h4>4. 自定义类建议</h4>
+            <p>推荐在 <code>__eq__</code> 里使用 <code>isinstance()</code> 做类型检查，避免意外比较错误。</p>
+            <pre><code>class User:
+    def __init__(self, id):
+        self.id = id
+
+    def __eq__(self, other):
+        if not isinstance(other, User):
+            return False
+        return self.id == other.id</code></pre>
+
+          </div>
+
+          <h3>2. is bug？</h3>
+          <p>Python 对小整数和部分常量做缓存复用（例如小整数对象池），可能导致两个变量指向同一对象，从而 <code>is</code> 为 <code>True</code>。因此不能把这类现象当作通用规律。</p>
+
+          <h3>4. 最佳实践：</h3>
+          <ul>
+            <li><b>单例判断用 <code>is</code></b>：尤其是 <code>None</code>（推荐 <code>if x is None:</code>）。</li>
+            <li><b>布尔判断优先真值语义</b>：通常直接写 <code>if x:</code> / <code>if not x:</code>。</li>
+          </ul>
+        </div>
+      </details>
+
+      <details>
+        <summary>4. PEP 8 是什么？</summary>
+        <div class="content">
+          <p><b>PEP 8</b> 是 Python 官方《代码风格指南》，属于 PEP体系中专门规范“代码风格”的核心文档。</p>
+
+          <h3>1. PEP 8 的核心规范</h3>
+          <h3>代码布局</h3>
+          <ul>
+            <li><b>缩进</b>：使用 4 个空格，避免混用 Tab 与空格。</li>
+            <li><b>行宽</b>：建议每行不超过 79 个字符。</li>
+            <li><b>空行</b>：顶级函数/类之间 2 行；类内方法之间 1 行。</li>
+          </ul>
+
+          <h3>命名规范</h3>
+          <ul>
+            <li><b>函数与变量</b>：<code>snake_case</code>，如 <code>calculate_total_price</code>。</li>
+            <li><b>类名</b>：<code>PascalCase</code>，如 <code>UserProfile</code>。</li>
+            <li><b>常量</b>：全大写，如 <code>MAX_RETRIES</code>。</li>
+          </ul>
+
+          <h3>表达式与语句</h3>
+          <ul>
+            <li><b>空格规则</b>：二元运算符两侧加空格；括号内避免多余空格。</li>
+            <li><b>导入顺序</b>：标准库 → 第三方库 → 本地库，并分组分行。</li>
+          </ul>
+
+        </div>
+      </details>
+
+      <details>
+        <summary>5. self、__init__、__new__、*args、**kwargs、推导式、pass / break / continue</summary>
+        <div class="content">
+          <h3>1. <code>__new__</code> vs <code>__init__</code>：对象诞生流程</h3>
+          <ul>
+            <li><b><code>__new__</code>（创建者）</b>：（第一个参数是 cls），负责创建实例，先于 <code>__init__</code> 执行，必须返回实例对象。</li>
+            <li><b><code>__init__</code>（初始化者）</b>：（第一个参数是 self），在实例创建后执行，负责设置初始状态（如 <code>self.name = name</code>），返回值应为 <code>None</code>。</li>
+          </ul>
+
+          <h3>2. <code>self</code> 到底是什么？</h3>
+          <ul>
+            <li><b>本质</b>：<code>self</code> 是实例对象本身的引用。</li>
+            <li><b>作用</b>：通过 <code>self</code> 访问实例属性与实例方法。</li>
+            <li><b>补充</b>：<code>self</code> 不是关键字；定义方法时需显式写出，调用时由解释器自动传入实例。</li>
+          </ul>
+
+          <h3>3. <code>*args</code> 与 <code>**kwargs</code>：动态参数</h3>
+          <ul>
+            <li><b><code>*args</code></b>：接收多余位置参数，打包为 <code>tuple</code>。</li>
+            <li><b><code>**kwargs</code></b>：接收多余关键字参数，打包为 <code>dict</code>。</li>
+          </ul>
+
+          <h3>4. 推导式、<code>pass</code> / <code>break</code> / <code>continue</code></h3>
+          <p>推导式用于从迭代对象快速构建新序列，语法更紧凑，通常比显式循环更 Pythonic。</p>
+
+          <h3>常见推导式类型</h3>
+          <ul>
+            <li><b>列表推导式</b>：<code>[x**2 for x in range(5)]</code> → <code>[0, 1, 4, 9, 16]</code></li>
+            <li><b>字典推导式</b>：<code>{x: x**2 for x in range(3)}</code> → <code>{0: 0, 1: 1, 2: 4}</code></li>
+            <li><b>集合推导式</b>：<code>{x for x in 'abracadabra' if x not in 'abc'}</code> → <code>{'r', 'd'}</code></li>
+            <li><b>生成器表达式</b>：<code>(x**2 for x in range(5))</code>，返回迭代器，惰性求值、内存更友好 <button class="chip-note-btn" type="button" aria-expanded="false" aria-controls="generator-note" title="查看生成器表达式说明">i</button>。</li>
+          </ul>
+
+          <div id="generator-note" class="chip-note-panel" role="region" aria-label="生成器表达式说明">
+            <h4>核心价值：惰性求值</h4>
+            <p>生成器不存储完整数据，它只存储“如何生成下一个数据”的算法与状态。</p>
+
+            <h4>1. 内存差异</h4>
+            <ul>
+              <li><b>列表/元组</b>：会把所有结果一次性放进内存；数据量极大时容易撑爆内存。</li>
+              <li><b>生成器</b>：只占用很小且相对固定的空间，按需产出（每次 <code>next()</code> 产出一个值）。</li>
+            </ul>
+
+            <h4>2. 时间差异</h4>
+            <ul>
+              <li><b>生成器</b>：即用即生；你只要前 10 个结果，它生成到第 10 个就可停。</li>
+              <li><b>列表/元组</b>：通常需要先构建完整结果，再进入后续消费逻辑。</li>
+            </ul>
+
+            <h4>3. 为什么没有“元组推导式”语法？</h4>
+            <ul>
+              <li>元组不可变，若要得到元组，通常写成 <code>tuple(表达式 for ...)</code>，即“先按迭代生成，再转元组”。</li>
+            </ul>
+
+            <h4>4. 关键应用：作为函数参数</h4>
+            <p>生成器表达式最常见、最优雅的用法是直接喂给聚合函数：</p>
+            <pre><code># 边生成边累加，不创建巨大的中间列表/元组
+total = sum(x**2 for x in range(1000000))</code></pre>
+            <p>这样 <code>sum</code> 可边消费边计算，通常更省内存、更快进入有效计算。</p>
+          </div>
+
+          <h3>循环控制关键字</h3>
+          <h3>A. <code>break</code></h3>
+          <ul>
+            <li><b>动作</b>：立即结束当前最内层循环。直接跳到循环之后的语句。</li>
+          </ul>
+
+          <h3>B. <code>continue</code></h3>
+          <ul>
+            <li><b>动作</b>：结束本轮迭代，进入下一轮循环。本轮 <code>continue</code> 后的代码不再执行。</li>
+          </ul>
+
+          <h3>C. <code>pass</code></h3>
+          <ul>
+            <li><b>动作</b>：不执行任何操作，仅保持语法完整。空函数、空类、待补实现代码块。</li>
+          </ul>
+
+          <h3>5. <code>lambda</code> 和普通 <code>def</code> 的区别</h3>
+          <ul>
+            <li><b>共同点</b>：本质都能创建函数对象，都可被调用、传参、返回。</li>
+            <li><b>差异 1</b>：<code>lambda</code> 是匿名函数；<code>def</code> 是具名函数。</li>
+            <li><b>差异 2</b>：<code>lambda</code> 只能写单个表达式；<code>def</code> 可写多行逻辑（分支/循环/异常处理/注释/文档字符串）。</li>
+            <li><b>后端常用</b>：排序、过滤、映射等轻量场景。</li>
+          </ul>
+          <pre><code>users = [{"name": "Tom", "age": 20}, {"name": "Amy", "age": 18}]
+
+# 排序：按年龄升序
+print(sorted(users, key=lambda x: x["age"]))
+
+# 过滤：仅保留成年
+print(list(filter(lambda x: x["age"] &gt;= 18, users)))
+
+# 映射：抽取姓名
+print(list(map(lambda x: x["name"], users)))</code></pre>
+
+          <h3>6. 实例方法、<code>@staticmethod</code>、<code>@classmethod</code> 的区别</h3>
+          <ul>
+            <li><b>实例方法</b>：自动传入 <code>self</code>，用于读写实例状态。</li>
+            <li><b><code>@staticmethod</code></b>：不自动传入 <code>self/cls</code>，适合工具函数。</li>
+            <li><b><code>@classmethod</code></b>：自动传入 <code>cls</code>，常用于工厂方法。</li>
+          </ul>
+          <pre><code>class User:
+    role = "user"
+
+    def __init__(self, name):
+        self.name = name
+
+    def rename(self, new_name):  # 实例方法
+        self.name = new_name
+
+    @staticmethod
+    def is_valid_name(name):
+        return isinstance(name, str) and len(name) &gt; 0
+
+    @classmethod
+    def from_dict(cls, data):  # 类方法（工厂）
+        return cls(data["name"])
+
+
+# 1) 调用实例方法（需要先有实例）
+u1 = User("Alice")
+u1.rename("Alicia")
+print(u1.name)  # Alicia
+
+# 2) 调用静态方法（可由类或实例调用）
+print(User.is_valid_name("Tom"))  # True
+print(u1.is_valid_name(""))        # False
+
+# 3) 调用类方法（通常由类调用，用于构造实例）
+u2 = User.from_dict({"name": "Bob"})
+print(u2.name)  # Bob</code></pre>
+
+        </div>
+      </details>
+
+
+      <details>
+        <summary>6. Python 内存管理</summary>
+        <div class="content">
+          <p>Python 内存管理由 <b>引用计数</b> 主导，配合 <b>分代垃圾回收</b> 处理循环引用，并借助 <b>Pymalloc</b> 与对象池优化分配性能。</p>
+
+          <h3>1. 第一道防线：引用计数</h3>
+          <ul>
+            <li><b>核心机制</b>：每个对象维护引用计数。</li>
+            <li><b>计数增加</b>：赋值、参数传递、放入容器（<code>list</code>/<code>dict</code>）等场景。</li>
+            <li><b>计数减少</b>：<code>del</code>、变量重绑定、离开作用域。</li>
+            <li><b>立即回收</b>：引用计数降为 <code>0</code> 时，对象可被及时释放。</li>
+          </ul>
+          <div class="tip"><b>优点</b>：回收及时、行为直观。<b>局限</b>：无法单独解决循环引用 <button class="chip-note-btn" type="button" aria-expanded="false" aria-controls="gc-cycle-note" title="查看循环引用说明">i</button>。</div>
+
+          <div id="gc-cycle-note" class="chip-note-panel" role="region" aria-label="循环引用说明">
+            <p><b>一句话简述</b>：两个或多个对象通过属性互相引用，形成闭合引用环，导致它们的引用计数永远无法降为 0。</p>
+
+            <h4>1. 典型代码示例</h4>
+            <pre><code>import gc
+
+class Node:
+    def __init__(self, name):
+        self.name = name
+        self.parent = None
+        self.children = []
+
+    def __del__(self):
+        print(f"内存释放: {self.name} 已被销毁")
+
+# 1. 创建两个对象
+parent = Node("父亲")
+child = Node("儿子")
+
+# 2. 建立循环引用
+parent.children.append(child)   # 父亲 引用 儿子
+child.parent = parent           # 儿子 引用 父亲
+
+# 3. 删除外部变量引用
+print("删除外部变量 parent 和 child...")
+del parent
+del child
+
+print("外部变量已删除，但销毁消息并未立即出现！")</code></pre>
+
+            <h4>2. 发生了什么？</h4>
+            <ul>
+              <li><b>初始状态</b>：<code>parent</code> 和 <code>child</code> 的引用计数都为 1（变量名引用）。</li>
+              <li><b>互相绑定后</b>：
+                <ul>
+                  <li><code>parent</code> 的引用计数变为 2（变量名 <code>parent</code> + <code>child.parent</code>）。</li>
+                  <li><code>child</code> 的引用计数变为 2（变量名 <code>child</code> + <code>parent.children</code>）。</li>
+                </ul>
+              </li>
+              <li><b>执行 <code>del</code> 后</b>：你删除了变量名，引用计数各减 1，但依然剩 1。</li>
+              <li><b>尴尬局面</b>：引用计数不为 0，基础回收机制不会销毁；对象已与外界失联，变成内存“孤岛”。</li>
+            </ul>
+
+            <h4>3. Python 如何解决？</h4>
+            <p>虽然引用计数失效了，但 Python 还有垃圾回收器（GC）。GC 会定期扫描对象图，识别这些“外部不可达但内部互相引用”的孤立环，并强制回收它们。</p>
+
+            <h4>4. 两种处理方案</h4>
+            <p><b>方案 A：手动干预（不推荐常态使用）</b></p>
+            <pre><code>import gc
+
+gc.collect()  # 强制触发回收，此时可能打印：内存释放: 父亲 已被销毁 ...</code></pre>
+
+            <p><b>方案 B：弱引用 <code>weakref</code>（最佳实践）</b></p>
+            <p>让子节点对父节点使用弱引用。弱引用不会增加引用计数，这样当外部引用删除后，对象更容易及时释放，从根源上降低循环引用风险。</p>
+          </div>
+
+          <h3>2. 第二道防线：分代垃圾回收</h3>
+          <p>为处理循环引用，GC 会定期扫描对象图，识别这些“外部不可达但内部互相引用”的孤立环，并强制回收它们。</p>
+
+          <h3>2.1 先看对象范围：只重点追踪“容器对象”</h3>
+          <ul>
+            <li><b>容器对象</b>（如 <code>list</code>、<code>dict</code>、<code>set</code>、部分 <code>tuple</code>、自定义类实例）可能持有其他对象引用，才可能形成引用环。</li>
+            <li><b>非容器对象</b>（如 <code>int</code>、<code>float</code>、<code>str</code>）通常不参与引用环，GC 不会把主要精力放在它们上面。</li>
+            <li>这样可以显著缩小扫描范围，减少回收开销。</li>
+          </ul>
+
+          <h3>2.2 代际划分与晋升机制</h3>
+          <ul>
+            <li><b>第 0 代</b>：新对象先进入 0 代，回收最频繁。</li>
+            <li><b>第 1 代</b>：在 0 代回收后仍存活的对象，会晋升到 1 代。</li>
+            <li><b>第 2 代</b>：在 1 代回收后仍存活的对象，再晋升到 2 代。</li>
+          </ul>
+          <p>对象“越老”越稳定，因此高代扫描频率更低，减少不必要的全量扫描。</p>
+
+          <h3>2.3 每次回收内部做什么：</h3>
+          <ul>
+            <li><b>标记阶段</b>：从根对象出发，沿引用链标记“可达对象”。</li>
+            <li><b>清除阶段</b>：未被标记的对象被判定为不可达垃圾，进行回收。</li>
+            <li><b>关键点</b>：循环引用本身不是问题，<b>“与根对象断开连接”</b>才是垃圾判定依据。</li>
+          </ul>
+
+          <h3>2.4 触发条件（阈值）与代际联动</h3>
+          <ul>
+            <li>GC 维护每代计数与阈值。</li>
+            <li>当低代达到阈值时优先触发低代回收；低代回收累计到一定次数后，会触发更高代回收。</li>
+            <li><b>扫描高代时会连带扫描低代</b>，因为对象可能存在跨代引用，必须保证可达性分析链条完整。</li>
+          </ul>
+
+          <h3>2.5 常用调优/排查接口</h3>
+          <ul>
+            <li><code>gc.collect(0/1/2)</code>：手动触发指定代回收。</li>
+            <li><code>gc.get_threshold()</code> / <code>gc.set_threshold(...)</code>：查看/调整阈值。</li>
+            <li><code>gc.get_count()</code>：查看当前代计数。</li>
+            <li><code>gc.garbage</code>：查看难以自动回收的对象（排障时有用）。</li>
+          </ul>
+
+          <svg viewBox="0 0 860 760" width="100%" role="img" aria-label="Python 分代垃圾回收流程（自上而下）" style="margin-top:8px;border:1px solid var(--line-soft);border-radius:8px;background:rgba(102,132,188,0.05)">
+            <defs>
+              <marker id="gcArrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto">
+                <path d="M0,0 L0,6 L9,3 z" fill="#86aef2" />
+              </marker>
+            </defs>
+
+            <rect x="250" y="20" width="360" height="56" rx="10" fill="#1d2a42" stroke="#86aef2"/>
+            <text x="430" y="44" text-anchor="middle" fill="#d9e4fb" font-size="14" font-weight="600">新容器对象创建</text>
+            <text x="430" y="63" text-anchor="middle" fill="#b7c5df" font-size="11">进入第 0 代（Young）</text>
+
+            <line x1="430" y1="76" x2="430" y2="108" stroke="#86aef2" stroke-width="2" marker-end="url(#gcArrow)"/>
+
+            <rect x="230" y="108" width="400" height="72" rx="10" fill="#1f314f" stroke="#86aef2"/>
+            <text x="430" y="136" text-anchor="middle" fill="#d9e4fb" font-size="13" font-weight="600">检查第 0 代计数是否超过阈值</text>
+            <text x="430" y="156" text-anchor="middle" fill="#b7c5df" font-size="11">未超阈值：继续分配；超阈值：触发 gc.collect(0)</text>
+
+            <line x1="430" y1="180" x2="430" y2="212" stroke="#86aef2" stroke-width="2" marker-end="url(#gcArrow)"/>
+
+            <rect x="190" y="212" width="480" height="94" rx="10" fill="#243a5d" stroke="#86aef2"/>
+            <text x="430" y="238" text-anchor="middle" fill="#d9e4fb" font-size="13" font-weight="600">第 0 代回收：标记-清除（可达性分析）</text>
+            <text x="430" y="258" text-anchor="middle" fill="#c8d6f1" font-size="11">从根对象出发标记可达对象</text>
+            <text x="430" y="276" text-anchor="middle" fill="#c8d6f1" font-size="11">未标记对象（含孤立循环引用）被清除</text>
+
+            <line x1="430" y1="306" x2="430" y2="338" stroke="#86aef2" stroke-width="2" marker-end="url(#gcArrow)"/>
+
+            <rect x="230" y="338" width="400" height="72" rx="10" fill="#264267" stroke="#67c9ad"/>
+            <text x="430" y="366" text-anchor="middle" fill="#cbf6e7" font-size="13" font-weight="600">幸存对象晋升到第 1 代</text>
+            <text x="430" y="386" text-anchor="middle" fill="#bde9db" font-size="11">0 代回收执行到一定次数后，触发 1 代回收</text>
+
+            <line x1="430" y1="410" x2="430" y2="442" stroke="#67c9ad" stroke-width="2" marker-end="url(#gcArrow)"/>
+
+            <rect x="190" y="442" width="480" height="94" rx="10" fill="#28486f" stroke="#67c9ad"/>
+            <text x="430" y="468" text-anchor="middle" fill="#cbf6e7" font-size="13" font-weight="600">第 1 代回收（通常连带检查第 0 代）</text>
+            <text x="430" y="488" text-anchor="middle" fill="#bde9db" font-size="11">考虑跨代引用，保证可达性链条完整</text>
+            <text x="430" y="506" text-anchor="middle" fill="#bde9db" font-size="11">幸存对象继续晋升到第 2 代</text>
+
+            <line x1="430" y1="536" x2="430" y2="568" stroke="#67c9ad" stroke-width="2" marker-end="url(#gcArrow)"/>
+
+            <rect x="180" y="568" width="500" height="98" rx="10" fill="#2b4f79" stroke="#dfc978"/>
+            <text x="430" y="596" text-anchor="middle" fill="#fff1c7" font-size="13" font-weight="600">第 2 代回收（全代参与）</text>
+            <text x="430" y="616" text-anchor="middle" fill="#f5e5b2" font-size="11">触发频率最低、成本最高，但最全面</text>
+            <text x="430" y="634" text-anchor="middle" fill="#f5e5b2" font-size="11">存活对象继续留在老年代，等待后续周期检查</text>
+
+            <line x1="430" y1="666" x2="430" y2="718" stroke="#dfc978" stroke-width="2" marker-end="url(#gcArrow)"/>
+
+            <rect x="250" y="718" width="360" height="30" rx="8" fill="#3b2f1a" stroke="#dfc978"/>
+            <text x="430" y="738" text-anchor="middle" fill="#fff1c7" font-size="11">循环往复：分代回收持续运行，平衡吞吐与停顿</text>
+          </svg>
+
+          <h3>3. 内存分配器：Pymalloc</h3>
+          <p>先向操作系统批量拿内存，再在进程内部按小块快速分发给对象。</p>
+
+          <h3>3.1 为什么需要它</h3>
+          <ul>
+            <li><b>系统调用昂贵</b>：如果每个小对象都直接走 OS 的 <code>malloc</code>，会产生频繁用户态/内核态切换，成本很高。</li>
+            <li><b>小对象极多</b>：Python 运行时会创建大量微小对象（数字、短字符串、临时容器等）。</li>
+            <li><b>碎片问题</b>：大量零散小块会让通用分配器账本复杂，降低长期分配效率。</li>
+          </ul>
+
+          <h3>3.2 三层结构（大仓库 → 货架 → 零件盒）</h3>
+          <ul>
+            <li><b>Arena（256KB）</b>：Pymalloc 向 OS 申请的大块内存单位。</li>
+            <li><b>Pool（4KB）</b>：Arena 切分后的中层管理单位，通常对应一个内存页。</li>
+            <li><b>Block（固定尺寸）</b>：真正存放对象的小块，通常按 8 字节步长划分（8、16、24 ... 到 512）。</li>
+          </ul>
+
+          <h3>3.3 为什么 512B 是分界线</h3>
+          <ul>
+            <li><b>≤ 512B</b>：由 Pymalloc 处理，走内部快路径。</li>
+            <li><b>&gt; 512B</b>：回退到系统分配器（如 <code>malloc</code>）。</li>
+          </ul>
+
+          <div class="tip">一句话：Pymalloc 让 Python 不必为每个“小额内存请求”都惊动操作系统，从而显著提升小对象分配与回收效率。</div>
+
+          <h3>4. 对象池与驻留</h3>
+          <ul>
+            <li><b>小整数池</b>：常见小整数（如 <code>-5~256</code>）会被缓存复用。</li>
+            <li><b>字符串驻留</b>：部分短字符串/标识符可共享存储，减少重复分配。</li>
+          </ul>
+
+          <h3>5. 总结</h3>
+          <ul>
+            <li><b>引用计数</b>：主机制，处理绝大部分回收。</li>
+            <li><b>分代 GC</b>：专治循环引用。</li>
+            <li><b>Pymalloc</b>：优化小对象分配效率。</li>
+          </ul>
+        </div>
+      </details>
+
+      <details>
+        <summary>7. 浅拷贝 vs 深拷贝</summary>
+        <div class="content">
+          <p>浅拷贝与深拷贝的本质区别是：你复制的是“外层容器本身”，还是“连同内部子对象一起递归复制”。这在嵌套 <code>list</code>/<code>dict</code> 场景中非常关键。</p>
+
+          <h3>1. 概念核心区别</h3>
+          <h3>浅拷贝（Shallow Copy）</h3>
+          <ul>
+            <li><b>定义</b>：创建新对象，但内部子对象仍引用原对象中的同一批子对象。</li>
+            <li><b>影响</b>：若子对象可变，修改子对象会“联动”原件与副本。</li>
+            <li><b>常见方式</b>：<code>list()</code>、<code>dict.copy()</code>、切片 <code>[:]</code>、<code>copy.copy()</code>。</li>
+          </ul>
+
+          <h3>深拷贝（Deep Copy）</h3>
+          <ul>
+            <li><b>定义</b>：递归复制所有层级，生成完全独立的新对象树。</li>
+            <li><b>影响</b>：修改副本任意层级都不会影响原对象。</li>
+            <li><b>标准方式</b>：<code>copy.deepcopy()</code>。</li>
+          </ul>
+
+          <h3>3. 为什么不总用 <code>deepcopy</code>？</h3>
+          <ul>
+            <li><b>性能成本高</b>：递归遍历整个对象图，耗时与内存开销明显。</li>
+            <li><b>资源对象不适合</b>：文件句柄、socket、单例对象通常不应深拷贝。</li>
+          </ul>
+
+          <h3>4. 结论</h3>
+          <ul>
+            <li><b>直接赋值</b>（<code>a = b</code>）：不创建新对象，仅增加引用。</li>
+            <li><b>浅拷贝</b>：顶层独立，嵌套可变子对象共享。</li>
+            <li><b>深拷贝</b>：顶层与嵌套层都独立。</li>
+          </ul>
+
+          <div class="tip">避坑：对不可变对象（如 <code>int</code>/<code>str</code>/<code>tuple</code>），<code>copy</code> 与 <code>deepcopy</code> 常返回原对象本身，这是正常优化行为 <button class="chip-note-btn" type="button" aria-expanded="false" aria-controls="deepcopy-immutable-note" title="查看不可变对象 deepcopy 细节">i</button>。</div>
+
+          <div id="deepcopy-immutable-note" class="chip-note-panel" role="region" aria-label="不可变对象 deepcopy 细节说明">
+            <p><b>核心原因</b>：原件和副本都不可变，逻辑上等价，让它们指向同一块内存地址（返回原对象）是安全且高效的优化。</p>
+
+            <h4>元组的特殊情况</h4>
+            <p>元组本身不可变，但只有当其内部元素也都不可变时，<code>deepcopy</code> 才可能直接返回自身。</p>
+
+            <p><b>全不可变元组：</b></p>
+            <pre><code>import copy
+
+a = (1, 2)
+b = copy.deepcopy(a)
+print(a is b)  # True（返回原对象）</code></pre>
+
+            <p><b>包含可变元素的元组：</b></p>
+            <pre><code>import copy
+
+a = (1, [2, 3])
+b = copy.deepcopy(a)
+print(a is b)  # False（需要新副本）</code></pre>
+
+            <h4>延伸：字符串驻留</h4>
+            <p>Python 对部分不可变对象会做对象复用优化（如短字符串、小整数等）。因此即使不是通过 <code>copy</code> 得到，也可能指向同一对象：</p>
+            <pre><code>s1 = "hello"
+s2 = "hello"
+print(s1 is s2)  # 常见为 True</code></pre>
+            <p>这属于解释器层面的对象复用策略，目的是减少重复对象创建，提升性能并节省内存。</p>
+          </div>
+        </div>
+      </details>
+
+      <details>
+        <summary>8. 装饰器、生成器、上下文管理器</summary>
+        <div class="content">
+          <p>这三个概念是 Python 后端进阶高频：装饰器解决<b>能力复用</b>，生成器解决<b>大数据量内存压力</b>，上下文管理器解决<b>资源安全释放</b>。</p>
+
+          <h3>1. 装饰器（Decorator）</h3>
+          <ul>
+            <li><b>本质</b>：接收函数并返回新函数的高阶函数，<code>@decorator</code> 只是 <code>func = decorator(func)</code> 的语法糖。</li>
+            <li><b>实现关键</b>：使用 <code>functools.wraps</code> 保留原函数元信息（函数名、注释、签名）。</li>
+            <li><b>生产场景</b>：鉴权、日志埋点、缓存、限流、重试、权限校验。</li>
+          </ul>
+          <pre><code>from functools import wraps
+
+
+def log(prefix):
+    # 第1层：接收装饰器参数
+    def decorator(func):
+        # 第2层：接收被装饰函数
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            # 第3层：真正执行函数逻辑
+            print(f"{prefix} -> 函数开始执行: {func.__name__}")
+            result = func(*args, **kwargs)
+            print(f"{prefix} -> 函数执行结束: {func.__name__}")
+            return result
+        return wrapper
+    return decorator
+
+
+@log("DEBUG")
+def add(a, b):
+    """返回两数之和"""
+    return a + b</code></pre>
+          <div class="tip"><b>执行顺序</b>：<code>@log("DEBUG")</code> → <code>log("DEBUG")</code> 返回 <code>decorator</code> → <code>decorator(add)</code> 返回 <code>wrapper</code>。本质上就是 <code>add = log("DEBUG")(add)</code>。其中 <code>prefix</code> 是装饰器参数，<code>*args, **kwargs</code> 是被装饰函数参数。</div>
+          <div class="tip"><code>@wraps(func)</code> 的核心作用：把原函数元信息复制到 <code>wrapper</code> 上，避免装饰后“函数身份丢失”。其中：<br/>
+            - <code>__name__</code>：函数名<br/>
+            - <code>__doc__</code>：文档字符串<br/>
+            - <code>__module__</code>：函数所属模块（文件）名。<br/>
+            - <code>__annotations__</code>：类型注解信息（参数/返回值类型）<br/>
+          </div>
+          <div class="warn"><b><code>__wrapped__</code></b>：其本质是 <code>wrapper.__wrapped__ = func</code>，即“装饰后的函数对象上保留一个指向原函数的引用”。<br/>
+            最直观理解：<br/>
+            <code>@decorator</code> 修饰后本质是 <code>test = decorator(test)</code>，外部拿到的是包装函数。<br/>
+            但有了 <code>__wrapped__</code>，你仍可通过 <code>test.__wrapped__</code> 拿到被装饰前的原函数。<br/>
+          </div>
+
+          <h3>2. 生成器（Generator）与迭代器（Iterator）</h3>
+          <ul>
+            <li><b>关系</b>：生成器是特殊的迭代器（Generator ⊂ Iterator）。</li>
+            <li><b><code>yield</code> 的作用</b>：返回值给外部并暂停函数，保留现场，下一次 <code>next()</code> 从暂停处继续执行。</li>
+            <li><b>核心价值</b>：惰性求值，按需产出，显著节省内存。</li>
+            <li><b>生产场景</b>：大文件逐行处理、分页拉取、流式响应、消息消费。</li>
+          </ul>
+          <pre><code>def read_big_file(path):
+    with open(path, "r", encoding="utf-8") as f:
+        for line in f:
+            yield line.strip()</code></pre>
+
+          <h3>3. 上下文管理器（Context Manager）</h3>
+          <ul>
+            <li><b>with 协议</b>：进入时调用 <code>__enter__()</code>，退出时无论是否异常都会调用 <code>__exit__()</code>。</li>
+            <li><b>核心价值</b>：等价于更安全、可复用的 <code>try/finally</code>，确保资源闭环。</li>
+            <li><b>生产场景</b>：文件句柄、数据库连接/事务、锁、临时资源管理。</li>
+          </ul>
+          <pre><code>class MyResource:
+    def __enter__(self):
+        print("acquire resource")
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        print("release resource")
+        return False</code></pre>
+
+          <h3>4. 总结</h3>
+          <ul>
+            <li><b>装饰器</b>：不改原函数，统一增强能力。</li>
+            <li><b>生成器</b>：<code>yield</code> + 惰性迭代，处理大数据更稳。</li>
+            <li><b>上下文管理器</b>：<code>with</code> 保证资源正确释放。</li>
+          </ul>
+
+          <p>串联：接口鉴权可用装饰器；大报表导出可用生成器流式输出；DB 连接与事务可用上下文管理器兜底。</p>
+        </div>
+      </details>
+
+      <details>
+        <summary>9. 设计模式</summary>
+        <div class="content">
+          <h3>1. 装饰器模式</h3>
+          <ul>
+            <li><b>定义</b>：在不修改原函数代码的前提下，动态增强能力。</li>
+            <li><b>核心价值</b>：把日志、鉴权、耗时统计等横切逻辑与业务逻辑解耦</li>
+          </ul>
+
+          <h3>2. 工厂模式</h3>
+          <ul>
+            <li><b>定义</b>：把对象创建过程集中管理，调用方只关心“要什么对象”，不关心“怎么创建”。</li>
+            <li><b>Python 常见写法</b>：工厂函数 + <code>match-case</code>。</li>
+          </ul>
+          <pre><code>class JsonParser:
+    def parse(self, text):
+        return f"json parsed: {text}"
+
+
+class XmlParser:
+    def parse(self, text):
+        return f"xml parsed: {text}"
+
+
+def parser_factory(parser_type):
+    match parser_type:
+        case "json":
+            return JsonParser()
+        case "xml":
+            return XmlParser()
+        case _:
+            raise ValueError("unsupported parser type")
+
+
+parser = parser_factory("json")
+print(parser.parse('{"a":1}'))</code></pre>
+
+          <h3>3. 策略模式</h3>
+          <ul>
+            <li><b>定义</b>：将一组可互换算法封装起来，运行时自由切换。</li>
+            <li><b>Python 优势</b>：函数是一等公民，策略可直接传函数。</li>
+          </ul>
+          <pre><code>def normal_discount(price):
+    return price
+
+
+def vip_discount(price):
+    return price * 0.8
+
+
+def execute_checkout(price, strategy):
+    return strategy(price)
+
+
+print(execute_checkout(100, normal_discount))  # 100
+print(execute_checkout(100, vip_discount))     # 80.0</code></pre>
+
+          <h3>4. 单例模式</h3>
+          <ul>
+            <li><b>定义</b>：确保全局只有一个实例。</li>
+            <li><b>Pythonic 实现</b>：优先使用模块级单例（推荐）；也可用 <code>__new__</code> 控制实例化。</li>
+          </ul>
+          <pre><code># 推荐：模块级单例（最常用、最 Pythonic）
+# config.py
+class Config:
+    def __init__(self):
+        # 全局配置初始化一次
+        self.env = "prod"
+        self.timeout = 30
+
+
+# 模块级全局对象：天然单例
+config = Config()
+
+
+# main.py / other.py 中都这样用：
+# from config import config
+# print(config.env)
+# 多处 import 共享同一个 config 对象</code></pre>
+
+          <h3>总结</h3>
+          <table>
+            <thead>
+              <tr>
+                <th>模式</th>
+                <th>核心思想</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>装饰器模式</td>
+                <td>不改原函数，动态增强能力</td>
+              </tr>
+              <tr>
+                <td>工厂模式</td>
+                <td>统一对象创建，解耦创建与使用</td>
+              </tr>
+              <tr>
+                <td>策略模式</td>
+                <td>算法可替换，运行时自由切换</td>
+              </tr>
+              <tr>
+                <td>单例模式</td>
+                <td>保证全局唯一实例</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </details>
+
+      <details>
+        <summary>10. LEGB</summary>
+        <div class="content">
+
+          <h3>1. LEGB 规则是什么？</h3>
+
+          <h3>2.1 四层命名空间</h3>
+          <ul>
+            <li><b>L - Local</b>：当前函数调用帧里的局部变量表，查找最快。</li>
+            <li><b>E - Enclosing</b>：外层函数帧中被闭包捕获的变量。</li>
+            <li><b>G - Global</b>：当前模块对象的 <code>__dict__</code>。</li>
+            <li><b>B - Built-in</b>：内建命名空间（通常来自 <code>builtins</code> 模块），如 <code>len</code>、<code>str</code>。</li>
+          </ul>
+
+          <h3>2.2 解释器视角：</h3>
+          <ul>
+            <li><b>先近后远</b>：优先当前栈帧，避免跨作用域查找带来的额外开销。</li>
+            <li><b>闭包可用</b>：函数定义时记录自由变量，运行时可从 enclosing cells 回溯取值。</li>
+            <li><b>模块级兜底</b>：函数内部若没有，就查模块全局字典。</li>
+            <li><b>最后 builtins</b>：再找不到才去内建命名空间；仍找不到抛 <code>NameError</code>。</li>
+          </ul>
+
+          <h3>2.3 结合代码看命中路径</h3>
+          <pre><code>x = "G"            # Global
+len = "shadowed"   # 故意遮蔽 builtins.len（仅演示，不推荐）
+
+def outer():
+    x = "E"        # Enclosing
+
+    def inner(flag):
+        x = "L"    # Local
+        if flag == 1:
+            return x            # 命中 Local
+        if flag == 2:
+            return y            # Local 无 y -> Enclosing 命中 y
+        if flag == 3:
+            return z            # Local/Enclosing 无 z -> Global 命中 z
+        return abs(-3)          # 前三层无 abs -> Built-in 命中 abs
+
+    y = "E-y"
+    return inner
+
+z = "G-z"
+f = outer()
+print(f(1))  # L
+print(f(2))  # E-y
+print(f(3))  # G-z
+print(f(4))  # 3</code></pre>
+
+          <h3>2.4 作用域可视化（SVG）</h3>
+          <svg viewBox="0 0 940 430" width="100%" role="img" aria-label="LEGB 命名空间查找路径示意图" style="margin-top:8px;border:1px solid var(--line-soft);border-radius:8px;background:rgba(102,132,188,0.05)">
+            <defs>
+              <marker id="legbArrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto">
+                <path d="M0,0 L0,6 L9,3 z" fill="#8eb5ff" />
+              </marker>
+            </defs>
+
+            <text x="28" y="36" fill="#d9e4fb" font-size="14" font-weight="700">LEGB 名称解析顺序：L → E → G → B（命中即停止）</text>
+
+            <rect x="40" y="64" width="180" height="100" rx="10" fill="#20314f" stroke="#8eb5ff"/>
+            <text x="58" y="90" fill="#d9e4fb" font-size="13" font-weight="600">L: Local</text>
+            <text x="58" y="112" fill="#bfd0f3" font-size="11">inner() 当前帧</text>
+            <text x="58" y="132" fill="#bfd0f3" font-size="11">x = "L"</text>
+
+            <rect x="260" y="64" width="180" height="100" rx="10" fill="#23425b" stroke="#67c9ad"/>
+            <text x="278" y="90" fill="#cbf6e7" font-size="13" font-weight="600">E: Enclosing</text>
+            <text x="278" y="112" fill="#c5efdf" font-size="11">outer() 闭包环境</text>
+            <text x="278" y="132" fill="#c5efdf" font-size="11">y = "E-y"</text>
+
+            <rect x="480" y="64" width="180" height="100" rx="10" fill="#3f3550" stroke="#dfc978"/>
+            <text x="498" y="90" fill="#fff1c7" font-size="13" font-weight="600">G: Global</text>
+            <text x="498" y="112" fill="#f5e5b2" font-size="11">module.__dict__</text>
+            <text x="498" y="132" fill="#f5e5b2" font-size="11">z = "G-z"</text>
+
+            <rect x="700" y="64" width="200" height="100" rx="10" fill="#3a2b3f" stroke="#c292ff"/>
+            <text x="718" y="90" fill="#f0dfff" font-size="13" font-weight="600">B: Built-in</text>
+            <text x="718" y="112" fill="#e8d1ff" font-size="11">builtins.__dict__</text>
+            <text x="718" y="132" fill="#e8d1ff" font-size="11">abs, str, len ...</text>
+
+            <line x1="220" y1="114" x2="258" y2="114" stroke="#8eb5ff" stroke-width="2" marker-end="url(#legbArrow)"/>
+            <line x1="440" y1="114" x2="478" y2="114" stroke="#8eb5ff" stroke-width="2" marker-end="url(#legbArrow)"/>
+            <line x1="660" y1="114" x2="698" y2="114" stroke="#8eb5ff" stroke-width="2" marker-end="url(#legbArrow)"/>
+
+            <rect x="40" y="210" width="860" height="180" rx="12" fill="#161f31" stroke="#516a99"/>
+            <text x="60" y="238" fill="#d9e4fb" font-size="13" font-weight="600">inner(flag) 查找演示</text>
+            <text x="60" y="264" fill="#b9c8e5" font-size="11">flag=1: return x  -> L 命中</text>
+            <text x="60" y="286" fill="#b9c8e5" font-size="11">flag=2: return y  -> L miss, E 命中</text>
+            <text x="60" y="308" fill="#b9c8e5" font-size="11">flag=3: return z  -> L/E miss, G 命中</text>
+            <text x="60" y="330" fill="#b9c8e5" font-size="11">flag=4: return abs(-3) -> L/E/G miss, B 命中</text>
+            <text x="60" y="358" fill="#8fa7d8" font-size="11">如果四层都 miss：抛 NameError</text>
+          </svg>
+
+          <h3>2.5 常见易错点（面试加分）</h3>
+          <ul>
+            <li><b>赋值即局部</b>：在函数体内对变量赋值，会让该名字默认变为 Local；若读取发生在赋值前，常见 <code>UnboundLocalError</code>。</li>
+            <li><b><code>global</code></b>：显式声明后，函数内赋值会写入模块全局命名空间。</li>
+            <li><b><code>nonlocal</code></b>：显式声明后，函数内赋值会写入最近一层 Enclosing 作用域。</li>
+          </ul>
+
+          <div class="tip">面试：<b>LEGB 本质是“运行时按作用域链解析名字”的机制；闭包能“记住外层变量”，是因为解释器把外层自由变量保存在 cell 中并在 E 层回溯命中。</b></div>
+
+        </div>
+      </details>
+
+      <details>
+        <summary>11. MRO</summary>
+        <div class="content">
+          <p><b>MRO</b> 是 Python 在多继承下的方法查找顺序 <button class="chip-note-btn" type="button" aria-expanded="false" aria-controls="multi-inheritance-note" title="查看什么是多继承">i</button>。Python 3 采用 <b>C3 线性化算法</b>，用于稳定解决菱形继承 <button class="chip-note-btn" type="button" aria-expanded="false" aria-controls="diamond-problem-note" title="查看什么是菱形问题">i</button>。</p>
+
+          <div id="multi-inheritance-note" class="chip-note-panel" role="region" aria-label="多继承说明">
+            <h4>什么是多继承？</h4>
+            <p><b>多继承</b>是指：一个子类可以同时继承多个父类，从多个父类中复用属性和方法。</p>
+            <ul>
+              <li><b>单继承</b>：<code>class B(A)</code>，只有一个父类。</li>
+              <li><b>多继承</b>：<code>class D(B, C)</code>，同时有多个父类。</li>
+              <li><b>优势</b>：可组合不同父类能力，减少重复代码。</li>
+              <li><b>挑战</b>：若多个父类有同名方法，会出现“到底调用谁”的歧义。</li>
+              <li><b>Python 解决方式</b>：通过 MRO（C3 线性化）给出唯一、可预测的查找顺序。</li>
+            </ul>
+          </div>
+
+          <div id="diamond-problem-note" class="chip-note-panel" role="region" aria-label="菱形继承问题说明">
+            <h4>什么是菱形问题？</h4>
+            <p><b>菱形问题</b>是多继承中的经典冲突：子类通过两条路径继承到同一个祖先类，形成“菱形结构”。</p>
+            <ul>
+              <li>典型结构：<code>A</code> 在最上层，<code>B(A)</code> 与 <code>C(A)</code> 在中间，<code>D(B, C)</code> 在底部。</li>
+              <li><b>冲突点 1</b>：若 <code>B</code> 和 <code>C</code> 都重写了同名方法，<code>D</code> 调用时可能产生歧义。</li>
+              <li><b>冲突点 2</b>：若调用链设计不当，祖先 <code>A</code> 的方法可能被重复调用或漏调。</li>
+              <li><b>Python 的解法</b>：使用 C3 线性化生成唯一 MRO，并配合协作式 <code>super()</code>，保证调用顺序一致且可预测。</li>
+            </ul>
+          </div>
+
+          <h3>1. 为什么“到底调用哪个父类”会不确定？</h3>
+          <ul>
+            <li>在多继承里，子类可能同时从多个父类得到同名方法。</li>
+            <li>若没有统一规则，解释器可能出现多条可行路径，行为会变得不可预测。</li>
+            <li><b>MRO 的作用</b>：为每个类预先计算一条唯一线性顺序（<code>__mro__</code>），方法查找严格按这条顺序进行，命中即停止。</li>
+          </ul>
+          <pre><code>class A: ...
+class B(A): ...
+class C(A): ...
+class D(B, C): ...
+
+print(D.__mro__)
+# (&lt;class '__main__.D'&gt;, &lt;class '__main__.B'&gt;, &lt;class '__main__.C'&gt;, &lt;class '__main__.A'&gt;, &lt;class 'object'&gt;)</code></pre>
+          <p>这意味着：<code>D</code> 查找方法时顺序固定为 <code>D → B → C → A → object</code>，不会再“摇摆”。</p>
+
+          <h3>2. C3 线性化如何生成这个唯一顺序</h3>
+          <p>C3 的核心是“合并多个有序列表”，并在每一步选择一个合法头元素，直到列表耗尽：</p>
+          <ul>
+            <li><b>输入</b>：父类各自的 MRO + 父类声明列表（如 <code>[B, C]</code>）。</li>
+            <li><b>选择规则</b>：选某列表头元素 <code>X</code> 时，<code>X</code> 不能出现在其他列表的尾部（tail）里。</li>
+            <li><b>输出保证</b>：
+              <ul>
+                <li><b>局部优先级顺序</b>：尽量保持 <code>class D(B, C)</code> 中 <code>B</code> 在 <code>C</code> 前。</li>
+                <li><b>单调性</b>：父类已有顺序在子类中不会被打乱。</li>
+                <li><b>无歧义</b>：得到唯一可预测线性序列；若无法满足则类创建直接报错。</li>
+              </ul>
+            </li>
+          </ul>
+
+          <h3>3. 菱形继承下的 C3 推导</h3>
+          <pre><code>class A:
+    def f(self):
+        print("A")
+
+class B(A):
+    def f(self):
+        print("B")
+        super().f()
+
+class C(A):
+    def f(self):
+        print("C")
+        super().f()
+
+class D(B, C):
+    def f(self):
+        print("D")
+        super().f()
+
+print(D.__mro__)  # D, B, C, A, object
+D().f()           # 输出: D B C A</code></pre>
+
+          <p><b>关键机制：</b><code>super()</code> 不是“跳到某个固定父类”，而是“沿当前实例所属类的 MRO，调用下一个类的方法”。因此：</p>
+
+          <h3>4. 可视化：</h3>
+          <svg viewBox="0 0 920 420" width="100%" role="img" aria-label="C3 线性化与菱形继承方法解析示意图" style="margin-top:8px;border:1px solid var(--line-soft);border-radius:8px;background:rgba(102,132,188,0.05)">
+            <defs>
+              <marker id="mroArrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto">
+                <path d="M0,0 L0,6 L9,3 z" fill="#8eb5ff" />
+              </marker>
+            </defs>
+
+            <text x="24" y="34" fill="#d9e4fb" font-size="14" font-weight="700">菱形继承结构（左）与最终 MRO 线性顺序（右）</text>
+
+            <rect x="120" y="60" width="120" height="52" rx="8" fill="#2a3250" stroke="#8eb5ff"/>
+            <text x="180" y="90" text-anchor="middle" fill="#d9e4fb" font-size="14" font-weight="600">A</text>
+
+            <rect x="40" y="150" width="120" height="52" rx="8" fill="#2f405f" stroke="#67c9ad"/>
+            <text x="100" y="180" text-anchor="middle" fill="#cbf6e7" font-size="14" font-weight="600">B(A)</text>
+
+            <rect x="200" y="150" width="120" height="52" rx="8" fill="#2f405f" stroke="#67c9ad"/>
+            <text x="260" y="180" text-anchor="middle" fill="#cbf6e7" font-size="14" font-weight="600">C(A)</text>
+
+            <rect x="120" y="250" width="120" height="52" rx="8" fill="#4a3a55" stroke="#dfc978"/>
+            <text x="180" y="280" text-anchor="middle" fill="#fff1c7" font-size="14" font-weight="600">D(B, C)</text>
+
+            <line x1="100" y1="150" x2="170" y2="112" stroke="#8eb5ff" stroke-width="2"/>
+            <line x1="260" y1="150" x2="190" y2="112" stroke="#8eb5ff" stroke-width="2"/>
+            <line x1="150" y1="250" x2="105" y2="202" stroke="#8eb5ff" stroke-width="2"/>
+            <line x1="210" y1="250" x2="255" y2="202" stroke="#8eb5ff" stroke-width="2"/>
+
+            <text x="420" y="84" fill="#d9e4fb" font-size="13" font-weight="600">C3 结果（D 的 MRO）</text>
+            <rect x="420" y="100" width="450" height="70" rx="10" fill="#1f2a42" stroke="#8eb5ff"/>
+            <text x="445" y="126" fill="#bcd0f4" font-size="12">D  →  B  →  C  →  A  →  object</text>
+            <text x="445" y="148" fill="#8fa7d8" font-size="11">方法查找与 super() 链路都沿此顺序推进</text>
+
+            <text x="420" y="214" fill="#d9e4fb" font-size="13" font-weight="600">调用链（D().f）</text>
+            <rect x="420" y="228" width="450" height="138" rx="10" fill="#18243a" stroke="#67c9ad"/>
+            <text x="445" y="256" fill="#c5efdf" font-size="12">1) D.f 执行后 super() → B.f</text>
+            <text x="445" y="280" fill="#c5efdf" font-size="12">2) B.f 中 super() → C.f</text>
+            <text x="445" y="304" fill="#c5efdf" font-size="12">3) C.f 中 super() → A.f</text>
+            <text x="445" y="328" fill="#c5efdf" font-size="12">4) A 只执行一次，避免重复调用</text>
+            <line x1="680" y1="196" x2="680" y2="224" stroke="#8eb5ff" stroke-width="2" marker-end="url(#mroArrow)"/>
+          </svg>
+
+          <div class="warn">工程建议：在多继承体系里始终使用协作式 <code>super()</code>，并保持每层方法签名兼容；这样 MRO 才能形成稳定、可组合的调用链。</div>
+        </div>
+      </details>
+
+      <details>
+        <summary>12. 描述符</summary>
+        <div class="content">
+          <p><b>一句话定义：</b>Python 描述符是“实现了描述符协议方法的对象”。当它被放在类属性位置时，能接管该属性的读取/写入/删除过程。</p>
+
+          <h3>1. 描述符协议到底是什么</h3>
+          <ul>
+            <li><code>__get__(self, instance, owner)</code>：读取属性时触发。</li>
+            <li><code>__set__(self, instance, value)</code>：写入属性时触发。</li>
+            <li><code>__delete__(self, instance)</code>：删除属性时触发。</li>
+          </ul>
+          <p>只要实现上面任意一个方法，就是描述符对象；但它通常要作为“类属性”出现，协议才会在属性访问时被自动触发。</p>
+
+          <h3>2. <code>__get__(self, instance, owner)</code> 参数详解（重点）</h3>
+          <p>最好记忆法：<b>owner 看“定义归属”，instance 看“谁在调用”</b>。</p>
+          <ul>
+            <li><b><code>owner</code></b>：描述符所属类（定义它的类）。</li>
+            <li><b><code>instance</code></b>：发起本次属性访问的实例对象；如果通过类访问，则为 <code>None</code>。</li>
+          </ul>
+
+          <pre><code>class Descriptor:
+    def __get__(self, instance, owner):
+        print(f"instance: {instance}")
+        print(f"owner: {owner}")
+        return "value"
+
+class Person:
+    name = Descriptor()  # 描述符作为类属性
+
+p = Person()
+print(p.name)        # __get__(instance=p, owner=Person)
+print(Person.name)   # __get__(instance=None, owner=Person)</code></pre>
+
+          <h3>3. 两种调用场景</h3>
+          <h3>A. 通过实例访问：<code>p.name</code></h3>
+          <ul>
+            <li><code>instance = p</code></li>
+            <li><code>owner = Person</code></li>
+            <li>最常用：用于读写这个具体对象的数据（常结合 <code>instance.__dict__</code>）。</li>
+          </ul>
+
+          <h3>B. 通过类访问：<code>Person.name</code></h3>
+          <ul>
+            <li><code>instance = None</code></li>
+            <li><code>owner = Person</code></li>
+            <li>常见写法是返回描述符对象自身，方便类级访问和调试。</li>
+          </ul>
+
+          <pre><code>class Field:
+    def __init__(self, key):
+        self.key = key
+
+    def __get__(self, instance, owner):
+        if instance is None:
+            return self
+        return instance.__dict__.get(self.key)
+
+    def __set__(self, instance, value):
+        instance.__dict__[self.key] = value
+
+class User:
+    age = Field("age")
+
+u = User()
+u.age = 18
+print(u.age)      # 18
+print(User.age)   # &lt;__main__.Field object at ...&gt;</code></pre>
+
+          <h3>5. 数据描述符 vs 非数据描述符（优先级）</h3>
+          <p><b><code>__dict__</code> 是什么：</b>实例对象自己的属性，默认都存在 <code>实例.__dict__</code> 里。</p>
+          <pre><code>class User:
+    pass
+
+u = User()
+u.name = "Tom"
+print(u.__dict__)  # {'name': 'Tom'}</code></pre>
+
+          <p>当你访问 <code>u.x</code> 时，解释器要决定“先看描述符，还是先看 <code>u.__dict__</code>”，这就涉及优先级：</p>
+          <ul>
+            <li><b>数据描述符</b>（实现了 <code>__set__</code> 或 <code>__delete__</code>：<b>优先级高于</b>实例 <code>__dict__</code>。</li>
+            <li><b>非数据描述符</b>（只有 <code>__get__</code>）：<b>优先级低于</b>实例 <code>__dict__</code>。</li>
+          </ul>
+
+          <h3>5.2 最小示例</h3>
+          <pre><code>class NonDataDesc:
+    def __get__(self, instance, owner):
+        return "from non-data descriptor"
+
+class A:
+    x = NonDataDesc()
+
+a = A()
+a.__dict__["x"] = "from instance dict"
+print(a.x)  # from instance dict（实例 __dict__ 覆盖了非数据描述符）</code></pre>
+
+        </div>
+      </details>
+
+      <details>
+        <summary>13. 元类</summary>
+        <div class="content">
+          <p><b>元类（Metaclass）就是“创建类的类”。</b>如果把“对象”比作车，“类”就是车的图纸；那“元类”就是生产图纸的工厂设备。</p>
+
+          <h3>1. 核心逻辑：类也是对象</h3>
+          <ul>
+            <li>在 Python 里，一切皆对象，类（class）本身也是对象。</li>
+            <li>既然类是对象，就一定是由某个“创建者”创建出来的。</li>
+            <li>默认这个创建者就是 <code>type</code>，也就是 Python 默认元类。</li>
+          </ul>
+          <pre><code>class MyClass:
+    pass
+
+print(type(MyClass))  # &lt;class 'type'&gt;</code></pre>
+
+          <h3>2. 为什么要用元类</h3>
+          <p>元类最大的价值是：<b>拦截类的创建过程</b>。在类对象正式生成前，可以做校验、改写和自动注入。</p>
+          <ul>
+            <li>校验规范：如强制类名、方法名、字段格式。</li>
+            <li>自动注入：给类加默认属性、注册信息、辅助方法。</li>
+            <li>统一管控：框架层对大量子类进行一致化约束。</li>
+          </ul>
+
+          <h3>3. 示例：强制类名必须大写开头</h3>
+          <pre><code># 1) 定义元类（继承 type）
+class UpperCaseMeta(type):
+    # __new__ 在“类对象创建之前”执行
+    def __new__(cls, name, bases, attrs):
+        # name: 类名
+        # bases: 父类元组
+        # attrs: 类体中的属性字典
+        if not name[0].isupper():
+            raise TypeError(f"类名 '{name}' 必须以大写字母开头！")
+
+        print(f"正在创建合规的类: {name}")
+        return super().__new__(cls, name, bases, attrs)
+
+
+# 2) 使用元类创建类
+class User(metaclass=UpperCaseMeta):
+    pass  # ✅ 正常
+
+
+# 3) 尝试创建违规类
+try:
+    class student(metaclass=UpperCaseMeta):
+        pass
+except TypeError as e:
+    print(f"拦截成功: {e}")  # ❌ 报错</code></pre>
+
+          <div class="warn">元类是深奥的魔法，99.9% 的用户都不需要它。如果你在考虑是否需要元类，那么你通常不需要。</div>
+        </div>
+      </details>
+
+      <details>
+        <summary>14. <code>__slots__</code></summary>
+        <div class="content">
+          <ul>
+            <li>限制实例可用属性：只能使用 __slots__ 里声明的字段。</li>
+            <li>节省内存：不再默认创建实例 __dict__，适合大量同结构对象。</li>
+            <li>减少属性拼写错误：给未声明属性赋值会直接报 AttributeError。</li>
+          </ul>
+        </div>
+      </details>
+
+      <details>
+        <summary>15. Python 的 <code>pickle</code> 和 <code>json</code></summary>
+        <div class="content">
+          <p>在 Python 开发中，<code>pickle</code> 和 <code>json</code> 都能做序列化（把内存对象转成可存储/传输的格式），但定位完全不同：<b><code>json</code> 是跨语言“通用语言”，<code>pickle</code> 是 Python 内部“私有格式”。</b></p>
+
+          <h3>1. 核心区别</h3>
+          <ul>
+            <li><b>可读性</b>：<code>json</code> 是文本，可读可改；<code>pickle</code> 是二进制，人类不可读。</li>
+            <li><b>跨语言</b>：<code>json</code> 几乎所有语言都支持；<code>pickle</code> 基本只适合 Python。</li>
+            <li><b>类型支持</b>：<code>json</code> 主要支持基础类型（<code>str/int/float/bool/list/dict/None</code>）；<code>pickle</code> 可处理大量 Python 对象（含自定义类实例等）。</li>
+            <li><b>安全性</b>：<code>json</code> 相对安全；<code>pickle</code> 反序列化可能执行恶意构造逻辑，<b>不能加载不可信来源数据</b>。</li>
+            <li><b>性能</b>：复杂 Python 对象场景下，<code>pickle</code> 往往更省心更快；但跨系统协作时 <code>json</code> 更稳妥。</li>
+          </ul>
+
+          <h3>2. 该怎么选</h3>
+          <ul>
+            <li><b>优先 JSON</b>：Web API、前后端通信、配置文件、跨语言系统集成。</li>
+            <li><b>考虑 Pickle</b>：纯 Python 可信边界内，且需要保存复杂对象状态（本地缓存、临时快照、多进程对象传递）。</li>
+          </ul>
+          <div class="tip">总结建议：默认先选 <code>json</code>。只有在“纯 Python + 可信数据源 + 复杂对象状态保存”这类场景，再考虑 <code>pickle</code>。</div>
+        </div>
+      </details>
+
+      <details>
+        <summary>16. async/await + asyncio并发</summary>
+        <div class="content">
+          <pre><code>import asyncio
+import random
+from dataclasses import dataclass
+
+
+# ========== Step 1: 定义任务数据结构（模拟“入队”的任务项） ==========
+@dataclass(slots=True)
+class Job:
+    job_id: int
+    user_id: int
+
+
+# ========== Step 2: 模拟两个异步 I/O 服务 ==========
+async def fetch_user(user_id: int) -> dict:
+    """模拟用户服务：异步网络请求"""
+    # await 时当前协程挂起，事件循环去调度其他协程
+    await asyncio.sleep(random.uniform(0.2, 0.6))
+    return {"user_id": user_id, "name": f"user-{user_id}"}
+
+
+async def fetch_orders(user_id: int) -> list[dict]:
+    """模拟订单服务：异步网络请求"""
+    await asyncio.sleep(random.uniform(0.2, 0.6))
+    return [{"order_id": 101, "amount": 99}, {"order_id": 102, "amount": 199}]
+
+
+# ========== Step 3: 单个任务的全链路处理（创建子任务 + 并发等待） ==========
+async def process_one_job(job: Job) -> dict:
+    # 3.1 创建并发子任务：用户请求和订单请求同时发起
+    user_task = asyncio.create_task(fetch_user(job.user_id), name=f"user-{job.job_id}")
+    orders_task = asyncio.create_task(fetch_orders(job.user_id), name=f"orders-{job.job_id}")
+
+    # 3.2 并发等待：用 gather 一次性等待多个任务
+    user, orders = await asyncio.gather(user_task, orders_task)
+
+    # 3.3 聚合结果
+    total_amount = sum(o["amount"] for o in orders)
+    return {
+        "job_id": job.job_id,
+        "user": user,
+        "orders": orders,
+        "total_amount": total_amount,
+    }
+
+
+# ========== Step 4: 队列生产者（入队） ==========
+async def producer(queue: asyncio.Queue[Job], total: int) -> None:
+    for i in range(1, total + 1):
+        # put 是异步入队：队列满时会自动等待，不阻塞线程
+        await queue.put(Job(job_id=i, user_id=i))
+
+
+# ========== Step 5: 队列消费者（出队 + 执行 + 结果回收） ==========
+async def consumer(
+    queue: asyncio.Queue[Job],
+    results: list[dict],
+    stop_event: asyncio.Event,
+) -> None:
+    while True:
+        # 5.1 退出条件：收到停止信号且队列已空
+        if stop_event.is_set() and queue.empty():
+            return
+
+        try:
+            # 5.2 从队列取任务
+            # asyncio.wait_for 用来给一个可等待对象加“超时限制”
+            # queue.get：从队列里取出一个元素（通常是队头）
+            job = await asyncio.wait_for(queue.get(), timeout=0.2)
+        except asyncio.TimeoutError:
+            continue
+
+        try:
+            # 5.3 执行单任务全链路
+            result = await process_one_job(job)
+            results.append(result)
+        finally:
+            # 5.4 标记该任务已处理完成
+            queue.task_done()
+
+
+# ========== Step 6: 主流程（创建任务、并发执行、等待结果） ==========
+async def main() -> None:
+    # maxsize=100 表示队列最多缓存 100 个任务，超过后 put 会等待，避免无限堆积。
+    queue: asyncio.Queue[Job] = asyncio.Queue(maxsize=100)
+
+    # 结果容器：所有消费者处理完的结果统一追加到这里，主流程最后集中输出。
+    results: list[dict] = []
+
+    # 停止信号：主流程在 queue.join() 后 set，通知消费者“可优雅退出”。
+    stop_event = asyncio.Event()
+
+    # 总任务数：本次要处理多少个 Job
+    total_jobs = 5
+
+    # 消费者并发数：同时启动 3 个消费者协程并行处理队列任务。
+    consumer_count = 3
+
+    # 6.1 使用 TaskGroup 统一管理并发任务生命周期
+    async with asyncio.TaskGroup() as tg:
+        # 6.2 创建生产者任务（负责入队）
+        tg.create_task(producer(queue, total_jobs), name="producer")
+
+        # 6.3 创建多个消费者任务（并行处理队列）
+        for idx in range(consumer_count):
+            tg.create_task(consumer(queue, results, stop_event), name=f"consumer-{idx+1}")
+
+        # 6.4 等待“所有入队任务”被处理完成
+        # queue.put(item)：每放入一个任务，内部“未完成任务数” (+1)
+        # queue.task_done()：每处理一个任务，内部“未完成任务数” (-1)
+        # queue.join()：阻塞等待，直到未完成任务数变成 0 才返回
+        # queue.empty()：表示“此刻队列里暂时没有元素”，但不代表消费者已经处理完（可能刚拿走还在处理）
+        await queue.join()
+
+        # 6.5 通知消费者：可以优雅退出了
+        stop_event.set()
+
+    # 6.6 TaskGroup 退出后，说明所有任务都已结束
+    print("全部任务处理完成，结果如下：")
+    for item in results:
+        print(item)
+
+
+if __name__ == "__main__":
+    # Step 7: 创建事件循环并运行主协程
+    asyncio.run(main())</code></pre>
+
+          <svg viewBox="0 0 1280 940" width="100%" role="img" aria-label="async/await + asyncio 全链路并发流程图（关键语法）" style="margin-top:10px;border:1px solid var(--line-soft);border-radius:10px;background:rgba(102,132,188,0.05)">
+            <defs>
+              <marker id="flowArrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto">
+                <path d="M0,0 L0,6 L9,3 z" fill="#8eb5ff" />
+              </marker>
+              <marker id="branchArrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto">
+                <path d="M0,0 L0,6 L9,3 z" fill="#67c9ad" />
+              </marker>
+              <marker id="warnArrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto">
+                <path d="M0,0 L0,6 L9,3 z" fill="#dfc978" />
+              </marker>
+            </defs>
+
+            <text x="24" y="34" fill="#d9e4fb" font-size="16" font-weight="700">async/await + asyncio 全链路并发流程（单进程/单线程，多协程并发）</text>
+            <text x="24" y="56" fill="#9fb3db" font-size="12">关键语法全景：asyncio.run / TaskGroup / create_task / Queue / wait_for / gather / join / task_done / Event</text>
+
+            <rect x="32" y="84" width="1216" height="76" rx="12" fill="#1e2b45" stroke="#8eb5ff"/>
+            <text x="52" y="114" fill="#d9e4fb" font-size="13" font-weight="600">入口：asyncio.run(main())</text>
+            <text x="52" y="136" fill="#bcd0f4" font-size="12">创建并运行 EventLoop，驱动 main()；main 结束后统一清理剩余任务并关闭循环</text>
+
+            <line x1="640" y1="160" x2="640" y2="198" stroke="#8eb5ff" stroke-width="2" marker-end="url(#flowArrow)"/>
+
+            <rect x="300" y="198" width="680" height="86" rx="12" fill="#213553" stroke="#8eb5ff"/>
+            <text x="324" y="230" fill="#d9e4fb" font-size="13" font-weight="600">main() 初始化关键对象</text>
+            <text x="324" y="252" fill="#c5d6f4" font-size="12">queue = asyncio.Queue(maxsize=100)；results = []；stop_event = asyncio.Event()</text>
+            <text x="324" y="272" fill="#8fa7d8" font-size="11">maxsize 提供背压；Event 用于消费者优雅退出</text>
+
+            <line x1="640" y1="284" x2="640" y2="322" stroke="#8eb5ff" stroke-width="2" marker-end="url(#flowArrow)"/>
+
+            <rect x="250" y="322" width="780" height="90" rx="12" fill="#253d5f" stroke="#67c9ad"/>
+            <text x="276" y="354" fill="#cbf6e7" font-size="13" font-weight="600">并发编排：async with asyncio.TaskGroup() as tg</text>
+            <text x="276" y="376" fill="#c9efdf" font-size="12">tg.create_task(producer(...), name="producer")</text>
+            <text x="276" y="396" fill="#c9efdf" font-size="12">for idx in range(consumer_count): tg.create_task(consumer(...), name=f"consumer-{idx+1}")</text>
+
+            <line x1="640" y1="412" x2="640" y2="440" stroke="#67c9ad" stroke-width="2" marker-end="url(#branchArrow)"/>
+            <line x1="640" y1="440" x2="280" y2="440" stroke="#67c9ad" stroke-width="2" marker-end="url(#branchArrow)"/>
+            <line x1="640" y1="440" x2="1000" y2="440" stroke="#67c9ad" stroke-width="2" marker-end="url(#branchArrow)"/>
+
+            <rect x="40" y="454" width="480" height="210" rx="12" fill="#1f334f" stroke="#8eb5ff"/>
+            <text x="62" y="484" fill="#d9e4fb" font-size="13" font-weight="600">Producer（入队）</text>
+            <text x="62" y="506" fill="#bfd0f3" font-size="12">for i in range(1, total + 1):</text>
+            <text x="62" y="526" fill="#bfd0f3" font-size="12">  await queue.put(Job(job_id=i, user_id=i))</text>
+            <text x="62" y="548" fill="#8fa7d8" font-size="11">队列满时 put 会 await 挂起，事件循环转去调度其他协程（背压生效）</text>
+
+            <rect x="560" y="454" width="680" height="210" rx="12" fill="#244766" stroke="#67c9ad"/>
+            <text x="584" y="484" fill="#cbf6e7" font-size="13" font-weight="600">Consumer（出队 + 处理 + 回收）</text>
+            <text x="584" y="506" fill="#c5efdf" font-size="12">while True:</text>
+            <text x="584" y="526" fill="#c5efdf" font-size="12">  if stop_event.is_set() and queue.empty(): return</text>
+            <text x="584" y="546" fill="#c5efdf" font-size="12">  try: job = await asyncio.wait_for(queue.get(), timeout=0.2)</text>
+            <text x="584" y="566" fill="#c5efdf" font-size="12">  except asyncio.TimeoutError: continue</text>
+            <text x="584" y="586" fill="#c5efdf" font-size="12">  try: result = await process_one_job(job); results.append(result)</text>
+            <text x="584" y="606" fill="#c5efdf" font-size="12">  finally: queue.task_done()</text>
+            <text x="584" y="628" fill="#9edec8" font-size="11">task_done 与 join 成对出现；缺失会导致 join 永久等待</text>
+
+            <line x1="900" y1="664" x2="900" y2="696" stroke="#67c9ad" stroke-width="2" marker-end="url(#branchArrow)"/>
+
+            <rect x="580" y="696" width="640" height="118" rx="12" fill="#2a4469" stroke="#8eb5ff"/>
+            <text x="604" y="728" fill="#d9e4fb" font-size="13" font-weight="600">process_one_job(job)：单任务内并发子请求</text>
+            <text x="604" y="750" fill="#c5d6f4" font-size="12">user_task = asyncio.create_task(fetch_user(job.user_id), name=f"user-{job.job_id}")</text>
+            <text x="604" y="770" fill="#c5d6f4" font-size="12">orders_task = asyncio.create_task(fetch_orders(job.user_id), name=f"orders-{job.job_id}")</text>
+            <text x="604" y="790" fill="#c5d6f4" font-size="12">user, orders = await asyncio.gather(user_task, orders_task)</text>
+
+            <rect x="40" y="696" width="500" height="118" rx="12" fill="#3a3149" stroke="#dfc978"/>
+            <text x="62" y="728" fill="#fff1c7" font-size="13" font-weight="600">I/O 协程（模拟）</text>
+            <text x="62" y="750" fill="#f5e5b2" font-size="12">async def fetch_user(...): await asyncio.sleep(...)</text>
+            <text x="62" y="770" fill="#f5e5b2" font-size="12">async def fetch_orders(...): await asyncio.sleep(...)</text>
+            <text x="62" y="790" fill="#f5e5b2" font-size="11">遇到 await 会让出执行权，实现协程级并发（非多线程并行）</text>
+
+            <line x1="280" y1="664" x2="280" y2="680" stroke="#dfc978" stroke-width="2" marker-end="url(#warnArrow)"/>
+            <line x1="640" y1="412" x2="640" y2="846" stroke="#8eb5ff" stroke-width="2" marker-end="url(#flowArrow)"/>
+
+            <rect x="300" y="834" width="680" height="86" rx="12" fill="#2e3a58" stroke="#8eb5ff"/>
+            <text x="324" y="864" fill="#d9e4fb" font-size="13" font-weight="600">主流程收敛与退出</text>
+            <text x="324" y="886" fill="#bfd0f3" font-size="12">await queue.join()  # 等未完成任务计数归零</text>
+            <text x="324" y="906" fill="#bfd0f3" font-size="12">stop_event.set() → 消费者命中 is_set()+queue.empty() 后退出；TaskGroup 统一等待所有任务结束</text>
+          </svg>
+
+          <table>
+            <thead>
+              <tr>
+                <th>步骤</th>
+                <th>内部动作</th>
+                <th>目的</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>1. 检查</td>
+                <td>确认当前线程没有正在运行的循环</td>
+                <td>防止循环嵌套冲突</td>
+              </tr>
+              <tr>
+                <td>2. 初始化</td>
+                <td>实例化一个新的 EventLoop</td>
+                <td>准备任务调度器</td>
+              </tr>
+              <tr>
+                <td>3. 注入</td>
+                <td>将 <code>main()</code> 包装成一个 Task</td>
+                <td>让协程变为可执行单位</td>
+              </tr>
+              <tr>
+                <td>4. 循环</td>
+                <td>启动循环直到 <code>main()</code> 返回结果</td>
+                <td>维持程序运行</td>
+              </tr>
+              <tr>
+                <td>5. 终结</td>
+                <td>取消所有存活任务并关闭循环</td>
+                <td>优雅地释放内存</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </details>
+
+      <details>
+        <summary>17. Python 类型注解</summary>
+        <div class="content">
+          <h3>Q1：Python 类型注解是什么？</h3>
+          <ul>
+            <li><b>定义</b>：类型注解（Type Hints）是 Python 的可选语法，用于声明变量、参数、返回值的类型。</li>
+            <li><b>核心价值</b>：提升编辑器补全、静态检查、重构安全性与团队协作可读性。</li>
+            <li><b>关键点</b>：注解主要服务于工具链，不会像静态语言那样默认阻止运行时执行。</li>
+          </ul>
+          <h3>Q2：类型注解会改变函数运行逻辑吗？</h3>
+          <ul>
+            <li><b>通常不会</b>：仅添加注解，不会自动做运行时强校验。</li>
+            <li><b>但会增强开发阶段质量</b>：编辑器能更早暴露明显问题（例如把 <code>int</code> 拼接到字符串）。</li>
+          </ul>
+          <pre><code>def get_name_with_age(name: str, age: int) -> str:
+    # 推荐显式转换，避免隐式类型错误
+    return f"{name} is this old: {age}"</code></pre>
+
+          <h3>Q3：函数参数和返回值如何声明基础类型？</h3>
+          <pre><code>def get_items(
+    item_a: str,
+    item_b: int,
+    item_c: float,
+    item_d: bool,
+    item_e: bytes,
+) -> tuple[str, int, float, bool, bytes]:
+    return item_a, item_b, item_c, item_d, item_e</code></pre>
+
+          <h3>Q4：什么是泛型类型？</h3>
+          <ul>
+            <li><b>泛型类型</b>：容器类型 + 内部元素类型参数，如 <code>list[str]</code>。</li>
+            <li><b>Python 3.13 推荐</b>：直接使用内置泛型语法（<code>list[str]</code>、<code>dict[str, float]</code>），避免旧式 <code>typing.List</code>。</li>
+          </ul>
+          <pre><code>def process_items(
+    names: list[str],
+    prices: dict[str, float],
+    fixed: tuple[int, int, str],
+    blobs: set[bytes],
+) -> None:
+    for name in names:
+        print(name.title())
+    for item_name, item_price in prices.items():
+        print(item_name, item_price)
+    print(fixed, blobs)</code></pre>
+
+          <h3>Q5：Union、Optional、| 有什么区别？</h3>
+          <ul>
+            <li><b>等价关系</b>：<code>str | None</code> 等价于 <code>Union[str, None]</code>，也等价于 <code>Optional[str]</code>。</li>
+            <li><b>Python 3.13 推荐</b>：优先使用 <code>|</code> 语法，最简洁直观。</li>
+            <li><b>语义提醒</b>：可为 <code>None</code> 不等于参数可省略；是否可省略由是否有默认值决定。</li>
+          </ul>
+          <pre><code>def print_item(item: int | str) -> None:
+    print(item)
+
+
+def say_hi(name: str | None = None) -> None:
+    if name is None:
+        print("Hello World")
+    else:
+        print(f"Hey {name}!")</code></pre>
+
+          <h3>Q6：为什么“可为 None”和“可选参数”经常被混淆？</h3>
+          <ul>
+            <li><code>name: str | None</code>：表示值类型允许 <code>None</code>。</li>
+            <li>只有写了默认值（如 <code>= None</code>）才是调用时可不传。</li>
+          </ul>
+          <pre><code>def required_but_nullable(name: str | None) -> None:
+    # 调用时必须传参，但可以传 None
+    print(name)
+
+
+required_but_nullable(None)   # 合法
+# required_but_nullable()     # 不合法：缺少参数</code></pre>
+
+          <h3>Q7：类本身可以作为类型吗？</h3>
+          <ul>
+            <li><b>可以</b>：注解为某个类，表示参数是该类实例。</li>
+          </ul>
+          <pre><code>class Person:
+    def __init__(self, name: str) -> None:
+        self.name = name
+
+
+def get_person_name(one_person: Person) -> str:
+    return one_person.name</code></pre>
+
+          <h3>Q8：Pydantic 模型与类型注解是什么关系？</h3>
+          <ul>
+            <li>Pydantic 基于类型注解定义数据结构、校验与转换规则。</li>
+            <li>FastAPI 基于 Pydantic + 类型注解实现请求体校验、错误响应与文档生成。</li>
+            <li><b>Python 3.13 实践建议</b>：优先不可变默认值；可变字段用 <code>Field(default_factory=...)</code>。</li>
+          </ul>
+          <pre><code>from datetime import datetime
+from pydantic import BaseModel, Field
+
+
+class User(BaseModel):
+    id: int
+    name: str = "John Doe"
+    signup_ts: datetime | None = None
+    # 在 Python 的底层机制中，如果你在类定义时直接写 []，这个列表在内存中只会被创建一次。
+    # default_factory=list 的意思是：每当创建一个新对象时，请调用一次 list() 函数来生成一个新的、干净的列表。
+    # 防止掉入“共享变量”的陷阱。
+    friends: list[int] = Field(default_factory=list)
+
+
+external_data = {
+    "id": "123",
+    "signup_ts": "2017-06-01 12:22",
+    "friends": [1, "2", b"3"],
+}
+
+# 字典解包 ** 运算符会将字典中的键值对拆开，作为关键字参数传递给构造函数。
+user = User(**external_data)
+print(user.id)       # 123
+print(user.friends)  # [1, 2, 3]</code></pre>
+
+          <h3>Q9：Annotated 是什么？在 FastAPI 里有什么价值？</h3>
+          <ul>
+            <li><b>定义</b>：<code>Annotated[T, ...meta]</code>，第一个参数是“真实类型”，后面是附加元数据。</li>
+            <li><b>Python 本身</b>：不强制处理元数据。</li>
+            <li><b>FastAPI</b>：会读取这些元数据驱动参数校验、文档描述等行为。</li>
+          </ul>
+          <pre><code>from typing import Annotated
+
+
+def say_hello(name: Annotated[str, "display name"]) -> str:
+    return f"Hello {name}"</code></pre>
+
+          <h3>Q10：FastAPI 到底如何利用类型注解？</h3>
+          <table>
+            <thead>
+              <tr>
+                <th>能力</th>
+                <th>类型注解带来的结果</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>编辑体验</td>
+                <td>自动补全、签名提示、重构更稳</td>
+              </tr>
+              <tr>
+                <td>请求数据校验</td>
+                <td>自动解析并验证参数与请求体</td>
+              </tr>
+              <tr>
+                <td>错误反馈</td>
+                <td>输入不合法时返回结构化错误</td>
+              </tr>
+              <tr>
+                <td>OpenAPI 文档</td>
+                <td>自动生成接口文档和交互式页面</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div class="tip"><b>Python 3.13 类型注解实践清单：</b>1）优先使用 <code>|</code> 联合语法；2）优先内置泛型 <code>list[str]</code>；3）函数必须写返回类型；4）模型中避免可变默认值；5）需要额外语义时优先 <code>Annotated</code>。</div>
+        </div>
+      </details>
+    </section>
+  </div>
+
+  <script>
+    (function () {
+      const STORAGE_KEY = 'python_faq_open_details_v1';
+      const NOTE_STORAGE_KEY = 'python_faq_open_notes_v1';
+      const detailsList = Array.from(document.querySelectorAll('.qa-list > details'));
+      const chipBtns = Array.from(document.querySelectorAll('.chip-note-btn[aria-controls]'));
+      if (!detailsList.length) return;
+
+      detailsList.forEach((el, idx) => {
+        el.setAttribute('data-faq-id', String(idx + 1));
+      });
+
+      function saveDetailsState() {
+        const openIds = detailsList
+          .filter((el) => el.open)
+          .map((el) => el.getAttribute('data-faq-id'));
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(openIds));
+      }
+
+      function restoreDetailsState() {
+        try {
+          const raw = localStorage.getItem(STORAGE_KEY);
+          if (!raw) return false;
+          const openIds = JSON.parse(raw);
+          if (!Array.isArray(openIds)) return false;
+
+          detailsList.forEach((el) => {
+            const id = el.getAttribute('data-faq-id');
+            el.open = openIds.includes(id);
+          });
+          return true;
+        } catch (e) {
+          return false;
+        }
+      }
+
+      function saveNotesState() {
+        const openNoteIds = chipBtns
+          .map((btn) => btn.getAttribute('aria-controls'))
+          .filter((panelId) => {
+            const panel = panelId ? document.getElementById(panelId) : null;
+            return !!panel && panel.classList.contains('show');
+          });
+        localStorage.setItem(NOTE_STORAGE_KEY, JSON.stringify(openNoteIds));
+      }
+
+      function restoreNotesState() {
+        try {
+          const raw = localStorage.getItem(NOTE_STORAGE_KEY);
+          if (!raw) return;
+          const openNoteIds = JSON.parse(raw);
+          if (!Array.isArray(openNoteIds)) return;
+
+          chipBtns.forEach((btn) => {
+            const panelId = btn.getAttribute('aria-controls');
+            const panel = panelId ? document.getElementById(panelId) : null;
+            const isShown = !!panel && openNoteIds.includes(panelId);
+            if (panel) panel.classList.toggle('show', isShown);
+            btn.setAttribute('aria-expanded', String(isShown));
+          });
+        } catch (e) {
+          // ignore invalid localStorage payload
+        }
+      }
+
+      const restored = restoreDetailsState();
+      if (!restored) {
+        detailsList.forEach((el, idx) => {
+          el.open = idx === 0;
+        });
+      }
+
+      detailsList.forEach((el) => {
+        el.addEventListener('toggle', saveDetailsState);
+      });
+
+      chipBtns.forEach((chipBtn) => {
+        const panelId = chipBtn.getAttribute('aria-controls');
+        if (!panelId) return;
+        const chipPanel = document.getElementById(panelId);
+        if (!chipPanel) return;
+
+        chipBtn.addEventListener('click', () => {
+          const isShown = chipPanel.classList.toggle('show');
+          chipBtn.setAttribute('aria-expanded', String(isShown));
+          saveNotesState();
+        });
+      });
+
+      restoreNotesState();
+
+      window.addEventListener('beforeunload', () => {
+        saveDetailsState();
+        saveNotesState();
+      });
+    })();
+  </script>
+</body>
+</html>

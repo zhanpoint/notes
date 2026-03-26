@@ -1,0 +1,1231 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PostgreSQL 面试高频问答（结构化版）</title>
+  <link rel="stylesheet" href="../assets/style.css" />
+  <style>
+    :root {
+      --bg: #0b0f1a;
+      --panel: #121829;
+      --panel-2: #1a2236;
+      --text: #a8b3cc;
+      --muted: #748099;
+      --ok: #7bd8ad;
+      --warn: #dfc978;
+      --danger: #de8c99;
+      --line: #3b4f7a;
+      --line-soft: rgba(102, 132, 188, 0.35);
+      --glow: 0 0 0 1px rgba(102, 132, 188, 0.2);
+    }
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      padding: 0;
+      background:
+        radial-gradient(1200px 700px at 12% -8%, rgba(79, 70, 229, 0.18) 0%, transparent 55%),
+        radial-gradient(900px 560px at 92% -10%, rgba(45, 226, 255, 0.14) 0%, transparent 52%),
+        linear-gradient(160deg, #03050b 0%, #070b17 56%, #05070f 100%);
+      color: var(--text);
+      font-family: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+      line-height: 1.6;
+      font-size: 13px;
+    }
+    .container { width: min(1080px, 92vw); margin: 20px auto 36px; }
+    .hero {
+      background: radial-gradient(1200px 360px at 10% -20%, rgba(120, 128, 186, 0.22) 0%, transparent 60%),
+                  radial-gradient(800px 260px at 90% -30%, rgba(102, 132, 188, 0.18) 0%, transparent 55%),
+                  var(--panel);
+      border: 1px solid var(--line);
+      box-shadow: var(--glow);
+      border-radius: 14px;
+      padding: 16px 18px;
+      margin-bottom: 12px;
+    }
+    h1 { margin: 0 0 8px; font-size: clamp(20px, 2.1vw, 28px); line-height: 1.25; }
+    .subtitle { color: var(--muted); margin: 0; font-size: 12px; }
+    .qa-list { display: grid; gap: 10px; }
+    details {
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: linear-gradient(180deg, var(--panel) 0%, #101726 100%);
+      box-shadow: var(--glow);
+      overflow: hidden;
+    }
+    summary {
+      cursor: pointer;
+      list-style: none;
+      padding: 12px 14px;
+      font-weight: 400;
+      font-size: 13px;
+      display: block;
+      background: linear-gradient(180deg, #1b2438, #171f32);
+      border-bottom: 1px solid var(--line-soft);
+      text-shadow: none;
+    }
+    summary::-webkit-details-marker { display: none; }
+    .content { padding: 10px 14px 14px; }
+    .content h3 { margin: 10px 0 6px; color: #d9e4fb; font-size: 12px; font-weight: 550; letter-spacing: 0.2px; }
+    .content > h3:first-child { margin-top: 0; }
+    .content > h3,
+    .content > p,
+    .content > ul,
+    .content > ol,
+    .content > table,
+    .content > pre,
+    .content > .tip,
+    .content > .warn,
+    .content > .danger {
+      margin: 8px 0;
+    }
+    p, li { color: #a8b3cc; font-size: 12px; margin: 0; }
+    ul, ol { margin: 8px 0 8px 0; padding-left: 20px; }
+    li { margin: 4px 0; }
+    .content > ul,
+    .content > ol { padding-left: 22px; }
+    table { width: 100%; border-collapse: collapse; margin-top: 6px; font-size: 11px; }
+    th, td { border: 1px solid rgba(102, 132, 188, 0.35); padding: 6px 8px; vertical-align: top; }
+    th {
+      background: linear-gradient(180deg, #1b2744, #18213a);
+      text-align: left;
+      box-shadow: inset 0 0 6px rgba(102, 132, 188, 0.12);
+    }
+    code {
+      background: rgba(78, 104, 158, 0.14);
+      border: 1px solid rgba(102, 132, 188, 0.35);
+      border-radius: 5px;
+      padding: 1px 5px;
+      font-family: Consolas, "Courier New", monospace;
+      font-size: 11px;
+      color: #9eabc6;
+      box-shadow: none;
+    }
+    pre {
+      background: #0b1222;
+      border: 1px solid rgba(102, 132, 188, 0.35);
+      color: #a3afc8;
+      padding: 10px;
+      border-radius: 8px;
+      overflow-x: auto;
+      margin: 0;
+      font-size: 11px;
+      line-height: 1.45;
+      box-shadow: none;
+    }
+    .tip { border-left: 4px solid var(--ok); background: rgba(123, 216, 173, 0.06); box-shadow: none; padding: 8px 10px; border-radius: 6px; font-size: 12px; }
+    .warn { border-left: 4px solid var(--warn); background: rgba(223, 201, 120, 0.06); box-shadow: none; padding: 8px 10px; border-radius: 6px; font-size: 12px; }
+    .danger { border-left: 4px solid var(--danger); background: rgba(222, 140, 153, 0.06); box-shadow: none; padding: 8px 10px; border-radius: 6px; font-size: 12px; }
+    .mvcc-diagram-wrap {
+      border: 1px solid var(--line-soft);
+      border-radius: 8px;
+      padding: 10px;
+      background: rgba(18, 24, 41, 0.45);
+      overflow-x: auto;
+    }
+    .mvcc-caption { color: var(--muted); font-size: 11px; margin-top: 6px; }
+    .diagram-note {
+      margin: 4px 0 8px 0;
+      padding: 0;
+      width: fit-content;
+      max-width: 100%;
+      border: 1px dashed rgba(159, 183, 232, 0.4);
+      border-radius: 7px;
+      background: rgba(18, 27, 48, 0.48);
+      overflow: hidden;
+    }
+    .diagram-note summary {
+      list-style: none;
+      cursor: pointer;
+      padding: 5px 8px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: flex-start;
+      text-align: left;
+      gap: 6px;
+      background: rgba(26, 35, 64, 0.62);
+      border-bottom: 1px solid rgba(102, 132, 188, 0.22);
+      font-size: 11px;
+      line-height: 1.35;
+    }
+    .diagram-note summary::-webkit-details-marker { display: none; }
+    .diagram-note .note-icon {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      border: 1px solid #9fb7e8;
+      color: #d9e4fb;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 9px;
+      line-height: 1;
+      flex: 0 0 auto;
+    }
+    .diagram-note .note-body {
+      padding: 8px 10px;
+      font-size: 11px;
+      color: #a8b3cc;
+    }
+    .diagram-note .note-body h4 {
+      margin: 7px 0 3px;
+      color: #d9e4fb;
+      font-size: 11px;
+      font-weight: 600;
+    }
+    .diagram-note .note-body p,
+    .diagram-note .note-body li {
+      font-size: 11px;
+    }
+    .diagram-note .note-body ul,
+    .diagram-note .note-body ol {
+      margin: 5px 0;
+      padding-left: 16px;
+    }
+    .inline-note {
+      display: inline-block;
+      vertical-align: middle;
+      margin-left: 6px;
+      border: 1px dashed rgba(159, 183, 232, 0.42);
+      border-radius: 999px;
+      background: rgba(18, 27, 48, 0.48);
+      overflow: hidden;
+    }
+    .inline-note[open] {
+      display: block;
+      margin: 8px 0 0 0;
+      border-radius: 8px;
+      overflow: visible;
+    }
+    .inline-note summary {
+      list-style: none;
+      cursor: pointer;
+      padding: 1px 7px;
+      font-size: 10px;
+      color: #d9e4fb;
+      background: rgba(26, 35, 64, 0.62);
+      border: 0;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      line-height: 1.4;
+    }
+    .inline-note[open] summary {
+      display: flex;
+      width: 100%;
+      border-bottom: 1px solid rgba(102, 132, 188, 0.25);
+      padding: 5px 8px;
+      font-size: 11px;
+    }
+    .inline-note summary::-webkit-details-marker { display: none; }
+    .inline-note .note-icon {
+      width: 11px;
+      height: 11px;
+      border-radius: 50%;
+      border: 1px solid #9fb7e8;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 8px;
+      line-height: 1;
+      color: #d9e4fb;
+    }
+    .inline-note .note-body {
+      display: block;
+      width: min(520px, 78vw);
+      padding: 8px 10px;
+      border-top: 1px solid rgba(102, 132, 188, 0.25);
+      background: rgba(12, 18, 34, 0.96);
+      color: #a8b3cc;
+      font-size: 11px;
+    }
+    .inline-note .note-body h4 {
+      margin: 6px 0 3px;
+      color: #d9e4fb;
+      font-size: 11px;
+    }
+    .inline-note .note-body ul,
+    .inline-note .note-body ol {
+      margin: 4px 0;
+      padding-left: 16px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <section class="hero">
+      <h1>PostgreSQL 面试高频问答（从高频到低频）</h1>
+      <p class="page-updated">最后更新：2026-03-26</p>
+    </section>
+
+    <section class="qa-list">
+
+      <details open>
+        <summary>1) PostgreSQL 和 MySQL 最大的区别是什么？</summary>
+        <div class="content">
+          <h3>对比</h3>
+          <table>
+            <tr><th>维度</th><th>PostgreSQL</th><th>MySQL(InnoDB)</th></tr>
+            <tr><td>MVCC</td><td>行版本 + <code>xmin/xmax</code> + 快照</td><td>undo log + Read View</td></tr>
+            <tr><td>索引</td><td>B-tree/GIN/GiST/BRIN/SP-GiST 等</td><td>主流 B+Tree</td></tr>
+            <tr><td>JSON</td><td><code>JSONB</code> 强，支持 GIN</td><td>有 JSON，但高级能力通常弱于 PG</td></tr>
+            <tr><td>约束与标准</td><td>更严格、更完整</td><td>历史上更宽松</td></tr>
+            <tr><td>扩展</td><td>强（PostGIS 等）</td><td>相对弱</td></tr>
+          </table>
+          <h3>怎么用</h3><p>回答时先给结论，再给“场景化选型”：复杂查询/强一致/JSONB/地理空间选 PG；简单高并发 CRUD 且团队 MySQL 经验深可选 MySQL。</p>
+          <div class="warn"><h3>优化/坑</h3><p>别说“PG 一定比 MySQL 快”。数据库选型本质是业务、团队、数据模型、成本的平衡。</p></div>
+          <h3>场景</h3><p>电商交易核心、风控、报表分析、地理空间、文档+关系混合查询，更常见 PG 优势。</p>
+        </div>
+      </details>
+
+      <details>
+        <summary>2) PostgreSQL 的 MVCC 实现原理是什么？</summary>
+        <div class="content">
+          <h3>定义</h3>
+          <p>MVCC（多版本并发控制）是 PostgreSQL 实现“数据隔离（事务隔离级别）”的核心机制：同一行在不同时间可存在多个版本，事务通过快照规则决定“当前能看见哪个版本”，从而在并发场景下既控制可见性（隔离），又尽量做到读写不互相阻塞。</p>
+
+          <h3>核心实现原理</h3>
+          <p>可以把一行数据理解为“有生命周期的版本记录”，而不是可反复擦写的单元格。MVCC 的关键是：同一业务行可同时存在多个物理版本，查询通过快照决定可见版本。</p>
+          <ul>
+            <li><b>行级元信息</b>：每个物理版本隐含 <code>xmin</code>（创建该版本的事务 ID）与 <code>xmax</code>（使该版本失效的事务 ID）。通常 <code>xmax=0</code> 表示该版本尚未失效。</li>
+            <li><b>UPDATE 的本质</b>：更新不会原地覆盖，而是把旧版本标记失效（写入 <code>xmax</code>），再插入新版本（新行 <code>xmin</code> 为当前事务）。因此对于这一行数据来说，旧物理版本的 xmax 等于新物理版本的 xmin。它们都指向执行更新操作的那个事务 ID。因此同一时刻磁盘上可能并存新旧两版。</li>
+            <li><b>快照</b>：快照主要由三个核心元素组成：
+              <ul>
+                <li><b>xmin</b>：这是快照生成时，最早的、仍在运行的事务 ID。所有比它小的事务都已经提交了，它们产生的数据对你可见。</li>
+                <li><b>xmax</b>：这是快照生成时，系统即将分配的下一个事务 ID。所有大于等于它的事务在快照生成时都还没出生，它们产生的数据对你不可见。</li>
+                <li><b>xip_list</b>：这就是你说的正在运行的事务 ID 列表。这些事务 ID 介于 xmin 和 xmax 之间，但它们还没提交，所以它们改动的数据对你不可见。</li>
+              </ul>
+            </li>
+            <li><b>定位最新且合法的版本</b>：数据库会沿着同一行的版本链寻找那个 xmin 最大（最年轻） 且 xmax 无效（还没死） 的版本，选出“对当前快照可见且事务号最新”的那个版本。</li>
+          </ul>
+          <h3>可见性判定坐标轴</h3>
+          <div class="mvcc-diagram-wrap">
+            <svg width="980" height="440" viewBox="0 0 980 440" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="PostgreSQL MVCC 区间判定图">
+              <defs>
+                <style>
+                  .t { fill:#a8b3cc; font: 12px 'Segoe UI', 'Microsoft YaHei', sans-serif; }
+                  .tt { fill:#d9e4fb; font: 12px 'Segoe UI', 'Microsoft YaHei', sans-serif; font-weight:600; }
+                  .mut { fill:#7c879f; font: 11px 'Segoe UI', 'Microsoft YaHei', sans-serif; }
+                </style>
+              </defs>
+
+              <rect x="20" y="20" width="940" height="400" rx="10" fill="#0f1628" stroke="#3b4f7a"/>
+
+              <text x="40" y="48" class="tt">A. 当前查询拿到的快照（示例）</text>
+              <rect x="40" y="60" width="900" height="58" rx="8" fill="#121b30" stroke="#3b4f7a"/>
+              <text x="56" y="84" class="t">下界 xmin = 90， 上界 xmax = 110， 活跃事务列表 = {95, 100, 108}</text>
+              <text x="56" y="104" class="mut">读法：小于 90 的已提交事务通常可见；大于等于 110 的事务版本通常不可见；活跃列表中的事务也不可见。</text>
+
+              <text x="40" y="144" class="tt">B. 事务号坐标轴</text>
+              <line x1="70" y1="190" x2="910" y2="190" stroke="#8da2cf" stroke-width="2"/>
+              <line x1="250" y1="178" x2="250" y2="202" stroke="#8da2cf"/>
+              <line x1="610" y1="178" x2="610" y2="202" stroke="#8da2cf"/>
+              <text x="238" y="170" class="t">90</text>
+              <text x="598" y="170" class="t">110</text>
+
+              <rect x="70" y="210" width="180" height="56" rx="6" fill="#16253a" stroke="#4f6697"/>
+              <text x="86" y="232" class="tt">区间①：&lt; xmin</text>
+              <text x="86" y="251" class="mut">通常可见（若已提交）</text>
+
+              <rect x="250" y="210" width="360" height="56" rx="6" fill="#202136" stroke="#7f6f9b"/>
+              <text x="266" y="232" class="tt">区间②：xmin ≤ 事务号 &lt; xmax</text>
+              <text x="266" y="251" class="mut">需看是否在“活跃事务列表”中</text>
+
+              <rect x="610" y="210" width="300" height="56" rx="6" fill="#322030" stroke="#9b6f8a"/>
+              <text x="626" y="232" class="tt">区间③：≥ xmax</text>
+              <text x="626" y="251" class="mut">通常不可见（未来事务）</text>
+
+              <text x="40" y="300" class="tt">C. 代入一个版本号做判定</text>
+              <rect x="40" y="312" width="900" height="88" rx="8" fill="#121b30" stroke="#3b4f7a"/>
+              <text x="56" y="338" class="t">100 落在区间②（90 到 110 之间），所以继续看：100 是否在活跃事务列表 {95,100,108}？</text>
+              <text x="56" y="359" class="t">答案：在活跃列表中 ⇒ 对当前查询不可见；若不在活跃列表且已提交 ⇒ 可见。</text>
+            </svg>
+          </div>
+
+          <h3>隔离级别</h3>
+          <ol>
+            <li>
+              <b>读未提交</b>
+              <p>字面上允许读到别人还没提交的数据（脏读）。但在 PostgreSQL 中，这个级别会被按 <b>读已提交</b> 执行。</p>
+              <p>根因是 PG 读取某个版本时，会基于该版本的事务号去查事务状态（提交/回滚/运行中）以及当前快照的活跃事务列表。如果该事务状态还在运行中/回滚则直接判定该物理行版本不可见，只要创建者事务提交，这个物理行版本才可见。</p>
+              <p>所以 PG 不是“默认不脏读”，而是“机制上无法脏读”。</p>
+            </li>
+            <li>
+              <b>读已提交</b>
+              <p>核心是“语句级快照”：每条 SQL 开始前都重新获取快照。</p>
+              <p>同一事务内，两次相同查询之间若有其他事务提交更新，第二次可能读到新值（不可重复读）；范围查询也可能出现幻读。</p>
+            </li>
+            <li>
+              <b>可重复读</b>
+              <p>核心是“事务级快照”：事务第一条查询确定快照，后续所有查询都复用同一张快照。</p>
+              <p>先区分两个概念：不可重复读关注“同一行内容变了”；幻读关注“满足条件的行数变了（结果集多/少了）”。</p>
+              <p>在RR下，外部事务在你快照之后新插入的行，其 <code>xmin</code> 不在你的可见范围内；外部事务删除的影响也不会改变你这张快照看到的结果集，所以同条件范围查询的行数保持一致。</p>
+              <p>因此 PG 的 RR 不仅避免不可重复读，也能避免幻读</p>
+              <p>但 RR 仍可能出现更高阶的并发逻辑冲突（如写偏序），并发更新时也可能报错，需要应用做事务重试。</p>
+            </li>
+          </ol>
+
+          <h3>为什么 PostgreSQL 天然免疫脏读</h3>
+          <ul>
+            <li>事务 A 更新时会产生新版本；在 A 提交前，新版本创建事务状态是“运行中”。</li>
+            <li>事务 B 读取时，发现该版本创建者未提交，直接判定不可见；只能看到旧版本。</li>
+            <li>如果 A 最终回滚，新版本状态变为“已回滚”，依然不可见。</li>
+            <li>只有当状态为事务“已提交”，并且同时通过以下快照规则时，版本才可见：
+              <ul>
+                <li><b>规则 1</b>：创建者事务必须是已提交；若是运行中或已回滚，直接不可见。</li>
+                <li><b>规则 2</b>：若该版本的事务号小于快照下界（snapshot.xmin），它属于拍照前已稳定完成的数据，通常可见。</li>
+                <li><b>规则 3</b>：若事务号落在 snapshot.xmin 与 snapshot.xmax 之间，需检查是否在快照活跃事务列表中：
+                  <ul>
+                    <li>在列表中：拍照时仍未完成，不可见；</li>
+                    <li>不在列表中：拍照时已完成，可见。</li>
+                  </ul>
+                </li>
+                <li><b>附加条件（未被删）</b>：还要检查该版本的 <code>xmax</code> 是否已生效删除；若删除已生效，则该版本依然不可见。</li>
+              </ul>
+            </li>
+          </ul>
+
+          <h3>并发异常对照</h3>
+          <table>
+            <tr><th>隔离级别</th><th>脏读</th><th>不可重复读</th><th>幻读</th><th>序列化异常</th><th>是否默认</th></tr>
+            <tr><td>Read Uncommitted</td><td>不可能</td><td>可能</td><td>可能</td><td>可能</td><td>否（等同 RC）</td></tr>
+            <tr><td>Read Committed</td><td>不可能</td><td>可能</td><td>可能</td><td>可能</td><td>是</td></tr>
+            <tr><td>Repeatable Read</td><td>不可能</td><td>不可能</td><td>不可能</td><td>可能</td><td>否</td></tr>
+          </table>
+
+        </div>
+      </details>
+
+      <details>
+        <summary>3) 什么是 vacuum 和 autovacuum？它们分别解决什么问题？</summary>
+        <div class="content">
+          <h3>定义</h3>
+          <p>可以把 <code>VACUUM</code> 理解为pg里的“垃圾回收 + 空间管理员”。在 Pg 中，<code>DELETE</code> / <code>UPDATE</code> 不会立刻物理删行，会留下大量 失效行记录。<code>VACUUM</code> 负责清理这些历史版本；<code>autovacuum</code> 则是自动执行这件事的后台机制。</p>
+
+          <h3>为什么需要</h3>
+          <ul>
+            <li><b>表膨胀</b>：失效行记录 长期堆积，表文件越来越大。</li>
+            <li><b>查询变慢</b>：扫描时会碰到大量无效版本，I/O 与缓存压力升高。</li>
+            <li><b>统计失真</b>：优化器拿到过期统计信息后，容易选错执行计划。</li>
+          </ul>
+
+          <h3>两种形态</h3>
+          <table>
+            <tr><th>类型</th><th>做了什么</th><th>锁影响</th><th>空间结果</th><th>适用场景</th></tr>
+            <tr><td>VACUUM（普通，在线清理）</td><td>扫描表并识别 失效行记录，把对应位置标记为“可复用空位”；常与 ANALYZE 配合，更新统计信息</td><td>通常不阻塞正常读写（业务可继续）</td><td>主要是数据库内部复用空间，不一定立刻缩小文件，不一定归还操作系统</td><td>日常维护主力；高频 UPDATE/DELETE 表的常规治理</td></tr>
+            <tr><td>VACUUM FULL（离线重组）</td><td>重写整表：把存活数据搬到新文件，再替换旧文件</td><td>会锁全表，期间读写受明显影响</td><td>可显著缩小文件体积，并把空间归还操作系统</td><td>表极度膨胀、且有明确维护窗口时使用（非日常）</td></tr>
+          </table>
+
+          <h3>细节</h3>
+          <ol>
+            <li><b>先产生“历史版本”（失效行记录）</b>：
+              <ul>
+                <li><code>DELETE</code> 只是标记失效，不会立刻物理删除。</li>
+                <li><code>UPDATE</code> 是“写新版本 + 旧版本失效”，旧版本会短期保留。</li>
+              </ul>
+            </li>
+            <li><b>普通 VACUUM 的核心动作</b>：
+              <ul>
+                <li><b>先确认“逻辑上已死亡”</b>：检查该版本的 <code>xmax</code> 对应事务是否已提交。若删除事务仍在运行或已回滚，这个版本还不能算真正失效，不能清理。</li>
+                <li><b>再确认“历史上无人再需要”</b>：即使 <code>xmax</code> 已提交，也要确认系统中不存在更早开启且仍活跃的事务快照会看到它。只有当“最后一个可能读取它的旧快照”也结束后，这个版本才会被标记为空位可复用。</li>
+                <li><b>长事务危险</b>：长事务会长期占用很小的事务号下界，使清理进程不敢回收大量已失效版本，最终造成 本堆积与表膨胀。</li>
+                <li><b>举例</b>：事务 A（ID=90）长时间不结束；事务 B（ID=100）删除了一条梦境并提交，行上出现 <code>xmax=100</code>。此时新事务 C（ID=110）快照即活跃事务列表已经看不到该事务，但因为 A 的旧快照仍可能看到它，清理进程不能回收。只有当 A 结束后，这条记录才会被标记为可复用空位。</li>
+              </ul>
+            </li>
+            <li><b>为什么文件有时不变小</b>：
+              <ul>
+                <li>普通 <code>VACUUM</code> 主要做“库内复用”，不是重写整表。</li>
+                <li>要显著缩文件并归还系统空间，通常需要 <code>VACUUM FULL</code>。</li>
+              </ul>
+            </li>
+          </ol>
+
+          <h3>autovacuum 做什么</h3>
+          <p>autovacuum 是 PostgreSQL 的后台自动清理机制：按表改动量与失效行记录阈值自动触发 <code>VACUUM</code>，并在统计信息老化时触发 <code>ANALYZE</code>，保证“空间可复用 + 执行计划更准确”。</p>
+
+          <h3>怎么用</h3>
+          <ul>
+            <li>默认开启 autovacuum，不建议关闭。</li>
+            <li><code>VACUUM FULL</code> 仅在严重膨胀且有维护窗口时执行。</li>
+          </ul>
+
+        </div>
+      </details>
+
+      <details>
+        <summary>4) PostgreSQL 支持哪些索引？B-tree 之外常用哪些？各自使用场景？</summary>
+        <div class="content">
+          <h3>定义</h3>
+          <p>索引就像书本目录：没有索引时，数据库常要“从头翻到尾”（全表扫描）；有索引后可以更快定位目标数据。</p>
+
+          <h3>常见索引类型与场景</h3>
+          <ol>
+            <li><b>B-tree（默认首选）</b>：
+              <ul>
+                <li>支持：<code>=</code>、<code>&gt;</code>、<code>&lt;</code>、<code>BETWEEN</code>、排序、前缀匹配（如 <code>LIKE 'abc%'</code>）。</li>
+                <li>适合：主键/唯一键、时间范围、金额范围、常规筛选排序。</li>
+                <li>结论：大多数业务先考虑它。</li>
+              </ul>
+            </li>
+
+            <div class="mvcc-diagram-wrap">
+              <h3>B-tree 结构图 1：等值查询</h3>
+              <svg width="980" height="620" viewBox="0 0 980 620" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="B-tree 节点结构与查找路径示意图（修正版）">
+                <defs>
+                  <style>
+                    .title { fill:#d9e4fb; font: 13px 'Segoe UI','Microsoft YaHei',sans-serif; font-weight:600; }
+                    .txt { fill:#a8b3cc; font: 12px 'Segoe UI','Microsoft YaHei',sans-serif; }
+                    .mut { fill:#7c879f; font: 11px 'Segoe UI','Microsoft YaHei',sans-serif; }
+                  </style>
+                  <marker id="arr1" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+                    <path d="M0,0 L10,3 L0,6 Z" fill="#8da2cf"/>
+                  </marker>
+                </defs>
+
+                <rect x="14" y="14" width="952" height="532" rx="10" fill="#0f1628" stroke="#3b4f7a"/>
+                <text x="30" y="40" class="title">例子：查找 key=26。</text>
+
+                <rect x="330" y="60" width="320" height="72" rx="8" fill="#1a2340" stroke="#5a6f9f"/>
+                <text x="490" y="88" class="txt" text-anchor="middle">根节点</text>
+                <text x="490" y="110" class="txt" text-anchor="middle">键：10 | 20 | 30</text>
+
+                <line x1="410" y1="132" x2="220" y2="192" stroke="#657fb6" stroke-dasharray="4 3"/>
+                <line x1="470" y1="132" x2="390" y2="192" stroke="#657fb6" stroke-dasharray="4 3"/>
+                <line x1="530" y1="132" x2="560" y2="192" stroke="#8da2cf" stroke-width="2" marker-end="url(#arr1)"/>
+                <line x1="590" y1="132" x2="760" y2="192" stroke="#657fb6" stroke-dasharray="4 3"/>
+
+                <text x="145" y="210" class="mut">P0（&lt;10）</text>
+                <text x="340" y="210" class="mut">P1（10~20）</text>
+                <text x="548" y="210" class="mut">P2（20~30，命中）</text>
+                <text x="745" y="210" class="mut">P3（&gt;=30）</text>
+
+                <rect x="470" y="226" width="340" height="76" rx="8" fill="#1b2744" stroke="#5a6f9f"/>
+                <text x="640" y="254" class="txt" text-anchor="middle">子节点</text>
+                <text x="640" y="276" class="txt" text-anchor="middle">键：21 | 24 | 27 | 29</text>
+
+                <line x1="620" y1="302" x2="620" y2="332" stroke="#8da2cf" stroke-width="2" marker-end="url(#arr1)"/>
+                <text x="648" y="322" class="mut">26 命中该子指针（区间路由）</text>
+
+                <rect x="430" y="342" width="520" height="126" rx="8" fill="#16253a" stroke="#4f6697"/>
+                <text x="448" y="366" class="txt">叶子页</text>
+                <text x="448" y="386" class="mut">示意：该页可能同时包含21 ~ 29的全部内容，并非只保留 24 ~ 27</text>
+
+                <rect x="448" y="404" width="235" height="48" rx="6" fill="#263a62" stroke="#9fb7e8"/>
+                <text x="462" y="424" class="txt">索引项：二元元组 (key=26, TID=(42,7))</text>
+
+                <rect x="710" y="404" width="220" height="48" rx="6" fill="#1b2744" stroke="#5a6f9f"/>
+                <text x="724" y="424" class="txt">Block磁盘块42, Offset偏移7</text>
+
+                <line x1="684" y1="428" x2="706" y2="428" stroke="#8da2cf" marker-end="url(#arr1)"/>
+                <line x1="560" y1="392" x2="560" y2="403" stroke="#8da2cf" marker-end="url(#arr1)"/>
+
+                <rect x="30" y="488" width="920" height="108" rx="8" fill="#121b30" stroke="#3b4f7a"/>
+                <text x="46" y="533" class="txt">命中区间 (24,27)只表示路由选择，不表示物理隔离。一个 8KB 叶子页会尽量装满，可能同时出现 21 ~ 29的所有索引项。</text>
+                <text x="46" y="554" class="txt">进入叶子页后还要页内定位：索引项按键有序，通常用二分查找快速锁定 key=26 对应槽位</text>
+                <text x="46" y="575" class="mut">拿到 TID=(42,7) 后，数据库再去堆表第 42 块第 7 行取完整记录：路由缩小范围，TID 负责最终精确命中。</text>
+              </svg>
+            </div>
+
+            <div class="mvcc-diagram-wrap">
+              <h3>B-tree 结构图 2：范围查询（24~28）</h3>
+              <svg width="980" height="330" viewBox="0 0 980 330" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="B-tree 范围查询沿叶子链表扫描示意图">
+                <defs>
+                  <style>
+                    .title { fill:#d9e4fb; font: 13px 'Segoe UI','Microsoft YaHei',sans-serif; font-weight:600; }
+                    .txt { fill:#a8b3cc; font: 12px 'Segoe UI','Microsoft YaHei',sans-serif; }
+                    .mut { fill:#7c879f; font: 11px 'Segoe UI','Microsoft YaHei',sans-serif; }
+                  </style>
+                  <marker id="arrRange" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+                    <path d="M0,0 L10,3 L0,6 Z" fill="#8da2cf"/>
+                  </marker>
+                </defs>
+
+                <rect x="14" y="14" width="952" height="472" rx="10" fill="#0f1628" stroke="#3b4f7a"/>
+                <text x="30" y="40" class="title">步骤：先像等值查询一样定位到“起始键 24”所在叶子页，再沿叶子链表向右扫描到 28。</text>
+
+                <rect x="360" y="60" width="280" height="70" rx="8" fill="#1a2340" stroke="#5a6f9f"/>
+                <text x="500" y="88" class="txt" text-anchor="middle">内部节点（导航）</text>
+                <text x="500" y="110" class="txt" text-anchor="middle">键：10 | 20 | 30</text>
+
+                <line x1="510" y1="130" x2="510" y2="168" stroke="#8da2cf" stroke-width="2" marker-end="url(#arrRange)"/>
+                <text x="602" y="154" class="mut" text-anchor="middle">先定位到 20~30 的子树</text>
+
+                <rect x="90" y="210" width="250" height="86" rx="8" fill="#16253a" stroke="#4f6697"/>
+                <text x="215" y="238" class="txt" text-anchor="middle">叶子页 L1（前页）</text>
+                <text x="215" y="260" class="txt" text-anchor="middle">[17,19,21,23]</text>
+
+                <rect x="365" y="210" width="250" height="86" rx="8" fill="#1f3154" stroke="#9fb7e8"/>
+                <text x="490" y="238" class="txt" text-anchor="middle">叶子页 L2（起始页）</text>
+                <text x="490" y="260" class="txt" text-anchor="middle">[24,25,26]</text>
+                <text x="490" y="280" class="mut" text-anchor="middle">从 24 开始输出</text>
+
+                <rect x="640" y="210" width="250" height="86" rx="8" fill="#1f3154" stroke="#9fb7e8"/>
+                <text x="765" y="238" class="txt" text-anchor="middle">叶子页 L3（继续页）</text>
+                <text x="765" y="260" class="txt" text-anchor="middle">[27,28,29]</text>
+                <text x="765" y="280" class="mut" text-anchor="middle">取到 28 停止</text>
+
+                <line x1="340" y1="253" x2="360" y2="253" stroke="#657fb6" marker-end="url(#arrRange)"/>
+                <line x1="615" y1="253" x2="635" y2="253" stroke="#8da2cf" stroke-width="2" marker-end="url(#arrRange)"/>
+
+                <text x="490" y="195" class="mut" text-anchor="middle">定位命中页后，通过叶子页 next 指针顺序遍历</text>
+
+              </svg>
+            </div>
+
+            <div class="mvcc-diagram-wrap">
+              <h3>B-tree 结构图 3：插入触发页分裂（Page Split）机制</h3>
+              <details class="diagram-note">
+                <summary>
+                  <span class="note-icon" aria-hidden="true">i</span>
+                  <span>点击查看注释：为什么父节点（内部节点）也会满，以及级联分裂如何影响树高</span>
+                </summary>
+                <div class="note-body">
+                  <p><b>核心结论：</b>父节点（Parent Node）就是非叶子节点（内部节点/路由节点）。它虽然不存行地址 TID，但它同样是固定大小的 8KB 物理页，所以也会“装满”。</p>
+
+                  <h4>1) 非叶子节点内部结构：为什么“指示牌”也会挤满</h4>
+                  <ul>
+                    <li>叶子节点主要存 <code>(Key, TID)</code>：Key + 数据行物理地址。</li>
+                    <li>非叶子节点主要存 <code>(Key, Child_Page_Number)</code>：Key + 下层页号（路由信息）。</li>
+                    <li>可理解为“分流表”：不同 Key 把查询分流到不同子页。</li>
+                    <li>因为页大小固定为 8KB，Key 越大，单页可容纳的分流项越少；分流项增多后，父节点同样会满。</li>
+                  </ul>
+
+                  <h4>2) 级联分裂（Cascade Split）：从叶子一直向上推</h4>
+                  <ol>
+                    <li>叶子页先满：页 A 分裂成 A/B，并把中间键（如 25）上推给父节点。</li>
+                    <li>父节点也可能满：若父节点放不下这个新分流键，就继续分裂，并把自己的中间键再上推。</li>
+                    <li>最坏会影响根：若根也满，根分裂并生成新根，整棵树高度 +1。</li>
+                  </ol>
+
+                  <h4>3) 为什么要关注树高</h4>
+                  <p>树高几乎直接决定查找路径长度。高度从 3 增到 4，等值查找通常就要多经过一层节点，在高并发下会放大延迟与 I/O 压力。</p>
+
+                  <h4>4) 补充：分裂策略与写入模式</h4>
+                  <p>PostgreSQL 常见 90/10（偏顺序插入优化）或 50/50（偏随机插入）分裂思路，目标是留出一定空隙（fillfactor）减少频繁再分裂。随机生成的 UUID 做主键会让数据库变慢：因为 UUID 乱序，会导致整棵树到处都在频繁分裂、频繁重组。</p>
+
+                  <h4>一句话总结</h4>
+                  <p>父节点不存业务数据，但要存“路标”；路标多了，8KB 的页照样不够用，分裂就会沿树向上级联。</p>
+                </div>
+              </details>
+              <svg width="980" height="500" viewBox="0 0 980 500" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="B-tree 页分裂机制示意图">
+                <defs>
+                  <style>
+                    .title { fill:#d9e4fb; font: 13px 'Segoe UI','Microsoft YaHei',sans-serif; font-weight:600; }
+                    .txt { fill:#a8b3cc; font: 12px 'Segoe UI','Microsoft YaHei',sans-serif; }
+                    .mut { fill:#7c879f; font: 11px 'Segoe UI','Microsoft YaHei',sans-serif; }
+                  </style>
+                  <marker id="arr2" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+                    <path d="M0,0 L10,3 L0,6 Z" fill="#8da2cf"/>
+                  </marker>
+                </defs>
+
+                <rect x="14" y="14" width="952" height="472" rx="10" fill="#0f1628" stroke="#3b4f7a"/>
+                <text x="30" y="40" class="title">例子：向叶子页插入 key=25，页满时如何分裂并上推中间键</text>
+
+                <text x="40" y="78" class="txt">步骤 1：目标叶子页已满</text>
+                <rect x="40" y="92" width="260" height="78" rx="8" fill="#1a2340" stroke="#5a6f9f"/>
+                <text x="58" y="121" class="txt">叶子页（满）</text>
+                <text x="58" y="144" class="txt">[21,23,24,26,27,29]</text>
+
+                <text x="350" y="78" class="txt">步骤 2：插入后排序并按中位拆分</text>
+                <rect x="350" y="92" width="280" height="78" rx="8" fill="#1b2744" stroke="#5a6f9f"/>
+                <text x="368" y="121" class="txt">临时序列</text>
+                <text x="368" y="144" class="txt">[21,23,24,25,26,27,29]</text>
+
+                <line x1="302" y1="131" x2="342" y2="131" stroke="#8da2cf" stroke-width="2" marker-end="url(#arr2)"/>
+
+                <text x="690" y="78" class="txt">步骤 3：拆成两个页并上推 25</text>
+                <rect x="690" y="92" width="120" height="78" rx="8" fill="#16253a" stroke="#4f6697"/>
+                <text x="705" y="121" class="txt">左页</text>
+                <text x="703" y="144" class="txt">[21,23,24]</text>
+
+                <rect x="826" y="92" width="120" height="78" rx="8" fill="#16253a" stroke="#4f6697"/>
+                <text x="841" y="121" class="txt">右页</text>
+                <text x="839" y="144" class="txt">[25,26,27,29]</text>
+
+                <line x1="632" y1="131" x2="680" y2="131" stroke="#8da2cf" stroke-width="2" marker-end="url(#arr2)"/>
+
+                <rect x="330" y="230" width="320" height="72" rx="8" fill="#121b30" stroke="#3b4f7a"/>
+                <text x="348" y="258" class="txt">父节点原键：10 | 20 | 30</text>
+                <text x="348" y="281" class="txt">上推后：10 | 20 | <tspan fill="#d9e4fb">25</tspan> | 30</text>
+
+                <line x1="750" y1="172" x2="520" y2="230" stroke="#8da2cf" stroke-width="2" marker-end="url(#arr2)"/>
+                <text x="760" y="205" class="mut">中间键上推到父节点（路由结点，内部节点）</text>
+
+                <rect x="40" y="340" width="910" height="126" rx="8" fill="#121b30" stroke="#3b4f7a"/>
+                <text x="56" y="368" class="txt">关键机制总结：</text>
+                <text x="56" y="392" class="txt">1) 叶子页满时触发分裂；2) 中间键上推父节点；3) 若父节点也满，会向上级联分裂，最坏可增加树高。</text>
+                <text x="56" y="415" class="txt">2) 这就是写入放大的来源之一：插入越随机、页越容易分裂，维护成本越高。</text>
+                <text x="56" y="438" class="txt">3) 顺序递增键（如时间/雪花ID）通常比完全随机键更友好，分裂和碎片更少。</text>
+              </svg>
+            </div>
+
+            <li><b>GIN（倒排）</b>：
+              <ul>
+                <li>特点：索引“元素”，不是整行，适合多值/包含关系查询。</li>
+                <li>适合：<code>JSONB</code>、数组、全文检索（梦境关键词检索）。</li>
+                <li>代价：写入维护成本通常高于 B-tree。</li>
+              </ul>
+            </li>
+            <li><b>BRIN（块范围索引）</b>：
+              <ul>
+                <li>特点：按数据块记录最小/最大值，索引体积极小。</li>
+                <li>适合：超大时序表、按时间递增写入的日志/流水。</li>
+                <li>优势：写入影响小，空间成本低；但精确度不如 B-tree。</li>
+              </ul>
+            </li>
+          </ol>
+
+          <h3>总结对照</h3>
+          <table>
+            <tr><th>索引类型</th><th>核心优势</th><th>Dream Log 典型场景</th></tr>
+            <tr><td>B-tree</td><td>通用、有序、范围查询强</td><td>用户 ID、创建时间、常规筛选排序</td></tr>
+            <tr><td>GIN</td><td>包含/多值/全文检索强</td><td>梦境内容关键词、标签、JSONB 属性</td></tr>
+            <tr><td>BRIN</td><td>体积极小，适合海量时序</td><td>日志流水、按时间追加的大表</td></tr>
+          </table>
+
+          <div class="warn"><h3>优化/坑</h3><p>索引不是越多越好：每多一个索引，写入都要额外维护。应基于真实 SQL、选择性与命中率定期清理无效索引。</p></div>
+        </div>
+      </details>
+
+      <details>
+        <summary>5) 解释一下 PostgreSQL 中的 WAL 机制，它的作用是什么？</summary>
+        <div class="content">
+          <h3>0) 先看一个“没有 WAL 会怎样”的场景</h3>
+          <p>假设 Dream Log 正在执行一条 <code>UPDATE</code>。数据库先在内存修改数据，然后准备把对应的 8KB 数据页写回磁盘。就在写盘过程中突然断电：可能只写了 2KB，剩余 6KB 没写完，形成“部分写入”。重启后这个数据页可能不一致，严重时会影响实例恢复。</p>
+          <p>WAL（Write-Ahead Logging，预写式日志）就是为了解决这个矛盾：<b>既要提交快，又要崩溃后可恢复</b>。</p>
+
+          <h3>1) WAL 的核心铁律：先写日志，再让数据页落盘</h3>
+          <p><b>规则：</b>任何数据页写入磁盘之前，描述该变更的 WAL 记录必须先安全落盘。</p>
+          <ol>
+            <li>客户端发出 <code>UPDATE</code>，数据库先修改内存中的 Buffer Cache（脏页产生）。</li>
+            <li>生成 WAL 记录（例如：事务100把 Page 42 的第 7 行改为“醒了”）。</li>
+            <li>把 WAL 追加写入 WAL 文件，并在提交路径上完成刷盘确认（fsync）。</li>
+            <li>WAL 落盘成功后，事务即可返回“提交成功”。</li>
+            <li>真正的 8KB 数据页可由后台进程稍后异步刷盘。</li>
+          </ol>
+
+          <h3>2) WAL 解决了什么问题（3 大作用）</h3>
+          <h3>A. 崩溃恢复（Crash Recovery）</h3>
+          <p>宕机后内存全部丢失，数据页可能还没来得及落盘。重启时 PostgreSQL 会从最近 Checkpoint 往后重放 WAL（Redo），把“已经提交但尚未写入数据页”的变更补回去，恢复到一致状态。</p>
+
+          <h3>B. 性能优化：把随机写变成顺序写</h3>
+          <p>直接写数据页通常是随机 I/O，成本高；而 WAL 是连续追加写（顺序 I/O），吞吐和延迟都更稳定。所以提交路径优先保证 WAL 快速落盘，接口响应更快。</p>
+
+          <h3>C. 复制与时间点恢复（PITR）</h3>
+          <ul>
+            <li><b>主从复制：</b>从库持续接收并重放主库 WAL，即可与主库保持一致。</li>
+            <li><b>PITR：</b>“一份基础备份 + 一段时间内的 WAL”，可恢复到指定时间点（秒级）。</li>
+          </ul>
+
+          <h3>3) Checkpoint：为什么 WAL 不会无限增长</h3>
+          <p>Checkpoint 会定期把脏页批量推进到数据文件，并在 WAL 中写入检查点记录。这样崩溃恢复只需从最近 Checkpoint 开始，不必从很久以前回放；同时更早的 WAL 也具备回收/复用条件。</p>
+
+          <h3>4) 一张图看懂 WAL</h3>
+          <div class="mvcc-diagram-wrap">
+            <svg width="980" height="470" viewBox="0 0 980 470" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="WAL 工作机制：提交路径与崩溃恢复路径">
+              <defs>
+                <style>
+                  .title { fill:#d9e4fb; font: 13px 'Segoe UI','Microsoft YaHei',sans-serif; font-weight:600; }
+                  .txt { fill:#a8b3cc; font: 12px 'Segoe UI','Microsoft YaHei',sans-serif; }
+                  .mut { fill:#7c879f; font: 11px 'Segoe UI','Microsoft YaHei',sans-serif; }
+                </style>
+                <marker id="arrWal2" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+                  <path d="M0,0 L10,3 L0,6 Z" fill="#8da2cf"/>
+                </marker>
+              </defs>
+
+              <rect x="14" y="14" width="952" height="442" rx="10" fill="#0f1628" stroke="#3b4f7a"/>
+
+              <text x="30" y="40" class="title">提交路径：先 WAL，后数据页</text>
+              <rect x="40" y="62" width="180" height="60" rx="8" fill="#1a2340" stroke="#5a6f9f"/>
+              <text x="130" y="88" class="txt" text-anchor="middle">1) UPDATE 改内存页</text>
+              <text x="130" y="108" class="mut" text-anchor="middle">Buffer Cache</text>
+
+              <rect x="260" y="62" width="190" height="60" rx="8" fill="#1b2744" stroke="#5a6f9f"/>
+              <text x="355" y="88" class="txt" text-anchor="middle">2) 生成 WAL 记录</text>
+              <text x="355" y="108" class="mut" text-anchor="middle">变更描述</text>
+
+              <rect x="490" y="62" width="210" height="60" rx="8" fill="#1f3154" stroke="#9fb7e8"/>
+              <text x="595" y="88" class="txt" text-anchor="middle">3) WAL 顺序写 + fsync</text>
+              <text x="595" y="108" class="mut" text-anchor="middle">先保证日志安全落盘</text>
+
+              <rect x="740" y="62" width="180" height="60" rx="8" fill="#263a62" stroke="#9fb7e8"/>
+              <text x="830" y="88" class="txt" text-anchor="middle">4) 返回提交成功</text>
+              <text x="830" y="108" class="mut" text-anchor="middle">客户端收到 ACK</text>
+
+              <line x1="220" y1="92" x2="252" y2="92" stroke="#8da2cf" marker-end="url(#arrWal2)"/>
+              <line x1="450" y1="92" x2="482" y2="92" stroke="#8da2cf" marker-end="url(#arrWal2)"/>
+              <line x1="700" y1="92" x2="732" y2="92" stroke="#8da2cf" marker-end="url(#arrWal2)"/>
+
+              <rect x="300" y="152" width="380" height="68" rx="8" fill="#16253a" stroke="#4f6697"/>
+              <text x="490" y="179" class="txt" text-anchor="middle">5) 后台异步刷脏页（Checkpointer/BgWriter）</text>
+              <text x="490" y="199" class="mut" text-anchor="middle">Data Page 可晚一点写盘，不阻塞提交</text>
+              <line x1="595" y1="122" x2="490" y2="144" stroke="#657fb6" stroke-dasharray="4 3" marker-end="url(#arrWal2)"/>
+
+              <text x="30" y="268" class="title">崩溃恢复路径：Checkpoint + WAL Redo</text>
+              <rect x="40" y="286" width="170" height="58" rx="8" fill="#322030" stroke="#9b6f8a"/>
+              <text x="125" y="311" class="txt" text-anchor="middle">A) 宕机重启</text>
+              <text x="125" y="329" class="mut" text-anchor="middle">内存状态丢失</text>
+
+              <rect x="250" y="286" width="220" height="58" rx="8" fill="#2d2538" stroke="#8e6e99"/>
+              <text x="360" y="311" class="txt" text-anchor="middle">B) 从最近 Checkpoint 启动</text>
+              <text x="360" y="329" class="mut" text-anchor="middle">定位恢复起点</text>
+
+              <rect x="510" y="286" width="180" height="58" rx="8" fill="#2a2235" stroke="#8e6e99"/>
+              <text x="600" y="311" class="txt" text-anchor="middle">C) 重放 WAL</text>
+              <text x="600" y="329" class="mut" text-anchor="middle">补齐已提交变更</text>
+
+              <rect x="730" y="286" width="190" height="58" rx="8" fill="#263a62" stroke="#9fb7e8"/>
+              <text x="825" y="311" class="txt" text-anchor="middle">D) 回到一致状态</text>
+              <text x="825" y="329" class="mut" text-anchor="middle">继续对外服务</text>
+
+              <line x1="210" y1="315" x2="242" y2="315" stroke="#8da2cf" marker-end="url(#arrWal2)"/>
+              <line x1="470" y1="315" x2="502" y2="315" stroke="#8da2cf" marker-end="url(#arrWal2)"/>
+              <line x1="690" y1="315" x2="722" y2="315" stroke="#8da2cf" marker-end="url(#arrWal2)"/>
+
+              <rect x="40" y="366" width="900" height="72" rx="8" fill="#121b30" stroke="#3b4f7a"/>
+              <text x="56" y="392" class="txt">一句话总结：WAL 像“流水账本”——正式账本（数据页）还没写完也没关系，只要流水账先安全记下，宕机后就能按账重建。</text>
+              <text x="56" y="416" class="mut">对照：Data Page 偏“结果存储”，WAL 偏“安全与恢复凭证”。</text>
+            </svg>
+          </div>
+        </div>
+      </details>
+
+      <details>
+        <summary>6) EXPLAIN ANALYZE 执行计划？</summary>
+        <div class="content">
+          <h3>定义：EXPLAIN 是“预测”，EXPLAIN ANALYZE 是“实测”</h3>
+          <p><code>EXPLAIN</code> 只展示优化器预计会怎么执行；<code>EXPLAIN ANALYZE</code> 会把 SQL 真正跑一遍，输出每个节点的真实耗时、真实行数与循环次数。</p>
+
+          <h3>1. 先看扫描方式：</h3>
+          <table>
+            <tr><th>扫描类型</th><th>含义</th><th>面试解读</th></tr>
+            <tr><td><code>Seq Scan</code></td><td>全表顺序扫描</td><td>小表可接受</td></tr>
+            <tr><td><code>Index Scan</code></td><td>先查索引，再回表取数据</td><td>适合选择性高（返回行少）的条件查询</td></tr>
+            <tr><td><code>Index Only Scan</code></td><td>仅靠索引返回结果，不回表</td><td>理想状态，I/O 最省，通常依赖覆盖索引与可见性条件</td></tr>
+          </table>
+
+          <h3>2. 核心指标：</h3>
+          <h3>A. <code>actual time</code>（真实耗时）</h3>
+
+          <h3>B. <code>rows</code>（估算行数）vs 实际行数</h3>
+
+          <p>需用 <code>EXPLAIN (ANALYZE, BUFFERS)</code>。重点看 <code>shared hit</code>（缓存命中）与 <code>shared read</code>（磁盘读取）。<code>read</code> 持续偏高通常意味着慢 I/O 成本在放大。</p>
+
+          <h3>3. 常见性能瓶颈</h3>
+          <ol>
+            <li><b>索引失效</b>：例如在过滤列上套函数（如 <code>WHERE lower(title)=...</code>），导致已有索引无法直接使用，计划退化为 <code>Seq Scan</code>。</li>
+            <li><b>Nested Loop 地狱</b>：大表 join 大表但仍走嵌套循环，常因 join 键缺索引或行数估算错误，原本应选 <code>Hash Join</code>/<code>Merge Join</code>。</li>
+            <li><b>排序落盘</b>：出现 <code>Sort Method: external merge Disk</code>，说明排序集超出内存，转为磁盘排序，延迟明显上升。</li>
+            <li><b>重复扫描放大</b>：某节点 <code>loops</code> 很高，单次不慢但总耗时被循环放大，常见于不合理子查询或 join 顺序。</li>
+          </ol>
+
+          <h3>4. 建议的排查顺序（实战模板）</h3>
+          <ol>
+            <li>看 <b>Execution Time</b>：总耗时是否超预算。</li>
+            <li>找最慢节点：按 <code>actual time</code> 与 <code>loops</code> 定位热点。</li>
+            <li>看扫描类型：大表是否出现异常 <code>Seq Scan</code>。</li>
+            <li>对比行数：估算与实际是否严重偏差。</li>
+            <li>看 Buffers：慢点是 CPU 计算还是磁盘 I/O。</li>
+          </ol>
+        </div>
+      </details>
+
+      <details>
+        <summary>7) PostgreSQL 如何实现分区表？</summary>
+        <div class="content">
+          <h3>1. 什么是分区表</h3>
+          <p><b>父表</b>是逻辑入口，本身不存业务数据；真正数据落在<b>分区子表（Partitions）</b>里。你对父表执行 <code>SELECT/INSERT</code>，PostgreSQL 会自动路由到对应分区。</p>
+
+          <h3>2. 三种核心分区方式</h3>
+          <table>
+            <tr><th>类型</th><th>适用场景</th><th>Dream Log 示例</th><th>特点</th></tr>
+            <tr><td><b>RANGE</b></td><td>时间/数值区间数据</td><td>按 <code>created_at</code> 按月或按年分区</td><td>最常见；范围查询可触发分区裁剪</td></tr>
+            <tr><td><b>LIST</b></td><td>枚举/分类字段</td><td>按 <code>weather_tag</code> 分区</td><td>分类清晰时直观易维护</td></tr>
+            <tr><td><b>HASH</b></td><td>无明显范围但要均摊负载</td><td>按 <code>user_id</code> 哈希打散</td><td>均衡写入与并发压力</td></tr>
+          </table>
+
+          <h3>分区路由与裁剪流程图</h3>
+          <div class="mvcc-diagram-wrap">
+            <svg width="980" height="470" viewBox="0 0 980 470" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="PostgreSQL 分区表：INSERT 路由与 SELECT 分区裁剪示意图">
+              <defs>
+                <style>
+                  .t1 { fill:#d9e4fb; font: 13px 'Segoe UI','Microsoft YaHei',sans-serif; font-weight:600; }
+                  .t2 { fill:#a8b3cc; font: 12px 'Segoe UI','Microsoft YaHei',sans-serif; }
+                  .t3 { fill:#7c879f; font: 11px 'Segoe UI','Microsoft YaHei',sans-serif; }
+                </style>
+                <marker id="arrP" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+                  <path d="M0,0 L10,3 L0,6 Z" fill="#8da2cf"/>
+                </marker>
+              </defs>
+
+              <rect x="14" y="14" width="952" height="442" rx="10" fill="#0f1628" stroke="#3b4f7a"/>
+
+              <text x="30" y="40" class="t1">A. INSERT 路由：应用只写父表，数据库自动分发到子分区</text>
+              <rect x="34" y="58" width="150" height="56" rx="8" fill="#1a2340" stroke="#5a6f9f"/>
+              <text x="109" y="82" class="t2" text-anchor="middle">INSERT INTO dreams</text>
+              <text x="109" y="100" class="t3" text-anchor="middle">created_at='2025-03-21'</text>
+
+              <rect x="240" y="58" width="210" height="56" rx="8" fill="#1b2744" stroke="#5a6f9f"/>
+              <text x="345" y="82" class="t2" text-anchor="middle">父表 dreams（逻辑入口）</text>
+              <text x="345" y="100" class="t3" text-anchor="middle">不存真实业务行</text>
+
+              <rect x="510" y="58" width="220" height="56" rx="8" fill="#1f3154" stroke="#9fb7e8"/>
+              <text x="620" y="82" class="t2" text-anchor="middle">分区路由器（Partition Router）</text>
+              <text x="620" y="100" class="t3" text-anchor="middle">按 RANGE/LIST/HASH 判断目标分区</text>
+
+              <line x1="184" y1="86" x2="232" y2="86" stroke="#8da2cf" marker-end="url(#arrP)"/>
+              <line x1="450" y1="86" x2="502" y2="86" stroke="#8da2cf" marker-end="url(#arrP)"/>
+
+              <rect x="760" y="36" width="180" height="54" rx="8" fill="#16253a" stroke="#4f6697"/>
+              <text x="850" y="59" class="t2" text-anchor="middle">dreams_y2024</text>
+              <text x="850" y="77" class="t3" text-anchor="middle">2024-01-01 ~ 2025-01-01</text>
+
+              <rect x="760" y="98" width="180" height="54" rx="8" fill="#263a62" stroke="#9fb7e8"/>
+              <text x="850" y="121" class="t2" text-anchor="middle">dreams_y2025</text>
+              <text x="850" y="139" class="t3" text-anchor="middle">2025-01-01 ~ 2026-01-01</text>
+
+              <rect x="760" y="160" width="180" height="54" rx="8" fill="#16253a" stroke="#4f6697"/>
+              <text x="850" y="183" class="t2" text-anchor="middle">dreams_default</text>
+              <text x="850" y="201" class="t3" text-anchor="middle">边界外异常值兜底</text>
+
+              <line x1="730" y1="80" x2="752" y2="63" stroke="#657fb6" marker-end="url(#arrP)"/>
+              <line x1="730" y1="86" x2="752" y2="125" stroke="#8da2cf" stroke-width="2" marker-end="url(#arrP)"/>
+              <line x1="730" y1="92" x2="752" y2="187" stroke="#657fb6" marker-end="url(#arrP)"/>
+              <text x="690" y="134" class="t3">命中 2025 年范围</text>
+
+              <text x="30" y="266" class="t1">B. SELECT 裁剪：只扫描命中分区（Partition Pruning）</text>
+              <rect x="34" y="284" width="300" height="62" rx="8" fill="#1a2340" stroke="#5a6f9f"/>
+              <text x="184" y="309" class="t2" text-anchor="middle">SELECT * FROM dreams</text>
+              <text x="184" y="329" class="t3" text-anchor="middle">WHERE created_at &gt;= '2025-01-01'</text>
+
+              <rect x="390" y="284" width="220" height="62" rx="8" fill="#1f3154" stroke="#9fb7e8"/>
+              <text x="500" y="309" class="t2" text-anchor="middle">规划器做分区裁剪</text>
+              <text x="500" y="329" class="t3" text-anchor="middle">仅保留相关分区</text>
+
+              <line x1="334" y1="316" x2="382" y2="316" stroke="#8da2cf" marker-end="url(#arrP)"/>
+
+              <rect x="680" y="254" width="220" height="54" rx="8" fill="#322030" stroke="#9b6f8a"/>
+              <text x="790" y="277" class="t2" text-anchor="middle">dreams_y2024</text>
+              <text x="790" y="296" class="t3" text-anchor="middle">被裁剪（跳过）</text>
+
+              <rect x="680" y="318" width="220" height="54" rx="8" fill="#263a62" stroke="#9fb7e8"/>
+              <text x="790" y="341" class="t2" text-anchor="middle">dreams_y2025</text>
+              <text x="790" y="360" class="t3" text-anchor="middle">保留并扫描</text>
+
+              <rect x="680" y="382" width="220" height="54" rx="8" fill="#263a62" stroke="#9fb7e8"/>
+              <text x="790" y="405" class="t2" text-anchor="middle">dreams_y2026</text>
+              <text x="790" y="424" class="t3" text-anchor="middle">保留并扫描</text>
+
+              <line x1="610" y1="316" x2="672" y2="281" stroke="#657fb6" marker-end="url(#arrP)"/>
+              <line x1="610" y1="316" x2="672" y2="345" stroke="#8da2cf" marker-end="url(#arrP)"/>
+              <line x1="610" y1="316" x2="672" y2="409" stroke="#8da2cf" marker-end="url(#arrP)"/>
+            </svg>
+          </div>
+          <div class="warn"><b>实践坑点：</b>分区不是越多越好；若分区键（created_at）和主查询条件（user_id）不一致，分区裁剪不会触发，数据库会将所有子表都扫描一遍，这比不分区还要慢！因为扫描多个物理表的开销远大于扫描一个大表。建议配置 <code>DEFAULT PARTITION</code> 防止异常值插入失败。</div>
+        </div>
+      </details>
+
+      <details>
+        <summary>8) JSON 和 JSONB 的区别？</summary>
+        <div class="content">
+          <h3>核心结论</h3>
+          <p>在 PostgreSQL 17 里，两者都能存 JSON，但定位不同：<b>JSON 是“原样文本存档”</b>，<b>JSONB 是“可计算、可索引的二进制结构”</b>。</p>
+
+          <h3>1. 核心区别对比</h3>
+          <table>
+            <tr><th>特性</th><th>JSON</th><th>JSONB</th></tr>
+            <tr><td>存储方式</td><td>保存原始文本副本</td><td>写入时解析为二进制结构</td></tr>
+            <tr><td>写入开销</td><td>较低（几乎直接写入）</td><td>较高（需解析与结构化）</td></tr>
+            <tr><td>查询速度</td><td>较慢（查询时再解析）</td><td>更快（已预解析）</td></tr>
+            <tr><td>索引能力</td><td>弱</td><td>强（常配合 GIN）</td></tr>
+            <tr><td>键顺序/重复键</td><td>保留输入顺序与重复键</td><td>不保证原顺序，重复键按规则归并（保留后值）</td></tr>
+            <tr><td>典型定位</td><td>“原文存档”</td><td>“可检索的数据结构”</td></tr>
+          </table>
+
+          <h3>2. 为什么 JSONB 常是首选</h3>
+          <ul>
+            <li><b>查询友好</b>：可直接对键路径做过滤、聚合与包含判断。</li>
+            <li><b>索引友好</b>：GIN 索引能显著降低大数据量下的 JSON 查询成本。</li>
+            <li><b>计算友好</b>：写入时先解析，读取时少重复解析，整体更适合“经常查”的业务。</li>
+          </ul>
+
+          <h3>3. 什么时候选 JSONB，什么时候选 JSON</h3>
+          <h3>A. 选 JSONB（绝大多数场景）</h3>
+          <ul>
+            <li>需要按 JSON 内部字段过滤，如 <code>WHERE data->>'type'='dream'</code>。</li>
+            <li>需要统计、聚合、标签检索、报表分析。</li>
+            <li>不要求保留原始文本格式（空格缩进等）。</li>
+          </ul>
+
+          <h3>B. 选 JSON（少数场景）</h3>
+          <ul>
+            <li>只做“原样存取”，几乎不查询内部字段。</li>
+            <li>必须保留原始格式或重复键形态。</li>
+            <li>极端偏写入、极低读取频率的日志存档场景。</li>
+          </ul>
+          <div class="warn"><b>实践提醒：</b>JSONB 虽灵活，但不要把所有结构化字段都塞进 JSONB。高频筛选字段（如 user_id、created_at、status）仍应保留为普通列，便于优化器稳定选计划。</div>
+
+        </div>
+      </details>
+
+      <details>
+        <summary>9) 说说 PostgreSQL 的进程模型</summary>
+        <div class="content">
+          <h3>核心结论：PostgreSQL 17 是多进程模型（Process-Based）</h3>
+          <p>PostgreSQL 采用“多进程”而不是“多线程”架构。优点是稳定性强：单个进程异常通常不会直接拖垮整个实例，主控进程可感知并进行隔离处理。</p>
+
+          <h3>1) Postmaster（主控/守护进程）</h3>
+          <p>实例启动后首先运行的是主控进程（常见为 <code>postgres</code>）。它不直接执行业务 SQL，而是负责：</p>
+          <ul>
+            <li>监听连接端口（默认 <code>5432</code>）；</li>
+            <li>接收新连接并派生对应的 backend 进程；</li>
+            <li>管理共享内存与各类后台辅助进程生命周期。</li>
+          </ul>
+
+          <h3>2) Backend</h3>
+          <p>每个客户端连接（例如 Dream Log 的一次应用连接）都会对应一个独立 backend，负责该连接上的 SQL 全流程：</p>
+          <ul>
+            <li>解析 SQL、生成/执行计划；</li>
+            <li>访问 shared buffers、锁管理、事务执行；</li>
+            <li>必要时触发 WAL 记录与提交路径同步。</li>
+          </ul>
+          <div class="warn"><b>关键代价：</b>“每连接一进程”意味着连接数暴涨会迅速放大内存与调度开销，生产环境通常需要 PgBouncer 做连接池化。
+            <details class="inline-note">
+              <summary>
+                <span class="note-icon" aria-hidden="true">i</span>
+                <span>点击查看</span>
+              </summary>
+              <div class="note-body">
+                <h4>PgBouncer 是什么，为什么几乎必备？</h4>
+                <p>PgBouncer 是 PostgreSQL 生态里轻量级高性能连接池。它把“海量客户端连接”复用到“少量真实数据库连接”，直接缓解 PostgreSQL 多进程模型下的连接膨胀问题。</p>
+
+                <h4>1) 不用 PgBouncer 的痛点</h4>
+                <ul>
+                  <li>每个连接都要对应一个 backend 进程，内存与调度开销线性上升。</li>
+                  <li>高并发下会出现连接风暴、上下文切换增加、数据库吞吐抖动。</li>
+                </ul>
+
+                <h4>2) PgBouncer 的三种池化模式</h4>
+                <ul>
+                  <li><b>Session Pooling</b>：连接随会话独占，最兼容但复用效率一般。</li>
+                  <li><b>Transaction Pooling（最常用）</b>：连接在事务内借出，提交后立即归还，复用率最高。</li>
+                  <li><b>Statement Pooling</b>：每条语句后归还连接，不支持多语句事务，较少用于通用业务。</li>
+                </ul>
+
+                <h4>3) Dream Log 的直接收益</h4>
+                <ul>
+                  <li>连接创建更快：客户端连接由 PgBouncer 预热复用。</li>
+                  <li>内存更稳：数据库真实连接数可控，不随前端连接暴涨。</li>
+                  <li>抗峰值更强：数据库进程数与负载更平滑。</li>
+                </ul>
+
+              </div>
+            </details>
+          </div>
+
+          <h3>3) 辅助进程</h3>
+          <table>
+            <tr><th>进程</th><th>职责</th><th>你可以怎么理解</th></tr>
+            <tr><td>Logger</td><td>写运行日志与错误日志</td><td>日志员</td></tr>
+            <tr><td>Checkpointer</td><td>执行检查点，推进脏页落盘边界</td><td>检查点总管</td></tr>
+            <tr><td>Background Writer</td><td>平时预刷脏页，维持可用缓冲页</td><td>异步刷盘手</td></tr>
+            <tr><td>WAL Writer</td><td>把 WAL buffer 持续刷新到 WAL 文件</td><td>日志记录员</td></tr>
+            <tr><td>Autovacuum Launcher/Worker</td><td>自动回收 dead tuples、维护统计信息</td><td>垃圾回收队</td></tr>
+            <tr><td>Archiver</td><td>归档已完成的 WAL 段</td><td>档案员</td></tr>
+            <tr><td>Walsender/Walreceiver</td><td>复制链路日志传输与接收</td><td>同步专员</td></tr>
+          </table>
+
+          <h3>4) 共享内存：多进程如何协作</h3>
+          <p>PostgreSQL 的并发进程通过共享内存协同工作，而不是直接共享进程私有堆：</p>
+          <ul>
+            <li><b>Shared Buffers</b>：共享数据页缓存；</li>
+            <li><b>Lock/Proc 相关结构</b>：协调锁与进程并发控制；</li>
+            <li><b>WAL Buffers</b>：暂存尚未写入 WAL 文件的日志记录。</li>
+          </ul>
+
+          <h3>5) 结合 Dream Log 的一次查询链路</h3>
+          <ol>
+            <li>FastAPI 发起连接/请求，Postmaster 受理连接；</li>
+            <li>对应 backend 执行 SQL，优先从 shared buffers 取页；</li>
+            <li>写请求产生 WAL；WAL Writer、bgwriter、checkpointer 在后台配合保障性能与可恢复性。</li>
+          </ol>
+
+          <h3>进程模型架构图（SVG）</h3>
+          <div class="mvcc-diagram-wrap">
+            <svg width="980" height="460" viewBox="0 0 980 460" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="FastAPI 到 PostgreSQL 进程模型协作架构图">
+              <defs>
+                <style>
+                  .t1 { fill:#d9e4fb; font: 13px 'Segoe UI','Microsoft YaHei',sans-serif; font-weight:600; }
+                  .t2 { fill:#a8b3cc; font: 12px 'Segoe UI','Microsoft YaHei',sans-serif; }
+                  .t3 { fill:#7c879f; font: 11px 'Segoe UI','Microsoft YaHei',sans-serif; }
+                </style>
+                <marker id="arrProc" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+                  <path d="M0,0 L10,3 L0,6 Z" fill="#8da2cf"/>
+                </marker>
+              </defs>
+
+              <rect x="14" y="14" width="952" height="432" rx="10" fill="#0f1628" stroke="#3b4f7a"/>
+              <text x="30" y="40" class="t1">PostgreSQL 17 多进程协作：FastAPI → Postmaster → Backend → Shared Memory + Auxiliary</text>
+
+              <rect x="34" y="66" width="170" height="64" rx="8" fill="#1a2340" stroke="#5a6f9f"/>
+              <text x="119" y="92" class="t2" text-anchor="middle">FastAPI 应用</text>
+              <text x="119" y="112" class="t3" text-anchor="middle">发起连接与 SQL 请求</text>
+
+              <rect x="260" y="66" width="220" height="64" rx="8" fill="#1b2744" stroke="#5a6f9f"/>
+              <text x="370" y="92" class="t2" text-anchor="middle">Postmaster（主控进程）</text>
+              <text x="370" y="112" class="t3" text-anchor="middle">监听5432 / 派生Backend / 管理后台进程</text>
+
+              <rect x="540" y="50" width="190" height="56" rx="8" fill="#263a62" stroke="#9fb7e8"/>
+              <text x="635" y="74" class="t2" text-anchor="middle">Backend #1</text>
+              <text x="635" y="93" class="t3" text-anchor="middle">连接A</text>
+
+              <rect x="540" y="116" width="190" height="56" rx="8" fill="#263a62" stroke="#9fb7e8"/>
+              <text x="635" y="140" class="t2" text-anchor="middle">Backend #2</text>
+              <text x="635" y="159" class="t3" text-anchor="middle">连接B</text>
+
+              <rect x="540" y="182" width="190" height="56" rx="8" fill="#263a62" stroke="#9fb7e8"/>
+              <text x="635" y="206" class="t2" text-anchor="middle">Backend #N</text>
+              <text x="635" y="225" class="t3" text-anchor="middle">连接N</text>
+
+              <line x1="204" y1="98" x2="252" y2="98" stroke="#8da2cf" marker-end="url(#arrProc)"/>
+              <line x1="480" y1="98" x2="532" y2="78" stroke="#8da2cf" marker-end="url(#arrProc)"/>
+              <line x1="480" y1="98" x2="532" y2="144" stroke="#8da2cf" marker-end="url(#arrProc)"/>
+              <line x1="480" y1="98" x2="532" y2="210" stroke="#8da2cf" marker-end="url(#arrProc)"/>
+
+              <rect x="34" y="280" width="430" height="130" rx="8" fill="#16253a" stroke="#4f6697"/>
+              <text x="52" y="307" class="t1">Shared Memory（共享内存车间）</text>
+              <text x="52" y="332" class="t2">• Shared Buffers：缓存数据页</text>
+              <text x="52" y="354" class="t2">• Lock/Proc 结构：并发与锁协调</text>
+              <text x="52" y="376" class="t2">• WAL Buffers：暂存 WAL 记录</text>
+
+              <rect x="500" y="280" width="446" height="130" rx="8" fill="#121b30" stroke="#3b4f7a"/>
+              <text x="518" y="307" class="t1">Auxiliary Processes（后台协作团队）</text>
+              <text x="518" y="332" class="t2">Logger | WAL Writer | Background Writer | Checkpointer</text>
+              <text x="518" y="354" class="t2">Autovacuum Launcher/Worker | Archiver | Walsender/Walreceiver</text>
+              <text x="518" y="376" class="t3">负责日志持久化、异步刷盘、垃圾回收与复制链路</text>
+
+              <line x1="635" y1="238" x2="240" y2="272" stroke="#8da2cf" marker-end="url(#arrProc)"/>
+              <line x1="635" y1="238" x2="720" y2="272" stroke="#8da2cf" marker-end="url(#arrProc)"/>
+
+              <rect x="760" y="66" width="180" height="64" rx="8" fill="#1f3154" stroke="#9fb7e8"/>
+              <text x="850" y="92" class="t2" text-anchor="middle">Data Files</text>
+              <text x="850" y="112" class="t3" text-anchor="middle">Heap / Index</text>
+
+              <rect x="760" y="146" width="180" height="64" rx="8" fill="#1f3154" stroke="#9fb7e8"/>
+              <text x="850" y="172" class="t2" text-anchor="middle">WAL Files</text>
+              <text x="850" y="192" class="t3" text-anchor="middle">持久化日志流</text>
+
+              <line x1="730" y1="84" x2="752" y2="96" stroke="#657fb6" marker-end="url(#arrProc)"/>
+              <line x1="730" y1="150" x2="752" y2="176" stroke="#8da2cf" marker-end="url(#arrProc)"/>
+            </svg>
+          </div>
+
+        </div>
+      </details>
+
+      <details>
+        <summary>10) PostgreSQL 物理复制和逻辑复制区别？</summary>
+        <div class="content">
+          <h3>核心理解：物理复制是“搬砖头”，逻辑复制是“搬图纸”</h3>
+          <p>在 PostgreSQL 17 中，两者都基于 WAL，但目标完全不同：<b>物理复制</b>追求“整实例一致镜像”，<b>逻辑复制</b>追求“按业务选择性分发”。</p>
+
+          <h3>1) 物理复制（Physical Replication）</h3>
+          <ul>
+            <li><b>复制单位</b>：整个数据库实例（所有库、表、索引、角色、系统对象）。</li>
+            <li><b>工作方式</b>：主库发送 WAL 字节流，从库在对应物理页位置重放，形成“克隆体”。</li>
+            <li><b>从库能力</b>：常见 Hot Standby（可读不可写）。</li>
+            <li><b>版本要求</b>：主从通常要求同大版本且体系结构兼容。</li>
+            <li><b>优势</b>：链路短、开销低、故障切换路径成熟，最适合 HA/容灾。</li>
+          </ul>
+
+          <h3>2) 逻辑复制（Logical Replication）</h3>
+          <ul>
+            <li><b>复制单位</b>：可按库/表/分区/行过滤（Publication/Subscription）。</li>
+            <li><b>工作方式</b>：把 WAL 解码成行级变更（INSERT/UPDATE/DELETE）后再应用。</li>
+            <li><b>订阅端能力</b>：目标库是独立可写实例，可有自己的索引与额外表。</li>
+            <li><b>版本能力</b>：更适合跨大版本迁移与异构分发。</li>
+            <li><b>优势</b>：按需同步、解耦主库、方便构建报表库/数据集成链路。</li>
+          </ul>
+
+          <h3>3) 核心差异对比（面试高频）</h3>
+          <table>
+            <tr><th>维度</th><th>物理复制（Physical）</th><th>逻辑复制（Logical）</th></tr>
+            <tr><td>同步粒度</td><td>实例级（全量）</td><td>按需（库/表/行）</td></tr>
+            <tr><td>底层依据</td><td>WAL 物理字节/页面变更</td><td>WAL 解码后的行级逻辑变更</td></tr>
+            <tr><td>从端写入</td><td>通常只读</td><td>可读可写（独立库）</td></tr>
+            <tr><td>跨版本</td><td>弱（通常需同大版本）</td><td>强（常用于平滑升级）</td></tr>
+            <tr><td>索引与约束</td><td>天然一致，无需重复建</td><td>需在目标端准备结构与约束策略</td></tr>
+            <tr><td>性能开销</td><td>更低</td><td>更高（解码 + 应用）</td></tr>
+            <tr><td>典型用途</td><td>高可用、容灾、只读扩展</td><td>数据分发、跨版本迁移、分析库</td></tr>
+          </table>
+
+          <h3>4) Dream Log 该怎么选</h3>
+          <ul>
+            <li><b>高可用优先</b>：主链路先上物理复制，保证主库故障时可快速切换。</li>
+            <li><b>分析/集成场景</b>：把公开梦境、特定业务表用逻辑复制分发到分析库，避免压主库。</li>
+          </ul>
+
+          <h3>5) PG 17 可说的增强点</h3>
+          <ul>
+            <li>逻辑复制在故障切换协同、初始复制效率等方面持续增强，运维可用性更高。</li>
+            <li>复制链路在高负载下的稳定性与可观测性持续改进，更适合复杂生产拓扑。</li>
+          </ul>
+
+          <p><b>一句话总结：</b>物理复制是“影子”，追求一模一样；逻辑复制是“分身”，只同步你指定的数据与变更。</p>
+        </div>
+      </details>
+
+    </section>
+  </div>
+  <script>
+    (function () {
+      const STORAGE_KEY = 'postgresql_faq_open_details_v1';
+      const detailsList = Array.from(document.querySelectorAll('.qa-list > details'));
+      if (!detailsList.length) return;
+
+      detailsList.forEach((el, idx) => {
+        el.setAttribute('data-faq-id', String(idx + 1));
+      });
+
+      function saveState() {
+        const openIds = detailsList
+          .filter((el) => el.open)
+          .map((el) => el.getAttribute('data-faq-id'));
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(openIds));
+      }
+
+      function restoreState() {
+        try {
+          const raw = localStorage.getItem(STORAGE_KEY);
+          if (!raw) return false;
+          const openIds = JSON.parse(raw);
+          if (!Array.isArray(openIds)) return false;
+
+          detailsList.forEach((el) => {
+            const id = el.getAttribute('data-faq-id');
+            el.open = openIds.includes(id);
+          });
+          return true;
+        } catch (e) {
+          return false;
+        }
+      }
+
+      const restored = restoreState();
+      if (!restored) {
+        detailsList.forEach((el, idx) => {
+          el.open = idx === 0;
+        });
+      }
+
+      detailsList.forEach((el) => {
+        el.addEventListener('toggle', saveState);
+      });
+
+      window.addEventListener('beforeunload', saveState);
+    })();
+  </script>
+</body>
+</html>

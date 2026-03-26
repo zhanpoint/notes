@@ -1,0 +1,2976 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FastAPI 面试高频问答</title>
+  <link rel="stylesheet" href="../assets/style.css" />
+  <style>
+    :root {
+      --bg: #0b0f1a;
+      --panel: #121829;
+      --text: #a8b3cc;
+      --line: #3b4f7a;
+      --line-soft: rgba(102, 132, 188, 0.35);
+    }
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+      line-height: 1.6;
+      font-size: 13px;
+    }
+    .container { width: min(1080px, 92vw); margin: 20px auto 36px; }
+    .hero {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 16px 18px;
+      margin-bottom: 12px;
+    }
+    h1 { margin: 0; font-size: clamp(20px, 2.1vw, 28px); line-height: 1.25; }
+
+    .qa-list { display: grid; gap: 10px; }
+    details {
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: linear-gradient(180deg, var(--panel) 0%, #101726 100%);
+      overflow: visible;
+    }
+    summary {
+      cursor: pointer;
+      list-style: none;
+      padding: 12px 14px;
+      font-weight: 500;
+      font-size: 13px;
+      display: block;
+      background: linear-gradient(180deg, #1b2438, #171f32);
+      border-bottom: 1px solid var(--line-soft);
+    }
+    summary::-webkit-details-marker { display: none; }
+    .content { padding: 10px 14px 14px; min-height: 20px; font-size: 12px; }
+    .content p,
+    .content li { font-size: 12px; }
+    .content h3 { font-size: 12px; }
+
+    .content p,
+    .content ul,
+    .content ol,
+    .content pre,
+    .content table,
+    .content h3 {
+      margin-left: 16px;
+    }
+    .content h3.q-title {
+      margin-left: 0;
+    }
+
+    .content pre {
+      background: linear-gradient(180deg, rgba(14, 21, 34, 0.94), rgba(11, 17, 29, 0.94));
+      border: 1px solid rgba(100, 126, 176, 0.26);
+      border-radius: 10px;
+      padding: 10px 12px;
+      overflow-x: auto;
+    }
+    .content pre code {
+      color: #bfcce6;
+      font-family: "Cascadia Code", "Consolas", "JetBrains Mono", monospace;
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
+    .content table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+      margin-top: 10px;
+      border: 1px solid var(--line-soft);
+      background: rgba(102, 132, 188, 0.06);
+    }
+    .content th,
+    .content td {
+      border: 1px solid var(--line-soft);
+      padding: 8px 10px;
+      text-align: left;
+      vertical-align: top;
+    }
+    .content thead th {
+      background: rgba(78, 104, 158, 0.2);
+      color: #d9e4fb;
+      font-weight: 600;
+    }
+
+    .chip-note-btn {
+      width: 14px;
+      height: 14px;
+      border-radius: 999px;
+      border: 1px solid var(--line-soft);
+      background: rgba(123, 216, 173, 0.15);
+      color: #c8f6e2;
+      font-size: 9px;
+      cursor: pointer;
+      line-height: 1;
+      padding: 0;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      vertical-align: middle;
+      margin-left: 6px;
+    }
+    .chip-note-btn:hover {
+      background: rgba(123, 216, 173, 0.25);
+    }
+    .note-anchor {
+      display: inline;
+    }
+    .chip-note-panel {
+      border: 1px solid var(--line-soft);
+      border-radius: 10px;
+      padding: 12px;
+      background: rgba(12, 20, 34, 0.98);
+      display: none;
+      position: fixed;
+      top: 16px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: min(980px, 92vw);
+      max-height: 82vh;
+      overflow: auto;
+      white-space: normal;
+      word-break: break-word;
+      z-index: 10000;
+      box-shadow: 0 18px 40px rgba(0, 0, 0, 0.55);
+    }
+    .chip-note-panel.show {
+      display: block;
+    }
+    .chip-note-panel h4 {
+      margin: 10px 0 6px;
+      color: #d9e4fb;
+      font-size: 12px;
+      font-weight: 600;
+    }
+    .chip-note-close {
+      position: absolute;
+      top: 8px;
+      right: 10px;
+      width: 22px;
+      height: 22px;
+      border-radius: 999px;
+      border: 1px solid var(--line-soft);
+      background: rgba(223, 201, 120, 0.12);
+      color: #ffe9a8;
+      cursor: pointer;
+      line-height: 1;
+      font-size: 14px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .chip-note-close:hover {
+      background: rgba(223, 201, 120, 0.24);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <section class="hero">
+      <h1>FastAPI 基础知识</h1>
+      <p class="page-updated">最后更新：2026-03-26</p>
+    </section>
+
+    <section class="qa-list">
+      <details>
+        <summary>前置知识：Pydantic详解</summary>
+        <div class="content">
+          <h3 class="q-title">1）Pydantic 是什么？</h3>
+          <p>Pydantic 是 Python 生态中最常用的数据验证与序列化库：你用类型注解描述数据结构，Pydantic 负责在运行时做验证、类型转换、错误报告与 JSON Schema 生成。</p>
+
+          <h3 class="q-title">2）为什么使用 Pydantic？</h3>
+          <ul>
+            <li><b>类型驱动</b>：直接复用 Python 类型提示，和 IDE、mypy/pyright 协同良好。</li>
+            <li><b>高性能</b>：核心验证引擎 <code>pydantic-core</code> 用 Rust 实现，速度在同类库中很有竞争力。</li>
+            <li><b>序列化能力强</b>：统一支持导出 Python 对象、JSON 兼容对象与 JSON 字符串。</li>
+            <li><b>JSON Schema 生成</b>：模型可直接生成 JSON Schema（2020-12），天然适配 OpenAPI 3.1。</li>
+            <li><b>严格/宽松双模式</b>：可做智能转换（默认）也可强校验（<code>strict=True</code>）。</li>
+            <li><b>可扩展</b>：验证器、序列化器、TypeAdapter、自定义类型协议都很完善。</li>
+            <li><b>生态成熟</b>：FastAPI、SQLModel、Django Ninja、LangChain 等大量项目依赖。</li>
+          </ul>
+
+          <h3 class="q-title">3）Pydantic 解决了哪些工程痛点？</h3>
+          <ul>
+            <li>外部输入不可信：自动拦截脏数据并定位具体字段错误。</li>
+            <li>类型漂移：把字符串数字、日期字符串等按规则转换为目标类型。</li>
+            <li>接口契约不稳定：通过模型统一入参/出参，降低前后端沟通成本。</li>
+            <li>文档同步困难：模型即文档，Schema 自动生成。</li>
+          </ul>
+
+          <h3 class="q-title">5）Pydantic v2 必须掌握的 API</h3>
+          <ul>
+            <li><code>model_validate(obj)</code>：<b>输入 Python 对象</b>（如 <code>dict</code>、ORM 对象），执行验证和类型转换后，返回模型实例。适合服务内已经拿到 Python 数据的场景。</li>
+            <li><code>model_validate_json(json_data)</code>：<b>输入 JSON 字符串/字节串</b>，一步完成“JSON 解析 + 校验 + 转换”。常用于高性能入口（HTTP 原始报文、消息队列消息体）。</li>
+            <li><code>model_dump(...)</code>：导出为 <b>Python 字典</b>。常用参数：<code>exclude_unset</code>（只导出已设置字段）、<code>exclude_defaults</code>（排除默认值字段）、<code>exclude_none</code>（排除 <code>None</code> 字段）、<code>mode="json"</code>（导出 JSON 兼容值）。</li>
+            <li><code>model_dump_json(...)</code>：直接导出为 <b>JSON 字符串</b>，适合写日志、发消息、直接返回文本化载荷。</li>
+            <li><code>model_json_schema()</code>：生成模型对应的 <b>JSON Schema</b>，是 OpenAPI 文档、前端自动表单和契约校验工具链的基础。</li>
+          </ul>
+
+          <h3 class="q-title">6）序列化三种常见形态</h3>
+          <pre><code>from datetime import datetime
+from pydantic import BaseModel
+
+
+class Meeting(BaseModel):
+    when: datetime
+    where: bytes
+    why: str = "No idea"
+
+
+m = Meeting(when="2020-01-01T12:00", where="home")
+
+# 形态 1：Python 对象字典（保留 Python 原生类型）
+# exclude_unset=True：只导出“显式传入/被设置过”的字段
+# 例如 datetime 仍是 datetime 对象、bytes 仍是 bytes
+print(m.model_dump(exclude_unset=True))
+
+# 形态 2：JSON 兼容字典（仍是 dict，但值已可 JSON 化）
+# mode="json"：把 datetime/bytes/UUID 等转换为 JSON 友好值
+# exclude={"where"}：排除指定字段
+print(m.model_dump(mode="json", exclude={"where"}))
+
+# 形态 3：JSON 字符串（可直接落日志/消息队列/HTTP）
+# exclude_defaults=True：排除“等于默认值”的字段，减少冗余
+print(m.model_dump_json(exclude_defaults=True))</code></pre>
+
+          <h3 class="q-title">7）严格模式 vs 宽松模式</h3>
+          <ul>
+            <li><b>宽松模式（默认）</b>：更偏业务友好，允许合理类型转换。</li>
+            <li><b>严格模式</b>：更偏安全与一致性，不做隐式转换。</li>
+          </ul>
+          <p>实践建议：外部入口（支付、风控、权限）可偏严格；内部服务交互可按业务选择宽松/严格策略。</p>
+
+          <h3 class="q-title">8）除了 BaseModel，还有哪些建模方式？</h3>
+          <ul>
+            <li><code>BaseModel</code>：最常用，功能最完整。</li>
+            <li><code>pydantic.dataclasses.dataclass</code>：给 dataclass 增加验证能力。</li>
+            <li><code>TypeAdapter</code>：对任意类型（如 <code>TypedDict</code>、<code>list[int]</code>）做验证/序列化。</li>
+            <li><code>validate_call</code>：为函数调用参数做运行时验证。</li>
+          </ul>
+
+          <h3 class="q-title">9）TypeAdapter 的典型场景</h3>
+          <pre><code>from typing_extensions import TypedDict
+from pydantic import TypeAdapter
+
+
+class Query(TypedDict):
+    page: int
+    size: int
+
+
+adapter = TypeAdapter(Query)
+data = adapter.validate_python({"page": "1", "size": "20"})
+print(data)
+print(adapter.json_schema())</code></pre>
+          <p>当你不想额外定义 BaseModel，但仍要验证类型时，TypeAdapter 很高效。</p>
+
+          <h3 class="q-title">10）自定义验证与序列化</h3>
+          <p><b>先记住一句话：</b>验证器（Validator）用于“输入阶段”，序列化器（Serializer）用于“输出阶段”。</p>
+          <ul>
+            <li><code>field_validator</code>：字段级规则，适合单字段校验/修正（如用户名格式）。</li>
+            <li><code>model_validator</code>：模型级规则，适合跨字段一致性（如密码与确认密码一致）。</li>
+            <li><code>field_serializer</code>：输出阶段格式化/脱敏（如时间格式化、手机号打码）。</li>
+          </ul>
+
+          <pre><code>from datetime import datetime, timezone
+
+from pydantic import BaseModel, field_serializer, field_validator, model_validator
+
+
+class UserProfile(BaseModel):
+    username: str
+    password: str
+    confirm_password: str
+    created_at: datetime
+    phone: str
+
+    # 1) 字段级验证器：校验并修正单字段输入
+    @field_validator("username")
+    @classmethod
+    def normalize_username(cls, value: str) -> str:
+        if " " in value:
+            raise ValueError("用户名不能包含空格")
+        return value.strip().title()
+
+    # “now”转时间 + 时区修正到 UTC
+    @field_validator("created_at", mode="before")
+    @classmethod
+    def parse_created_at(cls, value: object) -> datetime:
+        if isinstance(value, str) and value.lower() == "now":
+            return datetime.now(timezone.utc)
+
+        if isinstance(value, str):
+            # Python 3.13 推荐：fromisoformat 解析 ISO8601 字符串
+            value = datetime.fromisoformat(value)
+
+        if isinstance(value, datetime):
+            # 统一输出为 UTC 感知时间
+            if value.tzinfo is None:
+                return value.replace(tzinfo=timezone.utc)
+            return value.astimezone(timezone.utc)
+
+        raise TypeError("created_at 必须是 datetime 或 ISO8601 字符串")
+
+    # 2) 模型级验证器：处理跨字段业务规则
+    @model_validator(mode="after")
+    def check_passwords_match(self) -> "UserProfile":
+        if self.password != self.confirm_password:
+            raise ValueError("两次密码输入不一致")
+        return self
+
+    # 3) 字段级序列化器：控制输出给前端的格式
+    @field_serializer("created_at")
+    def serialize_created_at(self, dt: datetime) -> str:
+        return dt.strftime("%Y-%m-%d %H:%M:%S %Z")
+
+    @field_serializer("phone")
+    def serialize_phone(self, value: str) -> str:
+        if len(value) >= 7:
+            return f"{value[:3]}****{value[-4:]}"
+        return "****"
+
+
+payload = {
+    "username": "alice",
+    "password": "secret123",
+    "confirm_password": "secret123",
+    "created_at": "now",
+    "phone": "13812345678",
+}
+
+user = UserProfile.model_validate(payload)
+print(user.model_dump())
+print(user.model_dump_json())</code></pre>
+          <p>面试回答可总结：<b>field_validator 管单字段输入质量，model_validator 管跨字段业务一致性，field_serializer 管输出格式与脱敏。</b></p>
+
+          <h3 class="q-title">11）Pydantic 与 FastAPI 的关系</h3>
+          <ul>
+            <li>请求体校验：非法输入自动 422。</li>
+            <li>响应模型过滤：避免敏感字段泄漏。</li>
+            <li>OpenAPI 生成：模型直接驱动文档。</li>
+          </ul>
+          <p>面试可总结：<b>FastAPI 的“自动化体验”很大程度来自 Pydantic。</b></p>
+
+        </div>
+      </details>
+
+      <details>
+        <summary>0. FastAPI 高频面试题</summary>
+        <div class="content">
+          <h3 class="q-title">基础</h3>
+
+          <h3 class="q-title">Q1：FastAPI 是什么？核心优势是什么？</h3>
+          <p>FastAPI 是基于 ASGI 的现代 Python API 框架，围绕“类型注解驱动开发”。面试可概括为四点：<b>高性能</b>、<b>自动校验</b>、<b>自动文档</b>、<b>异步友好</b>。底层依赖 Starlette（Web 能力）+ Pydantic（数据校验）。</p>
+
+          <h3 class="q-title">Q2：FastAPI、Flask、Django 各适合什么场景？</h3>
+          <ul>
+            <li><b>Flask</b>：轻量灵活，适合小型服务或需要高度自定义的项目。</li>
+            <li><b>Django</b>：全家桶，适合后台管理、传统 Web 站点。</li>
+            <li><b>FastAPI</b>：API-first、前后端分离、微服务、AI 推理服务最常见。</li>
+          </ul>
+          <p>面试话术：<b>如果主要目标是高质量 API 交付速度 + 类型安全，我优先 FastAPI。</b></p>
+
+          <h3 class="q-title">Q3：最小可运行 FastAPI 应用？</h3>
+          <pre><code>from fastapi import FastAPI
+
+app = FastAPI()
+
+
+@app.get("/")
+async def root() -> dict[str, str]:
+    return {"message": "ok"}
+</code></pre>
+
+          <h3 class="q-title">Q4：路径参数 vs 查询参数怎么区分？</h3>
+          <ul>
+            <li><b>路径参数</b>：资源定位（<code>/users/{user_id}</code>）。</li>
+            <li><b>查询参数</b>：过滤/分页/排序（<code>?page=1&amp;size=20</code>）。</li>
+          </ul>
+          <pre><code>from typing import Annotated
+from fastapi import FastAPI, Path, Query
+
+app = FastAPI()
+
+
+@app.get("/users/{user_id}")
+async def read_user(
+    user_id: Annotated[int, Path(gt=0)],
+    keyword: Annotated[str | None, Query(max_length=50)] = None,
+):
+    return {"user_id": user_id, "keyword": keyword}</code></pre>
+
+          <h3 class="q-title">Q5：Pydantic 在 FastAPI 里做了什么？</h3>
+          <p>三件事：<b>验证输入</b>、<b>约束输出</b>、<b>生成 Schema</b>。你写模型，FastAPI 自动完成校验与文档，错误返回标准 422 结构。</p>
+
+          <h3 class="q-title">Q6：什么时候用 <code>async def</code>，什么时候用 <code>def</code>？</h3>
+          <p>规则很实用：涉及数据库/HTTP/文件等 I/O，用 <code>async def</code>；纯 CPU 密集计算通常用 <code>def</code>（必要时丢到任务队列或进程池）。避免在 <code>async def</code> 里直接跑阻塞 I/O。</p>
+
+          <h3 class="q-title">Q7：文档为什么“自动出现”？可否定制？</h3>
+          <p>因为 FastAPI 将路由、参数、模型自动汇总为 OpenAPI。默认 <code>/docs</code> 与 <code>/redoc</code>，可通过标题、描述、tags、response_model 等持续增强可读性。</p>
+
+          <h3 class="q-title">进阶</h3>
+
+          <h3 class="q-title">Q8：依赖注入（Depends）有什么价值？</h3>
+          <p><b>复用</b>（鉴权、分页、会话）、<b>解耦</b>（业务与基础设施分离）、<b>可测试</b>（可覆盖依赖）。生产代码中，依赖往往形成“应用级→路由级→路径级”分层。</p>
+
+          <h3 class="q-title">Q9：数据库连接的官方推荐实践？</h3>
+          <p>使用依赖提供会话（每请求一个会话），使用 <code>lifespan</code> 管理应用级资源，数据库结构变更使用 Alembic 迁移。</p>
+
+          <h3 class="q-title">Q11：错误处理该怎么设计？</h3>
+          <p>业务错误用 <code>HTTPException</code>；系统级异常可全局处理器统一封装。推荐返回稳定错误码结构（如 <code>code/message/request_id</code>），便于前端和日志追踪。</p>
+
+          <h3 class="q-title">Q12：BackgroundTasks 适合做什么？</h3>
+          <p><b>结论</b>：适合轻量后置任务（审计日志、通知、事件上报），不适合 CPU 重计算或强可靠任务。</p>
+          <p><b>“同进程”是什么意思？</b> 就是后台任务和你的 FastAPI 请求处理跑在同一个进程里：响应先返回，随后由同一进程继续执行任务。</p>
+          <ul>
+            <li><b>优点</b>：零额外基础设施、开发成本低、可直接复用当前进程上下文。</li>
+            <li><b>风险 1（资源争抢）</b>：CPU 密集任务会抢占同进程 CPU，拖慢后续请求。</li>
+            <li><b>风险 2（隔离性弱）</b>：任务异常可能影响主服务稳定性。</li>
+            <li><b>风险 3（可靠性有限）</b>：服务重启时，进行中的同进程任务可能中断且丢失。</li>
+          </ul>
+          <p><b>面试回答建议</b>：<code>BackgroundTasks</code> 用于“轻、短、可丢一点”的任务；需要重试、持久化、失败恢复、水平扩展时，使用 <code>ARQ/Celery</code> 这类异进程任务队列（通常基于 Redis/RabbitMQ）。</p>
+          <table>
+            <thead>
+              <tr>
+                <th>对比项</th>
+                <th>BackgroundTasks（同进程）</th>
+                <th>ARQ / Celery（异进程）</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>任务重量</td>
+                <td>轻量后置任务</td>
+                <td>重任务 / 批处理 / 长任务</td>
+              </tr>
+              <tr>
+                <td>隔离性</td>
+                <td>弱（共享同一进程资源）</td>
+                <td>强（主服务与 Worker 隔离）</td>
+              </tr>
+              <tr>
+                <td>可靠性</td>
+                <td>一般（重启可能丢失）</td>
+                <td>高（支持持久化、重试、恢复）</td>
+              </tr>
+              <tr>
+                <td>落地复杂度</td>
+                <td>低（开箱即用）</td>
+                <td>中高（需消息中间件与 Worker）</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <h3 class="q-title">Q13：CORS 与中间件常见坑？</h3>
+          <p>若 <code>allow_credentials=True</code>，就不能配 <code>allow_origins=["*"]</code>；要显式白名单。中间件顺序是“洋葱模型”，后加的在外层。</p>
+
+          <h3 class="q-title">Q14：认证授权怎么落地（OAuth2/JWT）？</h3>
+          <ol>
+            <li><b>登录</b>：校验用户名/密码，成功后签发 <code>access_token(JWT)</code>。</li>
+            <li><b>带 Token 访问</b>：客户端在请求头传 <code>Authorization: Bearer &lt;token&gt;</code>。</li>
+            <li><b>解析 Token（当前用户依赖）</b>：在依赖里验证签名、过期时间、issuer/audience，拿到用户身份（如 <code>sub</code>）。</li>
+            <li><b>授权（权限依赖）</b>：基于角色/权限（RBAC）判断是否允许访问当前接口。</li>
+          </ol>
+          <p><b>工程实践</b>：把“当前用户依赖”和“权限依赖”分开。前者负责“身份正确性”，后者负责“权限策略”，这样可组合、可复用、可单测。</p>
+          
+          <p><b>面试一句话版本</b>：先登录签发 JWT，再通过“当前用户依赖”完成认证，通过“权限依赖”完成授权，二者解耦以保证可维护性与可测试性。</p>
+
+          <h3 class="q-title">高级</h3>
+
+          <h3 class="q-title">Q16：FastAPI 为什么“快”？</h3>
+          <p>快来自异步 I/O + ASGI 栈：Uvicorn 负责网络与事件循环，Starlette 负责 Web 基础设施，FastAPI 负责类型驱动的参数解析和文档生成。高并发 I/O 场景优势明显。</p>
+
+          <h3 class="q-title">Q18：lifespan 到底是什么？</h3>
+          <p><b>一句话</b>：<code>lifespan</code> 是应用级“启动/关闭钩子”，用于启动时初始化、关闭时清理。它把生命周期逻辑集中到一个异步上下文中，语义更完整，适合 DB 引擎、缓存客户端、模型句柄等资源管理。</p>
+
+        </div>
+      </details>
+
+      <details>
+        <summary>1. FastAPI 并发与 async / await</summary>
+        <div class="content">
+          <h3 class="q-title">Q1：为什么在 FastAPI 中，即使函数内部没有 <code>await</code>，也常建议优先使用 <code>async def</code>？</h3>
+          <p>通常在 Python 中，如果你不打算在函数内部使用 <code>await</code>，我们会倾向于定义普通的 <code>def</code>。但在 FastAPI 的实践规范中，如果你确定这个函数<strong>不需要与数据库、API 或文件系统进行耗时的通信</strong>，那么即使没有 <code>await</code>，官方依然建议优先使用 <code>async def</code>。</p>
+          <h3>1. 线程开销与性能</h3>
+          <ul>
+            <li><b><code>def</code></b>：FastAPI 会将其放入线程池执行，避免阻塞主流程，但会引入线程调度开销。</li>
+            <li><b><code>async def</code></b>：在事件循环中直接运行；若无耗时 I/O，通常执行更轻量。</li>
+          </ul>
+          <h3>2. 框架互操作性</h3>
+          <ul>
+            <li>FastAPI 的中间件和依赖体系大量基于异步模型。</li>
+            <li>统一使用 <code>async def</code>，未来需要加 <code>await</code> 时无需改函数签名。</li>
+          </ul>
+
+          <h3 class="q-title">Q2：asyncio、Uvicorn、Starlette 三者是如何协作完成 FastAPI 并发执行流程的？</h3>
+          <h3>1. 核心角色定义</h3>
+          <ul>
+            <li><b>asyncio</b>：它是 Python 标准库提供的“心脏”。它负责管理一个<strong>事件循环（Event Loop）</strong>，像一个永不停歇的调度员，决定现在该处理哪个任务。</li>
+            <li><b>Uvicorn</b>：它是一个 <b>ASGI 服务器</b>。它的工作是监听网络端口（如 8000），接收原始的 HTTP 请求，并将其包装成一种标准格式（ASGI 协议），交给上面的框架处理。</li>
+            <li><b>Starlette</b>：它是 FastAPI 底层的 Web 工具包。它负责具体的业务逻辑：路由匹配、异常处理、Session 管理等。FastAPI 其实是在 Starlette 之上加了一层能力（如 Pydantic 校验和自动文档）。</li>
+          </ul>
+
+          <h3>2. 底层原理：</h3>
+          <p>当一个请求到达 FastAPI 应用时，它们的串联流程如下：</p>
+          <table>
+            <thead>
+              <tr>
+                <th>步骤</th>
+                <th>参与者</th>
+                <th>动作内容</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td>1. 监听</td><td>Uvicorn</td><td>Uvicorn 启动并运行在 <code>asyncio</code> 的事件循环中，等待网络连接。<button class="chip-note-btn" type="button" aria-expanded="false" aria-controls="uvicorn-loop-note" title="查看为什么 Uvicorn 运行在事件循环中">i</button></td></tr>
+              <tr><td>2. 接收</td><td>Uvicorn</td><td>浏览器发来请求。Uvicorn 解析 HTTP 协议，将其转化为一个 ASGI Scope（包含请求信息的字典）。</td></tr>
+              <tr><td>3. 调度</td><td>asyncio</td><td>Uvicorn 告诉 <code>asyncio</code>：有一个新任务要处理，请加入执行队列。</td></tr>
+              <tr><td>4. 路由</td><td>Starlette</td><td><code>asyncio</code> 执行该任务并调用 Starlette。Starlette 查看路由表，找到对应的 <code>async def</code> 处理函数。</td></tr>
+              <tr><td>5. 执行</td><td>FastAPI</td><td>FastAPI 在 Starlette 运行期间介入，利用 Pydantic 检查参数，最后运行业务代码。</td></tr>
+              <tr><td>6. 挂起</td><td>asyncio</td><td>如果代码中有 <code>await</code>（如查数据库），<code>asyncio</code> 立刻挂起当前任务，转去处理下一个请求。</td></tr>
+              <tr><td>7. 返回</td><td>全链路</td><td>I/O 返回后，<code>asyncio</code> 恢复任务，Starlette 生成响应，Uvicorn 发回浏览器。</td></tr>
+            </tbody>
+          </table>
+
+          <div id="uvicorn-loop-note" class="chip-note-panel" role="region" aria-label="Uvicorn 与 asyncio 事件循环关系说明">
+            <button class="chip-note-close" type="button" data-close-note="uvicorn-loop-note" aria-label="关闭说明面板">×</button>
+            <h4>1. 谁是真正的“指挥官”？</h4>
+            <ul>
+              <li>在异步编程中，<code>asyncio.run()</code> 才是调度入口。</li>
+              <li>Uvicorn 启动后会接入事件循环，把监听、读取数据包、解析协议等动作转成循环中的任务。</li>
+            </ul>
+
+            <h4>2. 协作模型</h4>
+            <ul>
+              <li>启动阶段：<code>uvicorn main:app</code> 本质是启动一个 Python 进程。</li>
+              <li>接管阶段：Uvicorn 初始化并运行 asyncio 事件循环。</li>
+              <li>循环阶段：监听任务常驻；有请求到来时，被事件循环唤醒处理。</li>
+              <li>分发阶段：Uvicorn 解析后把请求交给 FastAPI/Starlette，并继续由同一事件循环调度。</li>
+            </ul>
+
+            <h4>3. 单进程下，你的代码与 Uvicorn 通常就在同一线程、同一事件循环里协作运行。</h4>
+          </div>
+
+        </div>
+      </details>
+
+      <details>
+        <summary>2. 路径参数</summary>
+        <div class="content">
+          <h3 class="q-title">Q1：FastAPI 路由匹配优先级</h3>
+          <p>在 FastAPI 中，谁先声明，谁先被尝试匹配；一旦命中就停止继续向下匹配。</p>
+
+          <h3 class="q-title">Q2：为什么“通用路径”要放在“具体路径”后面？</h3>
+          <ul>
+            <li><b>静态路径</b>（如 <code>/users/me</code>、<code>/users/admin</code>）是明确字符串，匹配精确。</li>
+            <li><b>动态路径</b>（如 <code>/users/{user_id}</code>）是“贪婪匹配”，会尝试接收几乎所有同结构片段。</li>
+            <li>如果把动态路径放前面，就可能像“黑洞”一样抢先吞掉后面的静态路径请求。</li>
+          </ul>
+
+          <h3 class="q-title">Q3：顺序写反时会发生什么？</h3>
+          <pre><code>@app.get("/users/{user_id}")
+async def read_user(user_id: str):
+    return {"user_id": user_id}
+
+@app.get("/users/me")
+async def read_user_me():
+    return {"user_id": "the current user"}</code></pre>
+          <p>访问 <code>/users/me</code> 时，<code>"me"</code> 会先被当成 <code>user_id</code> 命中第一个路由，导致第二个静态路由无法触发。</p>
+
+          <h3 class="q-title">Q4：正确写法是什么？</h3>
+          <pre><code># 1) 先声明更具体的静态路径
+@app.get("/users/me")
+async def read_user_me():
+    return {"user_id": "the current user"}
+
+# 2) 再声明更通用的动态路径
+@app.get("/users/{user_id}")
+async def read_user(user_id: str):
+    return {"user_id": user_id}</code></pre>
+
+          <h3 class="q-title">Q5：类型提示会影响匹配吗？</h3>
+          <p>会。路径参数类型可作为“第二层过滤器”。例如把 <code>user_id</code> 限制为 <code>int</code>：</p>
+          <pre><code>@app.get("/users/{user_id}")
+async def read_user(user_id: int):
+    return {"user_id": user_id}
+
+@app.get("/users/me")
+async def read_user_me():
+    return {"user_id": "the current user"}</code></pre>
+          <p>当访问 <code>/users/me</code> 时，若前面的动态路由无法把 <code>"me"</code> 解析为 <code>int</code>，会继续寻找后续可匹配路由，从而命中静态路径。</p>
+
+          <h3 class="q-title">Q6：如何用 Enum 限制路径参数的可选值？</h3>
+          <p>如果路径参数只允许“预定义值集合”，推荐使用标准库 <code>Enum</code>。在 FastAPI 中，通常让枚举类继承 <code>str</code> 和 <code>Enum</code>，这样文档会按字符串枚举正确渲染，校验也更直观。</p>
+          <ul>
+            <li><b>为什么继承 <code>str</code></b>：让 OpenAPI 文档将其识别为字符串枚举，而不是通用对象。</li>
+            <li><b>收益</b>：参数值自动校验、接口文档下拉可选、非法值自动返回 422。</li>
+          </ul>
+
+          <pre><code>from enum import Enum
+
+from fastapi import FastAPI
+
+
+class ModelName(str, Enum):
+    alexnet = "alexnet"
+    resnet = "resnet"
+    lenet = "lenet"
+
+
+app = FastAPI()
+
+
+@app.get("/models/{model_name}")
+async def get_model(model_name: ModelName):
+    if model_name is ModelName.alexnet:
+        return {"model_name": model_name, "message": "Deep Learning FTW!"}
+
+    if model_name.value == "lenet":
+        return {"model_name": model_name, "message": "LeCNN all the images"}
+
+    return {"model_name": model_name, "message": "Have some residuals"}</code></pre>
+
+          <h3 class="q-title">Q7：如何在路径参数中包含“路径本身”？</h3>
+          <p>假设你的接口是 <code>/files/{file_path}</code>，但你希望 <code>file_path</code> 里还能包含斜杠（<code>/</code>），例如 <code>home/johndoe/myfile.txt</code>。这时需要使用 Starlette 的路径转换器：</p>
+          <pre><code>/files/{file_path:path}</code></pre>
+          <p>其中参数名仍是 <code>file_path</code>，结尾的 <code>:path</code> 表示该参数可以匹配完整路径片段。</p>
+
+          <h3>OpenAPI 支持说明</h3>
+          <p>OpenAPI 规范本身不支持直接声明“包含路径的路径参数”，因此文档不会额外标注该参数是路径类型；但 FastAPI 仍可正常工作。</p>
+
+          <h3>示例代码</h3>
+          <pre><code>from fastapi import FastAPI
+
+app = FastAPI()
+
+
+@app.get("/files/{file_path:path}")
+async def read_file(file_path: str):
+    return {"file_path": file_path}</code></pre>
+
+          <h3>前导斜杠提示</h3>
+          <p>如果你希望参数值本身以 <code>/</code> 开头，例如 <code>/home/johndoe/myfile.txt</code>，请求 URL 需要写成：</p>
+          <pre><code>/files//home/johndoe/myfile.txt</code></pre>
+          <p>注意 <code>files</code> 和 <code>home</code> 之间是双斜杠 <code>//</code>。</p>
+        </div>
+      </details>
+
+      <details>
+        <summary>3. 请求体</summary>
+        <div class="content">
+          <h3 class="q-title">Q1：在一次完整请求-响应中，请求体和响应体在 JSON、Pydantic、dict 之间是如何转换的？</h3>
+          <svg viewBox="0 0 1200 780" width="100%" role="img" aria-label="FastAPI 请求体与响应体转换流程图">
+            <defs>
+              <marker id="arrow" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+                <path d="M0,0 L10,3 L0,6 Z" fill="#8fb2ff"></path>
+              </marker>
+            </defs>
+
+            <rect x="20" y="20" width="1160" height="740" rx="14" fill="rgba(102,132,188,0.06)" stroke="rgba(102,132,188,0.35)" />
+
+            <text x="50" y="62" fill="#d9e4fb" font-size="20" font-weight="700">FastAPI：请求体 / 响应体格式转换全流程</text>
+
+            <rect x="50" y="120" width="320" height="120" rx="10" fill="#1b2438" stroke="#4b638f"/>
+            <text x="70" y="150" fill="#cfe0ff" font-size="16" font-weight="600">① 客户端发送请求</text>
+            <text x="70" y="178" fill="#a8b3cc" font-size="14">Content-Type: application/json</text>
+            <text x="70" y="202" fill="#a8b3cc" font-size="14">Body = JSON 字符串</text>
+
+            <rect x="440" y="120" width="320" height="120" rx="10" fill="#1b2438" stroke="#4b638f"/>
+            <text x="460" y="150" fill="#cfe0ff" font-size="16" font-weight="600">② FastAPI 解析请求体（反序列化）</text>
+            <text x="460" y="178" fill="#a8b3cc" font-size="14">JSON → Python 基础类型（通常是一个字典）</text>
+
+            <rect x="830" y="120" width="320" height="120" rx="10" fill="#1b2438" stroke="#4b638f"/>
+            <text x="850" y="150" fill="#cfe0ff" font-size="16" font-weight="600">③ 参数类型决定注入形态</text>
+            <text x="850" y="178" fill="#a8b3cc" font-size="14">item: Item(BaseModel) → Pydantic 对象</text>
+            <text x="850" y="202" fill="#a8b3cc" font-size="14">item: dict / list[...] → 原生 Python 对象</text>
+
+            <line x1="370" y1="180" x2="440" y2="180" stroke="#8fb2ff" stroke-width="2.5" marker-end="url(#arrow)"/>
+            <line x1="760" y1="180" x2="830" y2="180" stroke="#8fb2ff" stroke-width="2.5" marker-end="url(#arrow)"/>
+
+            <rect x="50" y="300" width="540" height="180" rx="10" fill="#162033" stroke="#4b638f"/>
+            <text x="70" y="332" fill="#cfe0ff" font-size="16" font-weight="600">④ 进入路径函数</text>
+            <text x="70" y="360" fill="#a8b3cc" font-size="14">若参数是 Pydantic：可用 item.name / item.price 等属性</text>
+            <text x="70" y="384" fill="#a8b3cc" font-size="14">需要 dict 时：Pydantic v2 用 item.model_dump()</text>
+            <text x="70" y="408" fill="#a8b3cc" font-size="14">你可以返回：dict / list / Pydantic 模型 / dataclass / ORM 对象</text>
+
+            <rect x="640" y="300" width="510" height="180" rx="10" fill="#162033" stroke="#4b638f"/>
+            <text x="660" y="332" fill="#cfe0ff" font-size="16" font-weight="600">⑤ FastAPI 响应序列化阶段</text>
+            <text x="660" y="360" fill="#a8b3cc" font-size="14">默认：自动将返回值转为 JSON 可编码数据</text>
+
+            <line x1="590" y1="390" x2="640" y2="390" stroke="#8fb2ff" stroke-width="2.5" marker-end="url(#arrow)"/>
+
+            <rect x="50" y="540" width="1100" height="170" rx="10" fill="#1b2438" stroke="#4b638f"/>
+            <text x="70" y="575" fill="#cfe0ff" font-size="16" font-weight="600">⑥ 返回给客户端</text>
+            <text x="70" y="603" fill="#a8b3cc" font-size="14">HTTP Response Body = JSON（文本）</text>
+            <text x="70" y="627" fill="#a8b3cc" font-size="14">重点：网络上传输始终是 JSON；Pydantic / dict 是服务端 Python 世界中的中间形态</text>
+            <text x="70" y="651" fill="#a8b3cc" font-size="14">若你直接返回 JSONResponse，需自己保证内容 JSON 可序列化；复杂对象先用 jsonable_encoder 转换</text>
+
+            <line x1="895" y1="480" x2="600" y2="540" stroke="#8fb2ff" stroke-width="2.5" marker-end="url(#arrow)"/>
+          </svg>
+
+          <h3>官方实践要点</h3>
+          <ul>
+            <li>请求体建模优先用 Pydantic，获得验证、类型转换和文档能力。</li>
+            <li>需要把模型转字典时，Pydantic v2 使用 <code>model_dump()</code>。</li>
+            <li>当你手动构造 <code>JSONResponse</code> 且内容含复杂对象时，先用 <code>jsonable_encoder()</code>。</li>
+            <li>用 <code>response_model</code> 控制“响应体最终格式”，避免把不该暴露字段返回给前端。</li>
+          </ul>
+        </div>
+      </details>
+
+      <details>
+        <summary>4. 查询参数与字符串验证</summary>
+        <div class="content">
+          <h3 class="q-title">Q1：查询参数基础写法是什么？可选参数如何声明？</h3>
+          <p>Python 3.13 推荐直接使用联合类型语法：<code>str | None</code>。当默认值是 <code>None</code> 时，参数就是可选。</p>
+          <pre><code>from fastapi import FastAPI
+
+app = FastAPI()
+
+
+@app.get("/items/")
+async def read_items(q: str | None = None):
+    result = {"items": [{"item_id": "Foo"}, {"item_id": "Bar"}]}
+    if q:
+        result["q"] = q
+    return result</code></pre>
+
+          <h3 class="q-title">Q2：为什么推荐 <code>Annotated + Query()</code>？</h3>
+          <p>官方推荐把校验与元数据放进 <code>Annotated[..., Query(...)]</code>：语义更清晰、类型提示更稳定、函数默认值仍是“真实 Python 默认值”。</p>
+          <pre><code>from typing import Annotated
+from fastapi import FastAPI, Query
+
+app = FastAPI()
+
+
+@app.get("/items/")
+async def read_items(
+    q: Annotated[str | None, Query(max_length=50)] = None,
+):
+    return {"q": q}</code></pre>
+          <ul>
+            <li>旧写法（仍可用，但不再是首选）：<code>q: str | None = Query(default=None, max_length=50)</code>。</li>
+            <li>使用 <code>Annotated</code> 时，默认值应写在函数参数位置，而不是 <code>Query(default=...)</code> ，避免“双默认值冲突”</li>
+          </ul>
+          
+          <h3 class="q-title">Q4：字符串校验可以做哪些？</h3>
+          <p>可直接在 <code>Query()</code> 中声明：</p>
+          <ul>
+            <li><code>min_length</code></li>
+            <li><code>max_length</code></li>
+            <li><code>pattern</code>（正则）</li>
+          </ul>
+
+
+          <h3 class="q-title">Q6：如何声明“一个查询参数可传多个值”？</h3>
+          <p>使用列表类型并显式 <code>Query()</code>，例如 <code>?q=foo&amp;q=bar</code>。</p>
+          <pre><code>from typing import Annotated
+from fastapi import FastAPI, Query
+
+app = FastAPI()
+
+
+@app.get("/items/")
+async def read_items(
+    q: Annotated[list[str] | None, Query()] = None,
+):
+    return {"q": q}</code></pre>
+          <p>带默认列表：</p>
+          <pre><code>from typing import Annotated
+from fastapi import FastAPI, Query
+
+app = FastAPI()
+
+
+@app.get("/items/default-list")
+async def read_items_default(
+    q: Annotated[list[str], Query()] = ["foo", "bar"],
+):
+    return {"q": q}</code></pre>
+          <h3 class="q-title">Q7：除了验证，还能给查询参数加哪些文档元数据？</h3>
+          <p>常见元数据：</p>
+          <ul>
+            <li><code>title</code>（字段的简短名称）</li>
+            <li><code>description</code>（详细说明文字）</li>
+            <li><code>alias</code>（字段别名）</li>
+            <li><code>deprecated</code>（标记弃用）</li>
+            <li><code>include_in_schema</code>（是否出现在 OpenAPI）</li>
+          </ul>
+        </div>
+      </details>
+
+      <details>
+        <summary>5. 路径参数和数字验证</summary>
+        <div class="content">
+          <h3 class="q-title">Q1：路径参数也能像查询参数那样做元数据与验证吗？</h3>
+          <p>可以。FastAPI 使用 <code>Path()</code> 给路径参数声明元数据与约束，能力与 <code>Query()</code> 同源、风格一致。官方推荐写法是 <code>Annotated[T, Path(...)]</code>。</p>
+          <pre><code>from typing import Annotated
+from fastapi import FastAPI, Path, Query
+
+app = FastAPI()
+
+
+@app.get("/items/{item_id}")
+async def read_items(
+    item_id: Annotated[int, Path(title="要获取的 item ID")],
+    q: Annotated[str | None, Query(alias="item-query")] = None,
+):
+    result = {"item_id": item_id}
+    if q:
+        result["q"] = q
+    return result</code></pre>
+
+          <h3 class="q-title">Q2：路径参数能否设置默认值或设为可选？</h3>
+          <p>不能。路径参数始终是必填，因为它是 URL 路径的一部分。即使你写了默认值或 <code>None</code>，在路由匹配层面它仍然必须存在。</p>
+
+          <h3 class="q-title">Q3：<code>Annotated</code> 为什么是当前最佳实践？</h3>
+          <ul>
+            <li>把“类型”与“参数元数据/验证”放在一起，语义清晰。</li>
+            <li>避免旧写法中“函数参数默认值顺序”造成的 Python 语法限制。</li>
+            <li>函数默认值保持纯 Python 语义，可读性和可复用性更好。</li>
+          </ul>
+
+          <h3 class="q-title">Q8：数字校验关键字？</h3>
+          <ul>
+            <li><code>gt</code>：greater than（&gt;）</li>
+            <li><code>ge</code>：greater than or equal（&gt;=）</li>
+            <li><code>lt</code>：less than（&lt;）</li>
+            <li><code>le</code>：less than or equal（&lt;=）</li>
+          </ul>
+
+        </div>
+      </details>
+
+      <details>
+        <summary>6. 查询参数模型</summary>
+        <div class="content">
+          <h3 class="q-title">Q1：什么是“查询参数模型”？</h3>
+          <p>当多个查询参数属于同一组筛选条件时，可以用一个 Pydantic 模型统一声明。这样可复用、可集中校验、可自动生成更清晰的文档。</p>
+          <ul>
+            <li>适用场景：分页、排序、过滤标签等参数经常一起出现。</li>
+            <li>收益：避免函数签名参数过长；规则集中在一个模型里维护。</li>
+          </ul>
+
+          <h3 class="q-title">Q2：官方推荐写法是什么？</h3>
+          <p>推荐：<code>Annotated[Model, Query()]</code>。这是当前官方最佳实践风格。</p>
+          <ul>
+            <li><code>Field()</code> 来自 Pydantic，用于给模型字段加“约束 + 元数据”。<span style="opacity:.9;">（注：在底层，FastAPI 的 <code>Query</code>/<code>Path</code>/<code>Body</code> 与 Pydantic 的 <code>Field</code> 都可追溯到同一“家族”（<code>FieldInfo</code>）；因此它们共享大量通用参数，如 <code>title</code>、<code>description</code>、<code>default</code>、<code>alias</code> 等。）</span></li>
+            <li><code>Field</code> 的第一个位置参数通常是默认值</li>
+            <li><code>Literal</code> 来自 <code>typing</code>，用于把值限制在固定字面量集合内。</li>
+            <li>例如 <code>Literal["created_at", "updated_at"]</code> 表示只能二选一。</li>
+          </ul>
+          <pre><code>from typing import Annotated, Literal
+
+from fastapi import FastAPI, Query
+from pydantic import BaseModel, Field
+
+app = FastAPI()
+
+
+class FilterParams(BaseModel):
+    limit: int = Field(100, gt=0, le=100)
+    offset: int = Field(0, ge=0)
+    order_by: Literal["created_at", "updated_at"] = "created_at"
+    tags: list[str] = []
+
+
+@app.get("/items/")
+async def read_items(filter_query: Annotated[FilterParams, Query()]):
+    return filter_query</code></pre>
+
+          <h3 class="q-title">Q5：如何禁止“未声明的额外查询参数”？</h3>
+          <p>使用 Pydantic v2 的模型配置：<code>model_config = {"extra": "forbid"}</code>。</p>
+          <pre><code>from typing import Annotated, Literal
+
+from fastapi import FastAPI, Query
+from pydantic import BaseModel, Field
+
+app = FastAPI()
+
+
+class StrictFilterParams(BaseModel):
+    model_config = {"extra": "forbid"}
+
+    limit: int = Field(100, gt=0, le=100)
+    offset: int = Field(0, ge=0)
+    order_by: Literal["created_at", "updated_at"] = "created_at"
+    tags: list[str] = []
+
+
+@app.get("/strict-items/")
+async def read_strict_items(filters: Annotated[StrictFilterParams, Query()]):
+    return filters</code></pre>
+          <p>此时若请求包含未声明参数（例如 <code>tool=plumbus</code>），会返回校验错误（<code>extra_forbidden</code>）。</p>
+
+        </div>
+      </details>
+
+      <details>
+        <summary>7. 请求体 - 多个参数</summary>
+        <div class="content">
+          <h3 class="q-title">Q1：当路径函数里既有路径参数、查询参数，又有请求体参数时，FastAPI 如何区分？</h3>
+          <ul>
+            <li>在路径模板里出现过的参数名（如 <code>/items/{item_id}</code>）→ 路径参数。</li>
+            <li>“简单类型”参数（如 <code>int</code>、<code>str</code>、<code>bool</code>）且不在路径中 → 查询参数。</li>
+            <li>Pydantic 模型参数（<code>BaseModel</code>）→ 请求体。</li>
+          </ul>
+          <pre><code>from typing import Annotated
+
+from fastapi import Body, FastAPI
+from pydantic import BaseModel
+
+app = FastAPI()
+
+
+class Item(BaseModel):
+    name: str
+    description: str | None = None
+    price: float
+    tax: float | None = None
+
+
+@app.put("/items/{item_id}")
+async def update_item(
+    item_id: int,              # path
+    item: Item,                # body
+    q: str | None = None,      # query
+):
+    return {"item_id": item_id, "item": item, "q": q}</code></pre>
+
+          <h3 class="q-title">Q2：可以在一个接口中接收多个请求体模型吗？</h3>
+          <p>可以。多个模型参数会被组合到同一个 JSON Body 的不同 key 下，key 默认就是参数名。</p>
+          <pre><code>from fastapi import FastAPI
+from pydantic import BaseModel
+
+app = FastAPI()
+
+
+class Item(BaseModel):
+    name: str
+    price: float
+
+
+class User(BaseModel):
+    username: str
+    full_name: str | None = None
+
+
+@app.put("/items/{item_id}")
+async def update_item(item_id: int, item: Item, user: User):
+    return {"item_id": item_id, "item": item, "user": user}</code></pre>
+          <p>对应请求体形状示意：</p>
+          <pre><code>{
+  "item": {"name": "Foo", "price": 42.0},
+  "user": {"username": "dave", "full_name": "Dave Grohl"}
+}</code></pre>
+
+          <h3 class="q-title">Q3：同一个接口里能否再加“单独的 body 字段”（非模型）？</h3>
+          <p>可以。使用 <code>Body()</code> 显式声明它来自请求体，而不是查询参数。</p>
+          <pre><code>from typing import Annotated
+
+from fastapi import Body, FastAPI
+from pydantic import BaseModel
+
+app = FastAPI()
+
+
+class Item(BaseModel):
+    name: str
+    price: float
+
+
+class User(BaseModel):
+    username: str
+
+
+@app.put("/items/{item_id}")
+async def update_item(
+    item_id: int,
+    item: Item,
+    user: User,
+    importance: Annotated[int, Body(gt=0)],
+):
+    return {
+        "item_id": item_id,
+        "item": item,
+        "user": user,
+        "importance": importance,
+    }</code></pre>
+          <p>此时请求体会包含 <code>importance</code> 顶层字段。</p>
+
+          <h3 class="q-title">Q4：为什么简单类型参数有时会“跑到查询参数”里？</h3>
+          <p>这是 FastAPI 的内置参数解析优先级决定的：</p>
+          <ul>
+            <li>若参数类型是 <code>BaseModel</code>（Pydantic 模型），默认按 <b>Body</b> 解析。</li>
+            <li>若参数是简单类型（<code>int / str / float / bool</code>），且不在路径模板中，默认按 <b>Query</b> 解析。</li>
+            <li>所以简单类型若想进入请求体，必须显式使用 <code>Body()</code> 改变默认行为。</li>
+          </ul>
+          <pre><code>from typing import Annotated
+
+from fastapi import Body, FastAPI
+
+app = FastAPI()
+
+
+# ❌ 不显式 Body：age 会被当成查询参数（/update-age?age=25）
+@app.post("/update-age-wrong")
+async def update_age_wrong(age: int):
+    return {"age": age}
+
+
+# ✅ Python 3.13 + FastAPI 推荐：使用 Annotated 显式声明 Body
+# 期待 JSON Body：{"age": 25}
+@app.post("/update-age")
+async def update_age(age: Annotated[int, Body()]):
+    return {"age": age}</code></pre>
+
+          <h3 class="q-title">Q5：请求体只有一个模型参数时，如何把它“嵌入键名”下？</h3>
+          <p><b>默认不加 <code>embed=True</code></b> 时，FastAPI 会把“整个请求体”直接当作这个模型（结构最扁平、最简洁）。</p>
+          <pre><code>from fastapi import FastAPI
+from pydantic import BaseModel
+
+app = FastAPI()
+
+
+class Item(BaseModel):
+    name: str
+    description: str | None = None
+    price: float
+    tax: float | None = None
+
+
+@app.post("/items/")
+async def create_item(item: Item):
+    return item</code></pre>
+          <p>此时期待的 JSON 形状：</p>
+          <pre><code>{
+  "name": "Foo",
+  "description": "The pretender",
+  "price": 42.0,
+  "tax": 3.2
+}</code></pre>
+
+          <p><b>使用 <code>embed=True</code></b> 时，FastAPI 会去请求体里找与参数同名的键（这里是 <code>item</code>），再把该键下的数据映射到模型。</p>
+          <pre><code>from typing import Annotated
+
+from fastapi import Body, FastAPI
+from pydantic import BaseModel
+
+app = FastAPI()
+
+
+class Item(BaseModel):
+    name: str
+    description: str | None = None
+    price: float
+    tax: float | None = None
+
+
+@app.post("/items/embedded")
+async def create_item_embedded(item: Annotated[Item, Body(embed=True)]):
+    return item</code></pre>
+          <p>此时期待的 JSON 形状：</p>
+          <pre><code>{
+  "item": {
+    "name": "Foo",
+    "description": "The pretender",
+    "price": 42.0,
+    "tax": 3.2
+  }
+}</code></pre>
+
+          <p><b>什么时候用 <code>embed=True</code>？</b> 当你希望结构更具扩展性（例如未来同一接口还会同时接收 <code>item</code>、<code>user</code>、<code>metadata</code>），提前使用嵌入键名会让 API 结构更一致、更易演进。</p>
+
+          <h3 class="q-title">Q6：<code>Body()</code> 能加哪些信息？和 <code>Query()</code>/<code>Path()</code> 一致吗？</h3>
+          <p>基本一致：可添加校验与文档元数据（如边界约束、标题、描述、示例等）。FastAPI 在 OpenAPI 中会自动反映这些信息。</p>
+        </div>
+      </details>
+
+      <details>
+        <summary>8. 请求体 - 嵌套模型</summary>
+        <div class="content">
+          <h3 class="q-title">Q1：什么是“嵌套模型”？</h3>
+          <p>嵌套模型就是：一个 Pydantic 模型里包含另一个模型（或模型列表）。在真实业务里非常常见，例如商品里有图片、标签、作者信息等结构化子对象。</p>
+
+          <h3 class="q-title">Q2：基础嵌套怎么写？</h3>
+          <pre><code>from typing import Annotated
+
+from fastapi import Body, FastAPI
+from pydantic import BaseModel, HttpUrl
+
+app = FastAPI()
+
+
+class Image(BaseModel):
+    url: HttpUrl
+    name: str
+
+
+class Item(BaseModel):
+    name: str
+    description: str | None = None
+    price: float
+    tax: float | None = None
+    image: Image | None = None
+
+
+@app.put("/items/{item_id}")
+async def update_item(
+    item_id: int,
+    item: Annotated[Item, Body()],
+):
+    return {"item_id": item_id, "item": item}</code></pre>
+          <p>这里 <code>item.image</code> 就是一个嵌套对象；<code>HttpUrl</code> 会自动验证 URL 合法性。</p>
+
+          <h3 class="q-title">Q3：列表里的每一项也能是模型吗？</h3>
+          <p>可以，这是最常见模式之一：<code>list[Image]</code>。</p>
+          <pre><code>from typing import Annotated
+
+from fastapi import Body, FastAPI
+from pydantic import BaseModel, HttpUrl
+
+app = FastAPI()
+
+
+class Image(BaseModel):
+    url: HttpUrl
+    name: str
+
+
+class Item(BaseModel):
+    name: str
+    images: list[Image] = []
+
+
+@app.post("/items/")
+async def create_item(item: Annotated[Item, Body()]):
+    return item</code></pre>
+          <p>请求体里的 <code>images</code> 应是对象数组，FastAPI 会逐项校验。</p>
+
+          <h3 class="q-title">Q4：深层嵌套怎么写？</h3>
+          <p>可直接使用 Python 3.13 类型注解，如 <code>set[str]</code>、<code>dict[str, float]</code>，并与模型组合。</p>
+          <pre><code>from typing import Annotated
+
+from fastapi import Body, FastAPI
+from pydantic import BaseModel, HttpUrl
+
+app = FastAPI()
+
+
+class Image(BaseModel):
+    url: HttpUrl
+    name: str
+
+
+class Item(BaseModel):
+    name: str
+    tags: set[str] = set()
+    images: list[Image] = []
+    metadata: dict[str, float] = {}
+
+
+@app.post("/items/complex")
+async def create_complex_item(item: Annotated[Item, Body()]):
+    return item</code></pre>
+          <ul>
+            <li><code>set[str]</code> 会去重（输入重复值时输出为集合语义）。</li>
+            <li><code>dict[str, float]</code> 会校验 value 必须可解析为浮点数。</li>
+          </ul>
+
+          <h3 class="q-title">Q5：如果请求体本身就是“模型列表”而不是对象怎么办？</h3>
+          <p>路径函数参数直接声明为 <code>list[Item]</code> 即可。</p>
+          <pre><code>from typing import Annotated
+
+from fastapi import Body, FastAPI
+from pydantic import BaseModel
+
+app = FastAPI()
+
+
+class Item(BaseModel):
+    name: str
+    price: float
+
+
+@app.post("/items/batch")
+async def create_items(items: Annotated[list[Item], Body()]):
+    return {"count": len(items), "items": items}</code></pre>
+          <p>这时请求体根节点是 JSON 数组，而不是 JSON 对象。</p>
+
+        </div>
+      </details>
+
+      <details>
+        <summary>9. 声明请求示例数据</summary>
+        <div class="content">
+          <h3 class="q-title">Q1：什么是 schema-extra-example？</h3>
+          <p>它本质是在 <b>JSON Schema / OpenAPI</b> 里给请求体声明示例。Pydantic v2 中推荐使用 <code>model_config = {"json_schema_extra": {...}}</code></p>
+
+          <h3 class="q-title">Q2：如何给模型声明“单个/多个请求示例”？</h3>
+          <pre><code>from fastapi import FastAPI
+from pydantic import BaseModel
+
+app = FastAPI()
+
+
+class Item(BaseModel):
+    name: str
+    description: str | None = None
+    price: float
+    tax: float | None = None
+
+    model_config = {
+        "json_schema_extra": {
+            "examples": [
+                {
+                    "name": "Foo",
+                    "description": "A very nice Item",
+                    "price": 35.4,
+                    "tax": 3.2,
+                },
+                {
+                    "name": "Bar",
+                    "price": 12.5,
+                },
+            ]
+        }
+    }
+
+
+@app.put("/items/{item_id}")
+async def update_item(item_id: int, item: Item):
+    return {"item_id": item_id, "item": item}</code></pre>
+
+          <h3 class="q-title">Q3：如何同一接口多示例？</h3>
+          <p>在参数层使用 <code>Body(openapi_examples=...)</code>。</p>
+          <pre><code>from typing import Annotated
+
+from fastapi import Body, FastAPI
+from pydantic import BaseModel
+
+app = FastAPI()
+
+
+class Item(BaseModel):
+    name: str
+    description: str | None = None
+    price: float
+    tax: float | None = None
+
+
+@app.put("/items/{item_id}/examples")
+async def update_item_with_examples(
+    item_id: int,
+    item: Annotated[
+        Item,
+        Body(
+            openapi_examples={
+                "normal": {
+                    "summary": "标准场景",
+                    "description": "包含可选字段 tax",
+                    "value": {
+                        "name": "Foo",
+                        "description": "A very nice Item",
+                        "price": 35.4,
+                        "tax": 3.2,
+                    },
+                },
+                "minimal": {
+                    "summary": "最小请求",
+                    "description": "只传必填字段",
+                    "value": {
+                        "name": "Bar",
+                        "price": 12.5,
+                    },
+                },
+                "discounted": {
+                    "summary": "促销商品",
+                    "description": "用于折扣业务测试",
+                    "value": {
+                        "name": "Baz",
+                        "description": "Discounted item",
+                        "price": 9.9,
+                        "tax": 0.8,
+                    },
+                },
+            }
+        ),
+    ],
+):
+    return {"item_id": item_id, "item": item}</code></pre>
+
+          <h3 class="q-title">Q4：<code>example</code> / <code>examples</code> / <code>openapi_examples</code> 如何选？</h3>
+          <ul>
+            <li><code>example</code>：单示例，最简。</li>
+            <li><code>examples</code>：Schema 层多示例，常放在模型 <code>json_schema_extra</code>。</li>
+            <li><code>openapi_examples</code>：Request Body 层多示例，文档展示最友好，适合“示例数 > 1”的面试场景。</li>
+          </ul>
+
+        </div>
+      </details>
+
+      <details>
+        <summary>10. Cookie 与 Header 参数</summary>
+        <div class="content">
+          <h3 class="q-title">Q1：Cookie/Header 参数和 Query/Path 的声明模式一致吗？</h3>
+          <p>一致。四者都属于 FastAPI 的参数声明体系，推荐统一使用 <code>Annotated[T, Param()]</code> 风格</p>
+          <ul>
+            <li>Cookie 用 <code>Cookie()</code>。</li>
+            <li>Header 用 <code>Header()</code>。</li>
+            <li>如果不用对应的参数类，FastAPI 会把它当作查询参数处理。</li>
+          </ul>
+          <pre><code>from typing import Annotated
+
+from fastapi import Cookie, FastAPI, Header
+
+app = FastAPI()
+
+
+@app.get("/client-context")
+async def read_client_context(
+    session_id: Annotated[str | None, Cookie()] = None,
+    user_agent: Annotated[str | None, Header()] = None,
+):
+    return {
+        "session_id": session_id,
+        "user_agent": user_agent,
+    }</code></pre>
+
+          <h3 class="q-title">Q2：Header 为什么可以写 <code>user_agent</code> 却匹配 <code>User-Agent</code>？</h3>
+          <p>因为 <code>Header()</code> 默认会把参数名中的下划线 <code>_</code> 自动转换为连字符 <code>-</code>，并且 Header 名大小写不敏感。</p>
+          <p>如需关闭自动转换，可设置 <code>convert_underscores=False</code></p>
+          <h3 class="q-title">Q3：如何处理“重复 Header”（同名多值）？</h3>
+          <p>把 Header 参数声明成列表类型即可，FastAPI 会收集同名 Header 的所有值。</p>
+          <pre><code>from typing import Annotated
+
+from fastapi import FastAPI, Header
+
+app = FastAPI()
+
+
+@app.get("/headers/multi")
+async def read_multi_header(
+    x_token: Annotated[list[str] | None, Header()] = None,
+):
+    return {"x_token_values": x_token}</code></pre>
+          <p>例如请求里发两次 <code>X-Token</code>，响应里会得到一个字符串列表。</p>
+
+          <h3 class="q-title">Q4：什么时候使用 Cookie/Header“参数模型”？</h3>
+          <p>当你有一组相关参数要复用（例如统一客户端上下文、灰度标记、链路追踪头）时，推荐建 Pydantic 模型统一声明。</p>
+          <h3 class="q-title">Q5：如何禁止“未声明的额外 Cookie/Header”？</h3>
+          <p>在模型里设置 <code>model_config = {"extra": "forbid"}</code>，即可拒绝未声明字段，返回 <code>extra_forbidden</code>。</p>
+        </div>
+      </details>
+
+      <details>
+        <summary>11. 响应模型</summary>
+        <div class="content">
+          <h3 class="q-title">Q1：为什么要声明响应模型？</h3>
+          <p>响应模型会在运行时参与 <b>校验、过滤、序列化</b>，并生成 OpenAPI Schema。核心价值是：保证返回结构稳定、避免敏感字段泄漏、让前后端契约可验证。</p>
+
+          <h3 class="q-title">Q2：用“返回类型注解”还是 <code>response_model</code>？</h3>
+          <h3>场景一：直接使用返回类型注解（类型一致）</h3>
+          <p>当函数直接返回 Pydantic 模型实例时，优先使用返回类型注解，这是现代且清晰的写法。</p>
+          <pre><code>from fastapi import FastAPI
+from pydantic import BaseModel
+
+app = FastAPI()
+
+
+class User(BaseModel):
+    name: str
+    age: int
+
+
+@app.get("/users/{user_id}")
+async def get_user(user_id: int) -> User:
+    return User(name="Alice", age=25)</code></pre>
+          <p>这种方式的优势是类型信息直接体现在函数签名里，编辑器和类型检查工具能更准确地提示返回值是否正确。</p>
+
+          <h3>场景二：使用 <code>response_model</code>（类型不一致 / 需要转换过滤）</h3>
+          <p>当函数返回的是 ORM 对象、原始字典，或包含更多内部字段的数据时，使用 <code>response_model</code> 让 FastAPI 按指定模型进行转换与过滤。</p>
+          <pre><code>from typing import Any
+
+from fastapi import FastAPI
+from pydantic import BaseModel
+
+app = FastAPI()
+
+
+class UserOut(BaseModel):
+    name: str
+
+
+@app.get("/users/{user_id}", response_model=UserOut)
+async def get_user_public(user_id: int) -> Any:
+    db_user = {
+        "name": "Alice",
+        "password": "secret",
+        "email": "alice@example.com",
+    }
+    return db_user</code></pre>
+          <p>这种方式的优势是即使函数返回了更多字段，最终响应也只会暴露 <code>UserOut</code> 中声明的字段。</p>
+
+          <h3>核心区别</h3>
+          <table>
+            <thead>
+              <tr>
+                <th>对比项</th>
+                <th>返回类型注解（<code>-&gt; Item</code>）</th>
+                <th><code>response_model=Item</code></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>编辑器类型提示</td>
+                <td>更强，签名即契约</td>
+                <td>一般，主要依赖装饰器配置</td>
+              </tr>
+              <tr>
+                <td>数据过滤能力</td>
+                <td>有，但更适合“返回值已是目标模型”场景</td>
+                <td>强，适合对字典/ORM 做输出裁剪</td>
+              </tr>
+              <tr>
+                <td>典型适用对象</td>
+                <td>Pydantic 模型实例</td>
+                <td>字典、ORM 对象、内部对象到公开模型的转换</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <h3 class="q-title">Q3：<code>response_model</code> 和返回类型同时声明时，谁优先？</h3>
+          <p><code>response_model</code> 优先。它会覆盖返回类型用于响应过滤与文档。</p>
+
+          <h3 class="q-title">Q4：如何避免把密码等敏感字段返回给前端？</h3>
+          <p>把“输入模型”和“输出模型”分离，并在路由上声明 <code>response_model=输出模型</code>。这是最推荐、最安全、最清晰的做法。</p>
+          <pre><code>from typing import Any
+
+from fastapi import FastAPI
+from pydantic import BaseModel, EmailStr
+
+app = FastAPI()
+
+
+class UserIn(BaseModel):
+    username: str
+    password: str
+    email: EmailStr
+
+
+class UserOut(BaseModel):
+    username: str
+    email: EmailStr
+
+
+@app.post("/users/", response_model=UserOut)
+async def create_user(user: UserIn) -> Any:
+    return user</code></pre>
+
+          <h3 class="q-title">Q6：什么时候要设 <code>response_model=None</code>？</h3>
+          <h3>场景一：动态返回不同结构的数据</h3>
+          <p>例如同一个接口可能返回重定向，也可能返回普通 JSON。若返回注解写成 <code>Response | dict[str, str]</code>，建议同时设置 <code>response_model=None</code>。</p>
+          <pre><code>from fastapi import FastAPI, Response
+from fastapi.responses import RedirectResponse
+
+app = FastAPI()
+
+
+@app.get("/portal", response_model=None)
+async def get_portal(teleport: bool = False) -> Response | dict[str, str]:
+    if teleport:
+        return RedirectResponse(url="https://example.com")
+    return {"message": "Here is your portal."}</code></pre>
+
+          <h3>场景二：直接返回原生响应对象</h3>
+          <p>当你明确手动构造响应（例如自定义状态码、Header、媒体类型、文件流）时，通常不需要让 <code>response_model</code> 参与过滤。</p>
+          <pre><code>from fastapi import FastAPI
+from fastapi.responses import FileResponse, JSONResponse
+
+app = FastAPI()
+
+
+@app.get("/download", response_model=None)
+async def download_file(export: bool = False):
+    if export:
+        return FileResponse(path="report.csv", media_type="text/csv", filename="report.csv")
+    return JSONResponse(content={"message": "set export=true to download"})</code></pre>
+
+          <h3 class="q-title">Q7：如何只返回“被显式设置”的字段？</h3>
+          <p>使用 <code>response_model_exclude_unset=True</code>。只给前端返回用户在代码里明确赋值过的字段，而跳过那些仅仅是因为有默认值才存在的字段。</p>
+          <pre><code>from fastapi import FastAPI
+from pydantic import BaseModel
+
+app = FastAPI()
+
+
+class Item(BaseModel):
+    name: str
+    description: str | None = None
+    price: float
+    tax: float = 10.5
+    tags: list[str] = []
+
+
+items = {
+    "foo": {"name": "Foo", "price": 50.2},
+    "bar": {"name": "Bar", "description": "The bartenders", "price": 62, "tax": 20.2},
+}
+
+
+@app.get("/items/{item_id}", response_model=Item, response_model_exclude_unset=True)
+async def read_item(item_id: str):
+    return items[item_id]</code></pre>
+          <p>返回结果示例：</p>
+          <pre><code># 请求
+GET /items/foo
+
+# 响应
+{
+  "name": "Foo",
+  "price": 50.2
+}
+
+# 请求
+GET /items/bar
+
+# 响应
+{
+  "name": "Bar",
+  "description": "The bartenders",
+  "price": 62,
+  "tax": 20.2
+}</code></pre>
+          <p>可以看到：<code>foo</code> 没有显式设置 <code>description</code>、<code>tax</code>、<code>tags</code>，因此不会返回这些默认字段。</p>
+
+          <h3 class="q-title">Q8：<code>response_model_include</code> / <code>response_model_exclude</code> ？</h3>
+          <p>response_model_include (包含)：指定只返回哪些字段。不在列表里的字段都会被过滤掉。</p>
+          <p>response_model_exclude (排除)：指定不要返回哪些字段。列表里的字段会被过滤，其余的正常返回。</p>
+
+          <h3 class="q-title">Q9：响应状态码</h3>
+          <p>统一在路径操作装饰器上使用 <code>status_code</code>（它是装饰器参数，不是函数参数）。</p>
+          <ul>
+            <li>默认状态码是 <code>200</code>。</li>
+            <li>可传数字（如 <code>201</code>），也可传枚举常量（推荐 <code>fastapi.status</code>，可读性更好）。</li>
+            <li>显式设置后，实际响应与 OpenAPI 文档都会使用该状态码。</li>
+            <li><code>204</code>、<code>304</code> 等状态码不应包含响应体。</li>
+          </ul>
+          <pre><code>from fastapi import FastAPI, status
+
+app = FastAPI()
+
+
+# 默认 200
+@app.get("/items/{item_id}")
+async def read_item(item_id: str):
+    return {"item_id": item_id}
+
+
+# 显式声明 201（推荐使用 fastapi.status 常量）
+@app.post("/items/", status_code=status.HTTP_201_CREATED)
+async def create_item(name: str):
+    return {"name": name}
+
+
+# 204 不返回响应体
+@app.delete("/items/{item_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_item(item_id: str):
+    return None</code></pre>
+        </div>
+      </details>
+
+      <details>
+        <summary>12. 额外模型</summary>
+        <div class="content">
+          <h3 class="q-title">Q1：为什么要用“额外模型”？</h3>
+          <p>同一个业务实体在不同阶段通常有不同数据形态：请求入参、响应出参、数据库落库。把它们拆成多个模型可以保证职责清晰，避免把不该暴露的数据返回给客户端。</p>
+          <ul>
+            <li><b>输入模型</b>：可包含明文密码等仅请求期字段。</li>
+            <li><b>输出模型</b>：只保留可对外字段。</li>
+            <li><b>DB 模型</b>：保存哈希密码等内部字段。</li>
+          </ul>
+
+          <h3 class="q-title">Q3：<code>model_dump()</code> 和 <code>**</code> 解包在这里起什么作用？</h3>
+          <p><code>model_dump()</code> 会把 Pydantic 模型转成 <code>dict</code>，再用 <code>**</code> 解包给另一个模型构造函数，实现“在保留公共字段的同时补充新字段”。</p>
+          <pre><code>user_dict = user_in.model_dump()
+user_in_db = UserInDB(**user_dict, hashed_password=hashed_password)</code></pre>
+
+          <h3 class="q-title">Q4：如何减少模型字段重复？</h3>
+          <p>用“基类 + 继承”提取公共字段，这是官方推荐的低重复实践。</p>
+
+          <h3 class="q-title">Q5：响应如果可能是“多种模型之一”怎么声明？</h3>
+          <pre><code>from fastapi import FastAPI
+from pydantic import BaseModel
+
+app = FastAPI()
+
+
+class BaseItem(BaseModel):
+    description: str
+    type: str
+
+
+class CarItem(BaseItem):
+    type: str = "car"
+
+
+class PlaneItem(BaseItem):
+    type: str = "plane"
+    size: int
+
+
+items = {
+    "item1": {"description": "Low rider", "type": "car"},
+    "item2": {"description": "Aeroplane", "type": "plane", "size": 5},
+}
+
+
+@app.get("/items/{item_id}", response_model=PlaneItem | CarItem)
+async def read_item(item_id: str):
+    return items[item_id]</code></pre>
+
+          <h3 class="q-title">Q6：如何声明“模型列表”响应？</h3>
+          <p>直接用 <code>response_model=list[Model]</code>。</p>
+          <pre><code>from fastapi import FastAPI
+from pydantic import BaseModel
+
+app = FastAPI()
+
+
+class Item(BaseModel):
+    name: str
+    description: str
+
+
+@app.get("/items/list", response_model=list[Item])
+async def read_items_list():
+    return [
+        {"name": "Foo", "description": "There comes my hero"},
+        {"name": "Red", "description": "It's my aeroplane"},
+    ]</code></pre>
+
+        </div>
+      </details>
+
+      <details>
+        <summary>13. 处理错误</summary>
+        <div class="content">
+          <h3 class="q-title">Q1：FastAPI 中业务错误该怎么返回？</h3>
+          <p>推荐直接 <code>raise HTTPException(...)</code>，而不是 <code>return</code> 错误对象。抛出后会立即中断当前请求流程并返回对应 HTTP 错误响应。</p>
+          <pre><code>from fastapi import FastAPI, HTTPException
+
+app = FastAPI()
+
+
+items = {"foo": "The Foo Wrestlers"}
+
+
+@app.get("/items/{item_id}")
+async def read_item(item_id: str):
+    if item_id not in items:
+        raise HTTPException(status_code=404, detail="Item not found")
+    return {"item": items[item_id]}</code></pre>
+
+          <h3 class="q-title">Q2：<code>HTTPException.detail</code> 只能是字符串吗？</h3>
+          <p>不是。可以是任何可 JSON 化的数据（如 <code>dict</code>、<code>list</code>）。FastAPI 会自动序列化。</p>
+          <pre><code>from fastapi import FastAPI, HTTPException
+
+app = FastAPI()
+
+
+@app.get("/orders/{order_id}")
+async def read_order(order_id: str):
+    raise HTTPException(
+        status_code=409,
+        detail={
+            "code": "ORDER_CONFLICT",
+            "message": "Order state conflict",
+            "order_id": order_id,
+        },
+    )</code></pre>
+
+          <h3 class="q-title">Q3：错误响应里可以加自定义 Header 吗？</h3>
+          <p>可以。通过 <code>HTTPException(headers={...})</code> 增加响应头，常用于安全或客户端提示场景。</p>
+          <pre><code>from fastapi import FastAPI, HTTPException
+
+app = FastAPI()
+
+
+@app.get("/items-header/{item_id}")
+async def read_item_header(item_id: str):
+    if item_id != "foo":
+        raise HTTPException(
+            status_code=404,
+            detail="Item not found",
+            headers={"X-Error": "ITEM_NOT_FOUND"},
+        )
+    return {"item": "The Foo Wrestlers"}</code></pre>
+
+          <h3 class="q-title">Q4：如何全局处理自定义异常？</h3>
+          <p>使用 <code>@app.exception_handler(YourException)</code> 注册全局处理器。适合统一业务错误结构。</p>
+          <pre><code>from fastapi import FastAPI, Request
+from fastapi.responses import JSONResponse
+
+app = FastAPI()
+
+
+class UnicornException(Exception):
+    def __init__(self, name: str):
+        self.name = name
+
+
+@app.exception_handler(UnicornException)
+async def unicorn_exception_handler(request: Request, exc: UnicornException):
+    return JSONResponse(
+        status_code=418,
+        content={"message": f"Oops! {exc.name} did something."},
+    )
+
+
+@app.get("/unicorns/{name}")
+async def read_unicorn(name: str):
+    if name == "yolo":
+        raise UnicornException(name=name)
+    return {"unicorn_name": name}</code></pre>
+
+          <h3 class="q-title">Q5：如何覆盖默认的请求验证错误处理？</h3>
+          <p>可覆盖 <code>RequestValidationError</code>，把默认 422 JSON 改为你想要的格式（如纯文本或统一 JSON 结构）。</p>
+          <pre><code>from fastapi import FastAPI, Request
+from fastapi.exceptions import RequestValidationError
+from fastapi.responses import PlainTextResponse
+
+app = FastAPI()
+
+
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request: Request, exc: RequestValidationError):
+    lines = ["Validation errors:"]
+    for error in exc.errors():
+        lines.append(f"field={error['loc']} msg={error['msg']}")
+    return PlainTextResponse("\n".join(lines), status_code=400)
+
+
+@app.get("/numbers/{value}")
+async def read_number(value: int):
+    return {"value": value}</code></pre>
+
+          <h3 class="q-title">Q6：如何覆盖 HTTPException 的默认处理？</h3>
+          <p>建议对 <code>StarletteHTTPException</code> 注册处理器，这样能覆盖 FastAPI/Starlette 内部抛出的同类异常。</p>
+          <pre><code>from fastapi import FastAPI, HTTPException, Request
+from fastapi.responses import PlainTextResponse
+from starlette.exceptions import HTTPException as StarletteHTTPException
+
+app = FastAPI()
+
+
+@app.exception_handler(StarletteHTTPException)
+async def http_exception_handler(request: Request, exc: StarletteHTTPException):
+    return PlainTextResponse(str(exc.detail), status_code=exc.status_code)
+
+
+@app.get("/items/{item_id}")
+async def read_item(item_id: int):
+    if item_id == 3:
+        raise HTTPException(status_code=418, detail="Nope! I don't like 3.")
+    return {"item_id": item_id}</code></pre>
+
+          <h3 class="q-title">Q7：<code>RequestValidationError.body</code> 有什么用？</h3>
+          <p>它保存了导致校验失败的原始请求体。开发阶段可用于排错与日志记录。</p>
+          <pre><code>from fastapi import FastAPI, Request
+from fastapi.encoders import jsonable_encoder
+from fastapi.exceptions import RequestValidationError
+from fastapi.responses import JSONResponse
+from pydantic import BaseModel
+
+app = FastAPI()
+
+
+class Item(BaseModel):
+    title: str
+    size: int
+
+
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request: Request, exc: RequestValidationError):
+    return JSONResponse(
+        status_code=422,
+        content=jsonable_encoder({"detail": exc.errors(), "body": exc.body}),
+    )
+
+
+@app.post("/items")
+async def create_item(item: Item):
+    return item</code></pre>
+
+          <h3 class="q-title">Q8：可以在自定义处理器里复用 FastAPI 默认异常处理吗？</h3>
+          <p>可以。先做日志、埋点，再调用官方默认处理器返回标准结构，是非常实用的生产实践。</p>
+          <pre><code>from fastapi import FastAPI, HTTPException, Request
+from fastapi.exception_handlers import (
+    http_exception_handler,
+    request_validation_exception_handler,
+)
+from fastapi.exceptions import RequestValidationError
+from starlette.exceptions import HTTPException as StarletteHTTPException
+
+app = FastAPI()
+
+
+@app.exception_handler(StarletteHTTPException)
+async def custom_http_exception_handler(request: Request, exc: StarletteHTTPException):
+    print(f"HTTP error: {exc!r}")
+    return await http_exception_handler(request, exc)
+
+
+@app.exception_handler(RequestValidationError)
+async def custom_validation_exception_handler(request: Request, exc: RequestValidationError):
+    print(f"Validation error: {exc}")
+    return await request_validation_exception_handler(request, exc)
+
+
+@app.get("/items/{item_id}")
+async def read_item(item_id: int):
+    if item_id == 3:
+        raise HTTPException(status_code=418, detail="Nope! I don't like 3.")
+    return {"item_id": item_id}</code></pre>
+        </div>
+      </details>
+
+      <details>
+        <summary>14. 路径操作配置</summary>
+        <div class="content">
+          <h3 class="q-title">Q1：路径操作配置参数应该写在哪里？</h3>
+          <p>写在装饰器上（如 <code>@app.get(...)</code>、<code>@app.post(...)</code>），不是写在函数参数里。它们会影响 OpenAPI 文档和接口行为。</p>
+          <pre><code>from fastapi import FastAPI, status
+from pydantic import BaseModel
+
+app = FastAPI()
+
+
+class Item(BaseModel):
+    name: str
+    description: str | None = None
+    price: float
+
+
+@app.post(
+    "/items/",
+    response_model=Item,
+    status_code=status.HTTP_201_CREATED,
+    tags=["items"],
+    summary="Create an item",
+    response_description="The created item",
+)
+async def create_item(item: Item):
+    return item</code></pre>
+
+          <h3 class="q-title">Q2：<code>status_code</code> 在路径操作配置里怎么用？</h3>
+          <p>可用数字，也可用 <code>fastapi.status</code> 常量（推荐后者，可读性更好）。该状态码会同时用于真实响应和 OpenAPI 文档。</p>
+          <table>
+            <thead>
+              <tr>
+                <th>分类</th>
+                <th>范围</th>
+                <th>常用常量示例</th>
+                <th>含义</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>1xx</td>
+                <td>信息响应</td>
+                <td><code>HTTP_101_SWITCHING_PROTOCOLS</code></td>
+                <td>切换协议（如 WebSocket）</td>
+              </tr>
+              <tr>
+                <td>2xx</td>
+                <td>成功</td>
+                <td><code>HTTP_200_OK</code><br><code>HTTP_201_CREATED</code></td>
+                <td>请求成功；资源创建成功</td>
+              </tr>
+              <tr>
+                <td>3xx</td>
+                <td>重定向</td>
+                <td><code>HTTP_301_MOVED_PERMANENTLY</code><br><code>HTTP_304_NOT_MODIFIED</code></td>
+                <td>永久移动；资源未修改（缓存）</td>
+              </tr>
+              <tr>
+                <td>4xx</td>
+                <td>客户端错误</td>
+                <td><code>HTTP_400_BAD_REQUEST</code><br><code>HTTP_401_UNAUTHORIZED</code><br><code>HTTP_403_FORBIDDEN</code><br><code>HTTP_404_NOT_FOUND</code></td>
+                <td>请求无效；未授权；访问禁止；找不到资源</td>
+              </tr>
+              <tr>
+                <td>5xx</td>
+                <td>服务器错误</td>
+                <td><code>HTTP_500_INTERNAL_SERVER_ERROR</code></td>
+                <td>服务器内部错误</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <h3 class="q-title">Q3：如何配置标签 <code>tags</code>？</h3>
+          <p>使用 <code>tags=[...]</code> 给接口分组，文档里会按标签聚合显示。大型项目建议统一标签命名。</p>
+          <pre><code>from fastapi import FastAPI
+
+app = FastAPI()
+
+
+@app.get("/items/", tags=["items"])
+async def read_items():
+    return [{"name": "Foo", "price": 42}]
+
+
+@app.get("/users/", tags=["users"])
+async def read_users():
+    return [{"username": "johndoe"}]</code></pre>
+
+          <h3 class="q-title">Q4：标签可以用枚举统一管理吗？</h3>
+          <p>可以。推荐用 <code>str, Enum</code> 管理标签常量，避免拼写不一致。</p>
+          <pre><code>from enum import Enum
+
+from fastapi import FastAPI
+
+app = FastAPI()
+
+
+class Tags(str, Enum):
+    items = "items"
+    users = "users"
+
+
+@app.get("/items/", tags=[Tags.items])
+async def get_items():
+    return ["Portal Gun", "Plumbus"]
+
+
+@app.get("/users/", tags=[Tags.users])
+async def get_users():
+    return ["Rick", "Morty"]</code></pre>
+
+          <h3 class="q-title">Q5：<code>summary</code> 和 <code>description</code> 分别做什么？</h3>
+          <p><code>summary</code> 是短标题，<code>description</code> 是详细说明。两者都会展示在文档中。</p>
+          <pre><code>from fastapi import FastAPI
+from pydantic import BaseModel
+
+app = FastAPI()
+
+
+class Item(BaseModel):
+    name: str
+    price: float
+
+
+@app.post(
+    "/items/meta",
+    response_model=Item,
+    summary="Create an item",
+    description="Create an item with name and price.",
+)
+async def create_item_meta(item: Item):
+    return item</code></pre>
+
+          <h3 class="q-title">Q6：描述能写在函数 docstring 里吗？</h3>
+          <p>可以。长描述推荐写在函数 docstring，支持 Markdown，文档展示更清晰。常见做法是装饰器保留 <code>summary</code>，详细说明写到 docstring。</p>
+          <pre><code>from fastapi import FastAPI
+from pydantic import BaseModel
+
+app = FastAPI()
+
+
+class Item(BaseModel):
+    name: str
+    price: float
+    tax: float | None = None
+
+
+@app.post("/items/doc", response_model=Item, summary="Create an item")
+async def create_item_doc(item: Item):
+    """
+    Create an item with complete information.
+
+    - **name**: required
+    - **price**: required
+    - **tax**: optional
+    """
+    return item</code></pre>
+
+          <h3 class="q-title">Q7：<code>response_description</code> 和 <code>description</code> 有什么区别？</h3>
+          <p><code>description</code> 描述整个路径操作；<code>response_description</code> 只描述响应内容。OpenAPI 规范要求响应有描述，不填时 FastAPI 会给默认值（如 <code>Successful response</code>）。</p>
+          <pre><code>from fastapi import FastAPI
+from pydantic import BaseModel
+
+app = FastAPI()
+
+
+class Item(BaseModel):
+    name: str
+
+
+@app.post(
+    "/items/response-desc",
+    response_model=Item,
+    description="Create an item resource.",
+    response_description="The created item",
+)
+async def create_item_response_desc(item: Item):
+    return item</code></pre>
+
+          <h3 class="q-title">Q8：如何把旧接口标记为弃用但暂不删除？</h3>
+          <p>在装饰器设置 <code>deprecated=True</code>。这样文档会明确标记为已弃用，便于平滑迁移。</p>
+          <pre><code>from fastapi import FastAPI
+
+app = FastAPI()
+
+
+@app.get("/v1/items", tags=["items"], deprecated=True)
+async def read_items_v1():
+    return [{"name": "legacy-item"}]
+
+
+@app.get("/v2/items", tags=["items"])
+async def read_items_v2():
+    return [{"name": "new-item"}]</code></pre>
+        </div>
+      </details>
+
+      <details>
+        <summary>15. JSON 兼容编码器</summary>
+        <div class="content">
+          <h3 class="q-title">Q1：什么是 <code>jsonable_encoder</code>？</h3>
+          <p>当你尝试把一些复杂的 Python 对象直接变成 JSON 时，会遇到麻烦，例如：</p>
+          <ul>
+            <li>Pydantic 模型：JSON 不认识 <code>Item(name="Apple")</code> 这种对象。</li>
+            <li>日期时间（<code>datetime</code>）：JSON 不识别 <code>datetime.now()</code>。</li>
+            <li>数据库对象：例如 SQLAlchemy 模型实例。</li>
+          </ul>
+          <p>如果你直接把这些对象交给 <code>json</code> 模块，会报错：<code>Object of type datetime is not JSON serializable</code>。</p>
+          <p><code>jsonable_encoder()</code> 会接收这些复杂对象，并递归地将每一部分转换成 JSON 能理解的类型，例如：</p>
+          <ul>
+            <li><code>datetime</code> ➜ ISO 格式字符串（如 <code>"2026-03-25T22:39:10"</code>）。</li>
+            <li>Pydantic 模型 ➜ 普通 <code>dict</code>。</li>
+            <li><code>Enum</code> ➜ 其原始值（字符串或数字）。</li>
+          </ul>
+          <p>当你需要把 Pydantic 模型或包含特殊类型的数据转换为“可被 JSON 序列化”的 Python 数据结构时，使用 <code>jsonable_encoder()</code>。</p>
+          <ul>
+            <li>典型场景：写入 NoSQL、缓存、消息队列、日志系统。</li>
+            <li>它返回的是 <code>dict/list</code> 等 Python 对象，而不是 JSON 字符串。</li>
+          </ul>
+
+          <h3 class="q-title">Q2：它和 <code>model_dump()</code> 有什么区别？</h3>
+          <p><code>model_dump()</code> 负责把模型导出为字典；<code>jsonable_encoder()</code> 进一步确保所有值都 JSON 兼容。</p>
+
+          <h3 class="q-title">Q3：标准写法示例（写入只接受 JSON 兼容数据的存储）</h3>
+          <pre><code>from datetime import datetime
+
+from fastapi import FastAPI
+from fastapi.encoders import jsonable_encoder
+from pydantic import BaseModel
+
+app = FastAPI()
+fake_db: dict[str, dict] = {}
+
+
+class Item(BaseModel):
+    title: str
+    timestamp: datetime
+    description: str | None = None
+
+
+@app.put("/items/{item_id}")
+async def update_item(item_id: str, item: Item):
+    json_compatible_item = jsonable_encoder(item)
+    fake_db[item_id] = json_compatible_item
+    return {"saved": fake_db[item_id]}</code></pre>
+
+          <h3 class="q-title">Q4：<code>jsonable_encoder</code> 会返回 JSON 字符串吗？</h3>
+          <p>不会。它返回的是 JSON 兼容的 Python 数据结构。</p>
+          <ul>
+            <li><code>json.dumps(obj)</code>：将 Python 对象序列化为 JSON 格式字符串。</li>
+            <li><code>json.loads(text)</code>：将 JSON 格式字符串反序列化为 Python 对象（如 <code>dict</code>、<code>list</code>）。</li>
+          </ul>
+          <pre><code>import json
+from datetime import datetime
+
+from fastapi.encoders import jsonable_encoder
+from pydantic import BaseModel
+
+
+class Event(BaseModel):
+    name: str
+    at: datetime
+
+
+event = Event(name="deploy", at=datetime(2026, 3, 25, 20, 0, 0))
+payload = jsonable_encoder(event)   # dict
+text = json.dumps(payload)          # str</code></pre>
+
+          <h3 class="q-title">Q5：为什么 FastAPI 返回模型时通常不需要手动调用它？</h3>
+          <p>因为 FastAPI 内部已经会做编码与序列化。只有在“你自己处理持久化/转发”时才需要显式调用 <code>jsonable_encoder</code>。</p>
+        </div>
+      </details>
+
+      <details>
+        <summary>16. 请求体更新</summary>
+        <div class="content">
+          <h3 class="q-title">Q1：<code>PUT</code> 和 <code>PATCH</code> 在更新场景有什么区别？</h3>
+          <p><code>PUT</code> 语义是“整体替换”，而 <code>PATCH</code> 语义是“部分更新”。如果用 <code>PUT</code> 只提交了部分字段，未提交的字段会被模型默认值覆盖。</p>
+
+          <h3 class="q-title">Q2：用 <code>PUT</code> 的标准替换写法是什么？</h3>
+          <pre><code>from fastapi import FastAPI
+from fastapi.encoders import jsonable_encoder
+from pydantic import BaseModel
+
+app = FastAPI()
+
+
+class Item(BaseModel):
+    name: str | None = None
+    description: str | None = None
+    price: float | None = None
+    tax: float = 10.5
+    tags: list[str] = []
+
+
+items: dict[str, dict] = {
+    "foo": {"name": "Foo", "price": 50.2},
+    "bar": {"name": "Bar", "description": "The bartenders", "price": 62, "tax": 20.2},
+}
+
+
+@app.put("/items/{item_id}", response_model=Item)
+async def replace_item(item_id: str, item: Item):
+    encoded = jsonable_encoder(item)
+    items[item_id] = encoded
+    return encoded</code></pre>
+
+          <h3 class="q-title">Q3：为什么 <code>PUT</code> 可能会“误覆盖”？</h3>
+          <p>如果请求体没有包含某些字段，它们会被模型默认值填充并写回，从而覆盖原有值。</p>
+          <pre><code># 假设原始数据
+# {"name": "Bar", "description": "The bartenders", "price": 62, "tax": 20.2}
+
+# PUT 仅传：
+# {"name": "Barz", "price": 3, "description": null}
+
+# 结果会变成：
+# {"name": "Barz", "description": null, "price": 3, "tax": 10.5}
+# 注意 tax 被默认值覆盖</code></pre>
+
+          <h3 class="q-title">Q4：如何用 <code>PATCH</code> 实现真正的“局部更新”？</h3>
+          <p>核心是组合使用两个步骤：</p>
+          <ul>
+            <li><code>model_dump(exclude_unset=True)</code>：只提取请求里“明确传入”的字段，避免把未传字段用默认值写回数据库。</li>
+            <li><code>model_copy(update=...)</code>：在已有模型基础上合并更新字段，生成新的已更新模型，保持类型与校验行为一致。</li>
+          </ul>
+          <pre><code>from fastapi import FastAPI
+from fastapi.encoders import jsonable_encoder
+from pydantic import BaseModel
+
+app = FastAPI()
+
+
+class Item(BaseModel):
+    name: str | None = None
+    description: str | None = None
+    price: float | None = None
+    tax: float = 10.5
+    tags: list[str] = []
+
+
+items: dict[str, dict] = {
+    "foo": {"name": "Foo", "price": 50.2},
+    "bar": {"name": "Bar", "description": "The bartenders", "price": 62, "tax": 20.2},
+}
+
+
+@app.patch("/items/{item_id}", response_model=Item)
+async def update_item(item_id: str, item: Item):
+    stored = items[item_id]
+    stored_model = Item(**stored)
+    update_data = item.model_dump(exclude_unset=True)
+    updated = stored_model.model_copy(update=update_data)
+    items[item_id] = jsonable_encoder(updated)
+    return updated</code></pre>
+
+          <h3 class="q-title">Q5：部分更新的完整流程？</h3>
+          <ol>
+            <li>读取已有数据并构建 Pydantic 模型。</li>
+            <li>对输入模型执行 <code>model_dump(exclude_unset=True)</code>。</li>
+            <li>用 <code>model_copy(update=...)</code> 合并。</li>
+            <li>用 <code>jsonable_encoder</code> 转成可持久化结构。</li>
+            <li>保存并返回更新结果。</li>
+          </ol>
+
+          <h3 class="q-title">Q6：如果希望“空字段也允许省略”，该怎么设计模型？</h3>
+          <p>更新模型应把字段设置为可选（带默认值或 <code>None</code>），与“创建模型”区分开。建议用 <code>ItemCreate</code> / <code>ItemUpdate</code> 这样的模型拆分。</p>
+          <pre><code>from fastapi import FastAPI
+from pydantic import BaseModel
+
+app = FastAPI()
+
+
+class ItemCreate(BaseModel):
+    name: str
+    price: float
+    description: str | None = None
+
+
+class ItemUpdate(BaseModel):
+    name: str | None = None
+    price: float | None = None
+    description: str | None = None
+
+
+@app.post("/items/", response_model=ItemCreate)
+async def create_item(item: ItemCreate):
+    return item
+
+
+@app.patch("/items/{item_id}")
+async def patch_item(item_id: str, item: ItemUpdate):
+    return {"item_id": item_id, "updates": item.model_dump(exclude_unset=True)}</code></pre>
+        </div>
+      </details>
+
+      <details>
+        <summary>17. 依赖项</summary>
+        <div class="content">
+          <h3 class="q-title">Q1：什么是依赖注入？</h3>
+          <p>通常情况下，你写一个函数时需要在函数内部自己创建它依赖的资源（例如数据库连接、Token 解析器）。而在 FastAPI 中，你只需要在参数里声明“我需要什么”，FastAPI 会在执行路径函数前自动准备并注入这些依赖。</p>
+          <p><b>核心区别：声明 vs 创建</b></p>
+          <ul>
+            <li><b>传统方式</b>：每个函数都自己处理依赖创建与清理，重复代码多，改动范围大。</li>
+            <li><b>依赖注入方式</b>：路径函数专注业务逻辑，依赖由框架统一提供。</li>
+          </ul>
+          <p><b>为什么重要</b></p>
+          <ul>
+            <li><b>代码复用</b>：同一鉴权、分页、数据库会话逻辑可被多个接口复用。</li>
+            <li><b>解耦</b>：路径函数不关心依赖如何构建，只关心如何使用。</li>
+            <li><b>易测试</b>：测试时可替换真实依赖为测试桩/假对象，不必改业务函数内部实现。</li>
+          </ul>
+
+          <h3 class="q-title">Q2：最小可用依赖怎么写？</h3>
+          <p>依赖本质就是普通函数（或可调用对象），再通过 <code>Depends(...)</code> 声明到路径函数参数中。</p>
+          <pre><code>from typing import Annotated, Any
+
+from fastapi import Depends, FastAPI
+
+app = FastAPI()
+
+
+async def common_parameters(
+    q: str | None = None,
+    skip: int = 0,
+    limit: int = 100,
+) -> dict[str, Any]:
+    return {"q": q, "skip": skip, "limit": limit}
+
+
+@app.get("/items/")
+async def read_items(
+    commons: Annotated[dict[str, Any], Depends(common_parameters)],
+):
+    return commons
+
+
+@app.get("/users/")
+async def read_users(
+    commons: Annotated[dict[str, Any], Depends(common_parameters)],
+):
+    return commons</code></pre>
+
+          <h3 class="q-title">Q3：<code>Depends</code> 使用时最容易犯什么错？</h3>
+          <p>不要在 <code>Depends</code> 里手动调用依赖函数。应写 <code>Depends(common_parameters)</code>，不要写 <code>Depends(common_parameters())</code>。</p>
+
+          <h3 class="q-title">Q4：如何减少重复声明依赖的代码？</h3>
+          <p>推荐使用 <code>Annotated</code> 类型别名，把依赖声明成可复用类型。</p>
+          <pre><code>from typing import Annotated, Any
+
+from fastapi import Depends, FastAPI
+
+app = FastAPI()
+
+
+async def common_parameters(
+    q: str | None = None,
+    skip: int = 0,
+    limit: int = 100,
+) -> dict[str, Any]:
+    return {"q": q, "skip": skip, "limit": limit}
+
+
+CommonsDep = Annotated[dict[str, Any], Depends(common_parameters)]
+
+
+@app.get("/orders/")
+async def read_orders(commons: CommonsDep):
+    return commons
+
+
+@app.get("/reports/")
+async def read_reports(commons: CommonsDep):
+    return commons</code></pre>
+
+          <h3 class="q-title">Q5：依赖函数必须是 <code>async def</code> 吗？</h3>
+          <p>不必须。<code>def</code> 和 <code>async def</code> 都可以，且可与路径函数混用。FastAPI 会按上下文正确执行。</p>
+          <pre><code>from typing import Annotated
+
+from fastapi import Depends, FastAPI
+
+app = FastAPI()
+
+
+def sync_dep() -> str:
+    return "sync-ok"
+
+
+async def async_dep() -> str:
+    return "async-ok"
+
+
+@app.get("/mix")
+async def read_mix(
+    a: Annotated[str, Depends(sync_dep)],
+    b: Annotated[str, Depends(async_dep)],
+):
+    return {"a": a, "b": b}</code></pre>
+
+          <h3 class="q-title">Q6：依赖会不会进入 OpenAPI 文档？</h3>
+          <p>会。依赖及其子依赖中声明的参数与校验规则会被合并进同一 OpenAPI Schema，并在 <code>/docs</code> 中可见。</p>
+
+          <h3 class="q-title">Q7：依赖注入在工程实践中的价值是什么？</h3>
+          <ul>
+            <li>复用：共享分页、排序、过滤、鉴权等逻辑。</li>
+            <li>解耦：路径函数专注业务，基础设施逻辑放进依赖。</li>
+            <li>可组合：依赖可以再依赖，形成分层能力树。</li>
+            <li>可测试：依赖天然适合替换/覆盖，方便测试隔离。</li>
+          </ul>
+
+        </div>
+      </details>
+
+      <details>
+        <summary>18. 安全</summary>
+        <div class="content">
+          <h3 class="q-title">Q1：FastAPI 的“安全”到底覆盖什么？</h3>
+          <p>核心是两件事：<b>认证（Authentication）</b> 与 <b>授权（Authorization）</b>。认证解决“你是谁”，授权解决“你能做什么”。FastAPI 通过标准化安全工具，减少你手写协议细节的成本。</p>
+
+          <h3 class="q-title">Q2：为什么官方强调 OAuth2？</h3>
+          <p>OAuth2 是目前 Web API 里最主流的授权规范，覆盖第三方登录与令牌授权等常见场景。像“使用 Google/GitHub 登录”底层都和它相关。</p>
+          <ul>
+            <li>OAuth2 本身不负责传输加密，生产环境仍必须使用 HTTPS。</li>
+          </ul>
+
+          <h3 class="q-title">Q3：OpenID Connect 和 OAuth2 是什么关系？</h3>
+          <p>OpenID Connect（OIDC）是建立在 OAuth2 之上的身份层标准，用于更统一地表达“登录用户是谁”。它让不同提供商的行为更可互操作。</p>
+
+          <h3 class="q-title">Q4：FastAPI 与 OpenAPI 安全方案如何对应？</h3>
+          <p>FastAPI 基于 OpenAPI，会把安全声明自动写入文档，所以 <code>/docs</code> 能直接出现授权输入框并参与调试。</p>
+          <h3 class="q-title">Q5：FastAPI 安全工具怎么开始用？</h3>
+          <p>从 <code>fastapi.security</code> 模块入手，把安全组件作为依赖注入到路径函数中。因为安全天然是“横切关注点”：多个接口复用同一套登录态与权限判断。用依赖可做到：统一校验、分层组合（当前用户→活跃用户→管理员）、自动文档、低重复。</p>
+          <pre><code>from typing import Annotated
+
+from fastapi import Depends, FastAPI
+from fastapi.security import OAuth2PasswordBearer
+
+app = FastAPI()
+
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
+
+
+@app.get("/users/me")
+async def read_users_me(token: Annotated[str, Depends(oauth2_scheme)]):
+    return {"access_token": token, "token_type": "bearer"}</code></pre>
+
+        </div>
+      </details>
+
+      <details>
+        <summary>19. 中间件</summary>
+        <div class="content">
+          <h3 class="q-title">Q1：什么是中间件？它和路由函数是什么关系？</h3>
+          <p>中间件是位于“请求进入应用”和“响应离开应用”两端的统一处理层。</p>
+          <ul>
+            <li>请求进入时先经过中间件。</li>
+            <li>中间件再把请求交给路由处理。</li>
+            <li>路由返回响应后，中间件还能再加工一次响应。</li>
+          </ul>
+
+          <h3 class="q-title">Q2：如何创建一个 HTTP 中间件？</h3>
+          <p>通过定义一个带有 <code>@app.middleware("http")</code> 装饰器的异步函数来实现。函数必须接收 <code>request</code> 和 <code>call_next</code>：</p>
+          <ul>
+            <li><code>request</code>：包含请求的所有信息。</li>
+            <li><code>call_next</code>：一个函数，它会接收 <code>request</code> 作为参数，并返回路径函数产生的 <code>response</code>。</li>
+          </ul>
+          <pre><code>from fastapi import FastAPI, Request
+
+app = FastAPI()
+
+
+@app.middleware("http")
+async def simple_middleware(request: Request, call_next):
+    response = await call_next(request)
+    return response</code></pre>
+
+          <h3 class="q-title">Q3：如何在中间件里统计耗时并写入响应头？</h3>
+          <p>推荐使用 <code>time.perf_counter()</code> 进行高精度计时，并在响应头中添加自定义字段。</p>
+          <pre><code>import time
+
+from fastapi import FastAPI, Request
+
+app = FastAPI()
+
+
+@app.middleware("http")
+async def add_process_time_header(request: Request, call_next):
+    start = time.perf_counter()
+    response = await call_next(request)
+    process_time = time.perf_counter() - start
+    response.headers["X-Process-Time"] = f"{process_time:.6f}"
+    return response</code></pre>
+
+          <h3 class="q-title">Q4：中间件里“前置逻辑”和“后置逻辑”怎么写？</h3>
+          <p>在 <code>await call_next(request)</code> 之前写前置逻辑，在它之后写后置逻辑。</p>
+
+          <h3 class="q-title">Q5：多个中间件的执行顺序是什么？</h3>
+          <p>中间件是“栈式包裹”结构：后添加的在最外层。</p>
+          <ul>
+            <li>请求阶段：最外层先执行。</li>
+            <li>响应阶段：最外层最后执行。</li>
+          </ul>
+          <pre><code>from fastapi import FastAPI, Request
+
+app = FastAPI()
+
+
+@app.middleware("http")
+async def middleware_a(request: Request, call_next):
+    response = await call_next(request)
+    response.headers["X-A"] = "A"
+    return response
+
+
+@app.middleware("http")
+async def middleware_b(request: Request, call_next):
+    response = await call_next(request)
+    response.headers["X-B"] = "B"
+    return response</code></pre>
+          <p>在这个示例里，<code>middleware_b</code> 后注册，因此请求先到 B，再到 A；响应返回时先经过 A，再经过 B。</p>
+
+          <h3 class="q-title">Q6：中间件与依赖项（尤其 <code>yield</code> 依赖）和后台任务的执行先后如何？</h3>
+          <p><b>核心执行流程</b>（从请求进入到结束）如下：</p>
+          <ol>
+            <li>中间件（Request 阶段）先接收请求。</li>
+            <li>依赖项进入阶段：若是 <code>yield</code> 依赖，会先执行到 <code>yield</code> 之前（如创建 DB 会话）。</li>
+            <li>路径函数执行业务逻辑并生成响应。</li>
+            <li>依赖项退出阶段：执行 <code>yield</code> 之后的清理代码（如 <code>db.close()</code>）。</li>
+            <li>中间件（Response 阶段）处理并返回响应。</li>
+            <li>后台任务在响应发送后执行。</li>
+          </ol>
+          <p><b>容易混淆的点</b>：<code>yield</code> 依赖不是普通依赖，它具备生命周期管理能力，像上下文管理器一样能在“前后”两个阶段执行代码；而普通 <code>return</code> 依赖只负责一次性提供值。</p>
+          <table>
+            <thead>
+              <tr>
+                <th>特性</th>
+                <th>普通依赖（<code>return</code>）</th>
+                <th><code>yield</code> 依赖</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>执行方式</td>
+                <td>执行一次并返回结果</td>
+                <td>前置执行 → <code>yield</code> 暂停 → 后置清理</td>
+              </tr>
+              <tr>
+                <td>典型用途</td>
+                <td>配置读取、参数组装、简单校验</td>
+                <td>数据库连接、会话、文件句柄等资源管理</td>
+              </tr>
+              <tr>
+                <td>清理机制</td>
+                <td>无内置清理阶段</td>
+                <td><code>yield</code> 后代码自动执行清理</td>
+              </tr>
+            </tbody>
+          </table>
+          <pre><code>from collections.abc import Generator
+
+
+def get_db() -> Generator[str, None, None]:
+    db = "db-session"
+    try:
+        yield db
+    finally:
+        # 响应完成后执行清理
+        print("close db session")</code></pre>
+
+        </div>
+      </details>
+
+      <details>
+        <summary>20. CORS</summary>
+        <div class="content">
+          <h3 class="q-title">Q1：什么是 CORS？为什么前后端分离经常遇到它？</h3>
+          <p>CORS 是浏览器的安全机制：当前端页面和后端 API 不同源（协议/域名/端口任一不同）时，浏览器会限制跨域请求，除非后端明确返回允许跨域的响应头。</p>
+
+          <h3 class="q-title">Q2：什么叫“不同源（Origin）”？</h3>
+          <p>源由 <code>协议 + 域名 + 端口</code> 组成。任意一个不同，就是不同源。</p>
+          <ul>
+            <li><code>http://localhost:3000</code> 与 <code>http://localhost:8000</code>：端口不同。</li>
+            <li><code>http://localhost:8000</code> 与 <code>https://localhost:8000</code>：协议不同。</li>
+          </ul>
+
+          <h3 class="q-title">Q3：FastAPI 里如何正确开启 CORS？</h3>
+          <p>推荐使用 <code>CORSMiddleware</code>，并显式列出允许的前端源。</p>
+          <pre><code>from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+
+app = FastAPI()
+
+origins = [
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allow_headers=["Authorization", "Content-Type"],
+    expose_headers=["X-Request-ID", "X-Process-Time"],
+    max_age=600,
+)
+
+
+@app.get("/health")
+async def health_check():
+    return {"status": "ok"}</code></pre>
+
+          <h3 class="q-title">Q4：<code>allow_origins=["*"]</code> 能不能直接用？</h3>
+          <p><code>allow_origins=["*"]</code> 表示允许任意来源访问，适合本地快速联调，不适合生产默认长期开启。</p>
+          <p><code>allow_credentials</code> 决定浏览器是否允许在跨源请求中携带凭证（如 Cookie、Authorization 等）：</p>
+          <ul>
+            <li><code>allow_credentials=False</code>（默认）：浏览器不会按跨域凭证模式处理请求/响应。</li>
+            <li><code>allow_credentials=True</code>：后端明确允许跨域携带凭证，并允许处理相关凭证响应。</li>
+          </ul>
+          <p>一旦开启 <code>allow_credentials=True</code>，就<strong>不能</strong>再使用 <code>allow_origins=["*"]</code>，必须显式列出可信前端源（例如 <code>["https://myfrontend.com"]</code>）。这是为了避免任意站点都能借浏览器上下文发送用户凭证，降低安全风险。</p>
+
+          <h3 class="q-title">Q5：什么是预检请求？</h3>
+          <p>浏览器在某些跨域请求前会先发 <code>OPTIONS</code> 请求（带 <code>Origin</code> 与 <code>Access-Control-Request-Method</code>），用来确认后端是否允许该跨域操作。<code>CORSMiddleware</code> 会自动处理这类请求并返回对应 CORS 响应头。</p>
+
+          <h3 class="q-title">Q6：什么是简单请求？</h3>
+          <p>带 <code>Origin</code> 的普通请求会直接到业务路由，中间件会在响应中补充 CORS 响应头，浏览器据此决定是否放行前端 JS 读取响应。</p>
+
+          <h3 class="q-title">Q7：各参数最常用含义是什么？</h3>
+          <ul>
+            <li><code>allow_origins</code>：允许跨域的源白名单。</li>
+            <li><code>allow_origin_regex</code>：按正则匹配源。</li>
+            <li><code>allow_methods</code>：允许的 HTTP 方法。</li>
+            <li><code>allow_headers</code>：允许的请求头。</li>
+            <li><code>allow_credentials</code>：是否允许 Cookie/Authorization 等凭证。</li>
+            <li><code>expose_headers</code>：允许浏览器 JS 读取的响应头。</li>
+            <li><code>max_age</code>：预检结果缓存秒数。</li>
+          </ul>
+
+          <h3 class="q-title">Q8：前端读不到自定义响应头怎么办？</h3>
+          <p>需要把该响应头加入 <code>expose_headers</code>。否则即使响应里有该头，浏览器端 JavaScript 也可能拿不到。</p>
+          <pre><code>app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+    expose_headers=["X-Process-Time", "X-Request-ID"],
+)</code></pre>
+        </div>
+      </details>
+
+      <details>
+        <summary>21. SQL 数据库</summary>
+        <div class="content">
+          <h3 class="q-title">Q1：FastAPI 强制使用 SQLModel 吗？</h3>
+          <p><b>官方结论：不强制。</b>FastAPI 可以配合任意 SQL/NoSQL 工具。选择 SQLModel，是因为它在 FastAPI 场景中能显著减少“重复建模”的成本。</p>
+          <p><code>SQLModel = Pydantic + SQLAlchemy</code></p>
+          <table>
+            <thead>
+              <tr>
+                <th>工具</th>
+                <th>角色</th>
+                <th>核心功能</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>SQLAlchemy</td>
+                <td>ORM / 数据库引擎层</td>
+                <td>负责表映射、SQL 生成、连接与事务。</td>
+              </tr>
+              <tr>
+                <td>Pydantic</td>
+                <td>数据验证层</td>
+                <td>负责请求/响应校验、类型转换与文档基础。</td>
+              </tr>
+              <tr>
+                <td>SQLModel</td>
+                <td>统一封装层</td>
+                <td>让同一模型同时具备 Pydantic 校验能力与 ORM 表定义能力。</td>
+              </tr>
+            </tbody>
+          </table>
+          <p>SQLModel 出现的动机是解决传统 FastAPI 项目中的常见问题：同一业务实体往往要写两份近似代码（Pydantic 模型 + SQLAlchemy 模型），字段变更要改两处，维护成本高。</p>
+          <ul>
+            <li><b>减少冗余</b>：字段尽量只定义一次。</li>
+            <li><b>提高一致性</b>：API 契约与数据库结构更容易同步演进。</li>
+            <li><b>增强体验</b>：类型提示与自动补全更连贯。</li>
+          </ul>
+          <p>补充：生产环境通常迁移到 PostgreSQL，并使用迁移工具（如 Alembic）管理 schema 变更。</p>
+
+          <h3 class="q-title">Q3：生产模式（全异步 + Alembic + 分层装配）推荐模板？</h3>
+          <p>生产实践建议：<b>用 Alembic 管迁移</b>（而不是启动时 <code>create_all</code>）、使用 <b>SQLAlchemy AsyncEngine + AsyncSession</b>，并把 DB 初始化与 app 装配拆分。<code>lifespan</code> 是应用级“启动/关闭钩子”，用于启动时初始化、关闭时清理资源。</p>
+          <p><b>app/db.py</b></p>
+          <pre><code>from collections.abc import AsyncGenerator
+
+from sqlalchemy.ext.asyncio import (
+    AsyncEngine,
+    AsyncSession,
+    async_sessionmaker,
+    create_async_engine,
+)
+
+DATABASE_URL = "postgresql+asyncpg://app:password@127.0.0.1:5432/dreamlog"
+
+engine: AsyncEngine = create_async_engine(
+    DATABASE_URL,
+    pool_pre_ping=True,
+)
+SessionLocal = async_sessionmaker(
+    bind=engine,
+    class_=AsyncSession,
+    expire_on_commit=False,
+)
+
+
+async def get_session() -> AsyncGenerator[AsyncSession, None]:
+    async with SessionLocal() as session:
+        yield session</code></pre>
+
+          <p><b>app/models.py</b></p>
+          <pre><code>from datetime import datetime
+
+from sqlalchemy import DateTime, String, func
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
+
+
+class Base(DeclarativeBase):
+    pass
+
+
+class Hero(Base):
+    __tablename__ = "heroes"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str] = mapped_column(String(100), index=True)
+    secret_name: Mapped[str] = mapped_column(String(100))
+    age: Mapped[int | None]
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        server_default=func.now(),
+    )</code></pre>
+
+          <p><b>app/schemas.py</b></p>
+          <pre><code>from pydantic import BaseModel
+
+
+class HeroCreate(BaseModel):
+    name: str
+    secret_name: str
+    age: int | None = None
+
+
+class HeroPublic(BaseModel):
+    id: int
+    name: str
+    age: int | None = None</code></pre>
+
+          <p><b>app/routers/heroes.py</b></p>
+          <pre><code>from typing import Annotated
+
+from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.db import get_session
+from app.models import Hero
+from app.schemas import HeroCreate, HeroPublic
+
+router = APIRouter(prefix="/heroes", tags=["heroes"])
+SessionDep = Annotated[AsyncSession, Depends(get_session)]
+
+
+@router.post("/", response_model=HeroPublic)
+async def create_hero(payload: HeroCreate, session: SessionDep) -> HeroPublic:
+    hero = Hero(name=payload.name, secret_name=payload.secret_name, age=payload.age)
+    session.add(hero)
+    await session.commit()
+    await session.refresh(hero)
+    return HeroPublic.model_validate(hero, from_attributes=True)
+
+
+@router.get("/{hero_id}", response_model=HeroPublic)
+async def read_hero(hero_id: int, session: SessionDep) -> HeroPublic:
+    hero = await session.get(Hero, hero_id)
+    if hero is None:
+        raise HTTPException(status_code=404, detail="Hero not found")
+    return HeroPublic.model_validate(hero, from_attributes=True)
+
+
+@router.get("/", response_model=list[HeroPublic])
+async def read_heroes(session: SessionDep) -> list[HeroPublic]:
+    result = await session.execute(select(Hero))
+    heroes = result.scalars().all()
+    return [HeroPublic.model_validate(h, from_attributes=True) for h in heroes]</code></pre>
+
+          <p><b>app/main.py</b></p>
+          <pre><code>from contextlib import asynccontextmanager
+
+from fastapi import FastAPI
+
+from app.db import engine
+from app.routers.heroes import router as heroes_router
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # lifespan = 应用级“启动/关闭钩子”：
+    # 启动时做一次初始化，关闭时做一次清理。
+    # 生产环境不在这里 create_all，结构迁移统一由 Alembic 执行。
+    yield
+    await engine.dispose()
+
+
+app = FastAPI(lifespan=lifespan, title="Dream Log API")
+app.include_router(heroes_router)</code></pre>
+
+          <p><b>Alembic（命令示例）</b></p>
+          <pre><code>alembic revision --autogenerate -m "create heroes table"
+alembic upgrade head</code></pre>
+
+        </div>
+      </details>
+
+      <details>
+        <summary>21. 更大的应用</summary>
+        <div class="content">
+          <h3 class="q-title">Q1：为什么要把 FastAPI 拆成“更大的应用”结构？</h3>
+          <p>当接口数量增加后，把所有路由都写在一个文件会迅速变得难维护。官方推荐使用 <code>APIRouter</code> + 分模块目录结构，让路由、依赖、模型按领域拆分，提升可读性、可测试性与团队协作效率。</p>
+          <ul>
+            <li><b>按领域拆分</b>：如 <code>users</code>、<code>items</code>、<code>auth</code>。</li>
+            <li><b>统一前缀与标签</b>：每个 router 自带 <code>prefix</code>/<code>tags</code>。</li>
+            <li><b>依赖可分层复用</b>：应用级、路由级、路径级逐层叠加。</li>
+          </ul>
+
+          <h3 class="q-title">Q3：<code>APIRouter</code> 怎么定义与拆分？</h3>
+          <p>每个业务文件创建自己的 <code>router = APIRouter(...)</code>，并在内部声明路径操作。推荐在 router 上集中声明 <code>prefix</code>、<code>tags</code>、<code>responses</code>。</p>
+          <pre><code>from typing import Annotated
+
+from fastapi import APIRouter, Depends, HTTPException
+
+router = APIRouter(
+    prefix="/items",
+    tags=["items"],
+    responses={404: {"description": "Not found"}},
+)
+</code></pre>
+
+          <h3 class="q-title">Q4：如何在主应用中注册多个 Router？</h3>
+          <p>在 <code>main.py</code> 里通过 <code>app.include_router(...)</code> 组装。这样每个模块独立开发，主入口只负责“装配”。</p>
+          <pre><code>from fastapi import FastAPI
+
+from app.routers import items, users
+
+app = FastAPI(title="Dream Log API")
+
+app.include_router(users.router)
+app.include_router(items.router)
+
+
+@app.get("/")
+async def root() -> dict[str, str]:
+    return {"message": "API is running"}</code></pre>
+
+          <h3 class="q-title">Q5：依赖项可以放在哪几层？执行关系是什么？</h3>
+          <ul>
+            <li><b>应用级</b>：<code>FastAPI(dependencies=[Depends(...)])</code>，作用于全站。</li>
+            <li><b>路由级</b>：<code>APIRouter(..., dependencies=[Depends(...)])</code>，作用于该组路由。</li>
+            <li><b>路径级</b>：写在具体路径函数参数中，粒度最细。</li>
+          </ul>
+          <p>执行时会叠加：应用级 → 路由级 → 路径级。越往后越接近具体业务。</p>
+
+          <h3 class="q-title">Q6：如何写“可复用且可测试”的共享依赖文件？</h3>
+          <p>可把鉴权、请求头校验等放到 <code>dependencies.py</code>，供多个 router 引用。推荐使用 <code>Annotated</code> + <code>Header()</code> 明确输入来源。</p>
+          <pre><code>from typing import Annotated
+
+from fastapi import Header, HTTPException
+
+
+async def verify_token(x_token: Annotated[str, Header()]) -> str:
+    if x_token != "fake-super-secret-token":
+        raise HTTPException(status_code=400, detail="X-Token invalid")
+    return x_token
+
+
+async def verify_key(x_key: Annotated[str, Header()]) -> str:
+    if x_key != "fake-super-secret-key":
+        raise HTTPException(status_code=400, detail="X-Key invalid")
+    return x_key</code></pre>
+
+          <h3 class="q-title">Q7：如何在 Router 级统一套用依赖与错误文档？</h3>
+          <pre><code>from fastapi import APIRouter, Depends
+
+from app.dependencies import verify_key, verify_token
+
+router = APIRouter(
+    prefix="/admin",
+    tags=["admin"],
+    dependencies=[Depends(verify_token), Depends(verify_key)],
+    responses={403: {"description": "Forbidden"}},
+)
+
+
+@router.get("/stats")
+async def read_admin_stats() -> dict[str, int]:
+    return {"active_users": 128}</code></pre>
+          <p>这样该 router 下所有接口都会自动执行依赖，无需每个函数重复声明。</p>
+
+        </div>
+      </details>
+
+    </section>
+  </div>
+
+  <script>
+    (function () {
+      const STORAGE_KEY = 'fastapi_faq_open_details_v1';
+      const NOTE_STORAGE_KEY = 'fastapi_faq_open_notes_v1';
+      const detailsList = Array.from(document.querySelectorAll('.qa-list > details'));
+      const chipBtns = Array.from(document.querySelectorAll('.chip-note-btn[aria-controls]'));
+      if (!detailsList.length) return;
+
+      detailsList.forEach((el, idx) => {
+        el.setAttribute('data-faq-id', String(idx + 1));
+      });
+
+      function saveDetailsState() {
+        const openIds = detailsList
+          .filter((el) => el.open)
+          .map((el) => el.getAttribute('data-faq-id'));
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(openIds));
+      }
+
+      function restoreDetailsState() {
+        try {
+          const raw = localStorage.getItem(STORAGE_KEY);
+          if (!raw) return false;
+          const openIds = JSON.parse(raw);
+          if (!Array.isArray(openIds)) return false;
+
+          detailsList.forEach((el) => {
+            const id = el.getAttribute('data-faq-id');
+            el.open = openIds.includes(id);
+          });
+          return true;
+        } catch (e) {
+          return false;
+        }
+      }
+
+      function saveNotesState() {
+        const openNoteIds = chipBtns
+          .map((btn) => btn.getAttribute('aria-controls'))
+          .filter((panelId) => {
+            const panel = panelId ? document.getElementById(panelId) : null;
+            return !!panel && panel.classList.contains('show');
+          });
+        localStorage.setItem(NOTE_STORAGE_KEY, JSON.stringify(openNoteIds));
+      }
+
+      function restoreNotesState() {
+        try {
+          const raw = localStorage.getItem(NOTE_STORAGE_KEY);
+          if (!raw) return;
+          const openNoteIds = JSON.parse(raw);
+          if (!Array.isArray(openNoteIds)) return;
+
+          chipBtns.forEach((btn) => {
+            const panelId = btn.getAttribute('aria-controls');
+            const panel = panelId ? document.getElementById(panelId) : null;
+            const isShown = !!panel && openNoteIds.includes(panelId);
+            if (panel) panel.classList.toggle('show', isShown);
+            btn.setAttribute('aria-expanded', String(isShown));
+          });
+        } catch (e) {
+          // ignore invalid localStorage payload
+        }
+      }
+
+      const restored = restoreDetailsState();
+      if (!restored) {
+        detailsList.forEach((el, idx) => {
+          el.open = idx === 0;
+        });
+      }
+
+      detailsList.forEach((el) => {
+        el.addEventListener('toggle', saveDetailsState);
+      });
+
+      chipBtns.forEach((chipBtn) => {
+        const panelId = chipBtn.getAttribute('aria-controls');
+        if (!panelId) return;
+        const chipPanel = document.getElementById(panelId);
+        if (!chipPanel) return;
+
+        chipBtn.addEventListener('click', () => {
+          const isShown = chipPanel.classList.toggle('show');
+          chipBtn.setAttribute('aria-expanded', String(isShown));
+          saveNotesState();
+        });
+      });
+
+      document.querySelectorAll('.chip-note-close[data-close-note]').forEach((closeBtn) => {
+        closeBtn.addEventListener('click', () => {
+          const panelId = closeBtn.getAttribute('data-close-note');
+          if (!panelId) return;
+          const panel = document.getElementById(panelId);
+          if (!panel) return;
+          panel.classList.remove('show');
+
+          const triggerBtn = document.querySelector(`.chip-note-btn[aria-controls="${panelId}"]`);
+          if (triggerBtn) {
+            triggerBtn.setAttribute('aria-expanded', 'false');
+          }
+          saveNotesState();
+        });
+      });
+
+      restoreNotesState();
+
+      window.addEventListener('beforeunload', () => {
+        saveDetailsState();
+        saveNotesState();
+      });
+    })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,1289 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>生产环境分布式系统架构 & Raft 流程图解</title>
+  <link rel="stylesheet" href="../assets/style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Source+Han+Sans+CN:wght@300;400;600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #0c0f1a;
+      --panel: #111827;
+      --panel-2: #0f172a;
+      --ink: #e2e8f0;
+      --muted: #94a3b8;
+      --accent: #22d3ee;
+      --accent-2: #a855f7;
+      --accent-3: #f97316;
+      --success: #34d399;
+      --danger: #f43f5e;
+      --line: rgba(148, 163, 184, 0.35);
+      --glow: 0 0 30px rgba(34, 211, 238, 0.35);
+      --scale: 0.92;
+      --card-w: 280px;
+      --text-lh: 1.75;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: "Source Han Sans CN", system-ui, sans-serif;
+      color: var(--ink);
+      line-height: var(--text-lh);
+      background:
+        radial-gradient(circle at top, rgba(34, 211, 238, 0.1), transparent 45%),
+        radial-gradient(circle at 15% 20%, rgba(168, 85, 247, 0.2), transparent 50%),
+        radial-gradient(circle at 90% 15%, rgba(249, 115, 22, 0.18), transparent 50%),
+        var(--bg);
+      min-height: 100vh;
+      padding: 18px 24px 26px;
+      overflow-x: hidden;
+    }
+
+    header {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      margin-bottom: 18px;
+      gap: 24px;
+    }
+
+    header h1 {
+      font-family: "Source Han Sans CN", system-ui, sans-serif;
+      font-size: 28px;
+      letter-spacing: 0.5px;
+      font-weight: 700;
+      text-shadow: 0 0 18px rgba(56, 189, 248, 0.35);
+    }
+
+    header p {
+      max-width: 720px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.7;
+    }
+
+
+    .canvas {
+      position: relative;
+      background: linear-gradient(140deg, rgba(15, 23, 42, 0.92), rgba(2, 6, 23, 0.92));
+      border-radius: 24px;
+      padding: 16px 16px 18px;
+      box-shadow: 0 20px 60px rgba(8, 10, 24, 0.55);
+      border: 1px solid rgba(148, 163, 184, 0.2);
+      overflow: visible;
+    }
+
+    .flow-lines {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      z-index: 3;
+      pointer-events: none;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 18px;
+      position: relative;
+      z-index: 2;
+    }
+
+    .lane {
+      background: rgba(15, 23, 42, 0.75);
+      border-radius: 16px;
+      padding: 10px 10px 12px;
+      border: 1px solid rgba(148, 163, 184, 0.18);
+      display: grid;
+      grid-template-rows: auto 1fr;
+      gap: 8px;
+    }
+
+    .lane h3 {
+      font-size: 12px;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: var(--muted);
+      font-weight: 600;
+    }
+
+    .lane-cards {
+      display: flex;
+      gap: 52px;
+      align-items: stretch;
+      justify-content: flex-start;
+      width: 100%;
+      max-width: 100%;
+      padding-inline: 22px;
+      overflow: visible;
+    }
+
+    /* Zigzag lanes: alternate visual reading direction to shorten inter-lane links */
+    #distGrid .lane:nth-child(even) .lane-cards {
+      flex-direction: row-reverse;
+    }
+
+    .lane-cards .card {
+      flex: 0 0 var(--card-w);
+      max-width: var(--card-w);
+    }
+
+    .card {
+      background: linear-gradient(160deg, rgba(30, 41, 59, 0.9), rgba(17, 24, 39, 0.9));
+      border-radius: 12px;
+      padding: 9px 10px;
+      border: 1px solid rgba(148, 163, 184, 0.15);
+      box-shadow: 0 8px 18px rgba(15, 23, 42, 0.38);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .card[role="button"] {
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .card[role="button"]:focus-visible {
+      outline: 2px solid rgba(34, 211, 238, 0.6);
+      outline-offset: 2px;
+    }
+
+    .jump-highlight {
+      border-color: rgba(34, 211, 238, 0.6) !important;
+      box-shadow: 0 0 0 1px rgba(34, 211, 238, 0.35), 0 16px 34px rgba(34, 211, 238, 0.18) !important;
+      transition: box-shadow 220ms ease, border-color 220ms ease;
+    }
+
+    .card::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at top, rgba(34, 211, 238, 0.2), transparent 60%);
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    .card:hover::after { opacity: 1; }
+
+    .card strong {
+      display: block;
+      font-size: 12.5px;
+      margin-bottom: 6px;
+    }
+
+    .card p {
+      font-size: 11.5px;
+      color: var(--muted);
+      line-height: 1.75;
+      margin-top: 6px;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 3px 6px;
+      border-radius: 999px;
+      font-size: 9.5px;
+      font-weight: 600;
+      margin-bottom: 8px;
+      color: #0f172a;
+    }
+
+    .badge.edge { background: #22d3ee; }
+    .badge.app { background: #a855f7; }
+    .badge.data { background: #34d399; }
+    .badge.infra { background: #f97316; }
+    .badge.alert { background: #f43f5e; color: #0f172a; }
+
+    .flow {
+      margin-top: 14px;
+      border-radius: 22px;
+      border: 1px solid rgba(148, 163, 184, 0.18);
+      padding: 14px 16px;
+      background: rgba(2, 6, 23, 0.6);
+      position: relative;
+      z-index: 2;
+    }
+
+    .flow h2 {
+      font-size: 14px;
+      letter-spacing: 0.5px;
+      margin-bottom: 12px;
+    }
+
+    .timeline { display: grid; gap: 12px; }
+
+    .step {
+      display: grid;
+      grid-template-columns: 26px 1fr;
+      gap: 14px;
+      align-items: start;
+      padding: 10px 12px;
+      background: rgba(15, 23, 42, 0.75);
+      border-radius: 12px;
+      border: 1px solid rgba(148, 163, 184, 0.12);
+    }
+
+    .step .index {
+      width: 20px;
+      height: 20px;
+      border-radius: 7px;
+      display: grid;
+      place-items: center;
+      font-weight: 700;
+      font-size: 11px;
+      background: rgba(34, 211, 238, 0.15);
+      color: var(--accent);
+      border: 1px solid rgba(34, 211, 238, 0.4);
+    }
+
+    .step strong {
+      font-size: 12.5px;
+      line-height: 1.25;
+      display: inline-block;
+      margin-bottom: 4px;
+    }
+
+    .step p {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.75;
+    }
+
+    .step ul {
+      margin: 10px 0 0;
+      padding-left: 18px;
+      color: var(--muted);
+      font-size: 11.5px;
+      line-height: 1.75;
+    }
+
+    .step li { margin: 4px 0; }
+    .step ul ul { margin-top: 6px; }
+
+    .step code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      font-size: 11px;
+      color: rgba(226, 232, 240, 0.92);
+      background: rgba(148, 163, 184, 0.12);
+      border: 1px solid rgba(148, 163, 184, 0.16);
+      padding: 1px 6px;
+      border-radius: 999px;
+      white-space: nowrap;
+    }
+
+    .tip-icon {
+      position: relative;
+      display: inline-flex;
+      justify-content: center;
+      align-items: center;
+      width: 14px;
+      height: 14px;
+      margin-left: 4px;
+      border-radius: 50%;
+      font-size: 10px;
+      font-weight: 700;
+      line-height: 1;
+      cursor: help;
+      color: rgba(103, 232, 249, 0.95);
+      background: transparent;
+      border: 1px solid rgba(103, 232, 249, 0.85);
+      vertical-align: middle;
+    }
+
+    .tip-icon::after { display: none; }
+
+    .floating-tip {
+      position: fixed;
+      left: 0;
+      top: 0;
+      max-width: min(560px, calc(100vw - 24px));
+      white-space: pre-wrap;
+      text-align: left;
+      font-size: 11px;
+      line-height: 1.7;
+      font-weight: 400;
+      color: #e2e8f0;
+      padding: 10px 12px;
+      border-radius: 10px;
+      background: rgba(2, 6, 23, 0.96);
+      border: 1px solid rgba(148, 163, 184, 0.36);
+      box-shadow: 0 12px 28px rgba(2, 6, 23, 0.55);
+      z-index: 9999;
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+      transition: opacity 0.14s ease;
+    }
+
+    .floating-tip.show {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .divider {
+      height: 1px;
+      background: rgba(148, 163, 184, 0.14);
+      margin: 16px 0;
+      border-radius: 999px;
+    }
+
+
+    svg {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      pointer-events: none;
+      z-index: 3;
+    }
+
+    .flow-lines path {
+      stroke-width: 2.6;
+      filter: drop-shadow(0 0 8px rgba(56, 189, 248, 0.28));
+      stroke-linecap: round;
+      opacity: 0.88;
+    }
+
+    .flow-lines .lane-down {
+      stroke: rgba(56, 189, 248, 0.55);
+      stroke-width: 1.7;
+      opacity: 0.78;
+      stroke-dasharray: 4 10;
+      animation: dashFlow 10s linear infinite;
+      filter: drop-shadow(0 0 7px rgba(56, 189, 248, 0.18));
+    }
+
+    .flow-lines .intra-link {
+      stroke: rgba(226, 232, 240, 0.62);
+      stroke-width: 2.0;
+      opacity: 0.9;
+      stroke-dasharray: 4 8;
+      animation: dashFlow 8.5s linear infinite;
+      filter: drop-shadow(0 0 6px rgba(226, 232, 240, 0.14));
+    }
+
+    @keyframes dashFlow {
+      from { stroke-dashoffset: 0; }
+      to { stroke-dashoffset: -180; }
+    }
+
+
+    @media (max-width: 1100px) {
+      header { flex-direction: column; align-items: flex-start; }
+      .lane-cards { width: 100%; max-width: 100%; flex-wrap: wrap; overflow: visible; }
+      .lane-cards .card { flex: 1 1 280px; max-width: none; }
+    }
+
+    @media (max-width: 700px) {
+      body { padding: 28px 20px 40px; }
+      header h1 { font-size: 30px; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div>
+      <h1>分布式系统架构</h1>
+      <p class="page-updated">最后更新：2026-03-26</p>
+    </div>
+  </header>
+
+  <!-- ===================== Distributed Architecture ===================== -->
+  <section class="canvas" id="distCanvas">
+    <svg class="flow-lines" preserveAspectRatio="none">
+      <defs>
+        <marker id="arrowTipTiny" viewBox="0 0 14 14" refX="14" refY="7" markerWidth="4.4" markerHeight="4.4" orient="auto" markerUnits="strokeWidth">
+          <path d="M 0 0 L 14 7 L 0 14 z" fill="context-stroke" />
+        </marker>
+      </defs>
+    </svg>
+
+    <div class="grid" id="distGrid">
+      <div class="lane">
+        <h3>客户端与接入层</h3>
+        <div class="lane-cards">
+          <div class="card" role="button" tabindex="0" data-jump="#step-1">
+            <span class="badge edge">入口</span>
+            <strong>Web / App / 小程序</strong>
+            <p>统一认证与鉴权，灰度策略与地域就近接入。</p>
+          </div>
+          <div class="card" role="button" tabindex="0" data-jump="#step-2">
+            <span class="badge edge">边缘</span>
+            <strong>CDN / WAF / RateLimit</strong>
+            <p>静态加速、DDoS 防护、限流熔断；把“攻击”和“尖峰”拦在系统外。</p>
+          </div>
+          <div class="card" role="button" tabindex="0" data-jump="#step-3">
+            <span class="badge edge">网关</span>
+            <strong>API Gateway / Ingress</strong>
+            <p>路由、鉴权、统一日志、请求追踪；把复杂性从业务服务挪到治理层。</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="lane">
+        <h3>服务与计算层</h3>
+        <div class="lane-cards">
+          <div class="card" role="button" tabindex="0" data-jump="#step-4">
+            <span class="badge app">计算</span>
+            <strong>微服务 / BFF / GraphQL</strong>
+            <p>按领域拆分，服务间 RPC/HTTP；BFF 面向端做聚合以降低前端复杂度。</p>
+          </div>
+          <div class="card" role="button" tabindex="0" data-jump="#step-5">
+            <span class="badge app">异步</span>
+            <strong>消息队列 / 事件流</strong>
+            <p>削峰填谷、解耦；用幂等与去重保障“至少一次”语义下的正确性。</p>
+          </div>
+          <div class="card" role="button" tabindex="0" data-jump="#step-6">
+            <span class="badge app">治理</span>
+            <strong>服务发现 / 配置中心</strong>
+            <p>注册与健康检查、动态配置；配合熔断/限流实现弹性与自愈。</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="lane">
+        <h3>数据与存储层</h3>
+        <div class="lane-cards">
+          <div class="card" role="button" tabindex="0" data-jump="#step-7">
+            <span class="badge data">缓存</span>
+            <strong>Redis Cluster / KV</strong>
+            <p>热点数据加速；分布式锁与限流器常落在这里（需要续租与防误删）。</p>
+          </div>
+          <div class="card" role="button" tabindex="0" data-jump="#step-8">
+            <span class="badge data">数据库</span>
+            <strong>分库分表 / 读写分离</strong>
+            <p>主从复制、分片路由；跨分片事务复杂，常用最终一致/补偿替代强一致。</p>
+          </div>
+          <div class="card" role="button" tabindex="0" data-jump="#step-9">
+            <span class="badge data">对象/文件</span>
+            <strong>Distributed Storage</strong>
+            <p>图片/音视频/附件；多副本/纠删码，冷热分层与生命周期策略降低成本。</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="lane">
+        <h3>基础设施与运维</h3>
+        <div class="lane-cards">
+          <div class="card" role="button" tabindex="0" data-jump="#step-10">
+            <span class="badge infra">部署</span>
+            <strong>Kubernetes / 多 AZ</strong>
+            <p>滚动发布、蓝绿/金丝雀；多可用区容灾，业务无感切流。</p>
+          </div>
+          <div class="card" role="button" tabindex="0" data-jump="#step-11">
+            <span class="badge infra">可观测</span>
+            <strong>日志 / 指标 / 链路追踪</strong>
+            <p>统一链路追踪（TraceId），以 SLO 驱动告警与容量规划。</p>
+          </div>
+          <div class="card" role="button" tabindex="0" data-jump="#step-12">
+            <span class="badge infra">治理底座</span>
+            <strong>etcd / Consul（配置 / 注册 / 租约）</strong>
+            <p>配置中心、服务注册发现、租约与 Watch 通知等能力的稳定支撑。</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="flow">
+      <h2></h2>
+      <div class="timeline">
+        <div class="step" id="step-1">
+          <div class="index">1</div>
+          <div>
+            <strong>Web / App / 小程序：</strong>
+            <ul>
+              <li><strong>一）认证体系：</strong>
+                <ul>
+                  <li><strong>① 底层机制：</strong>
+                    <ul>
+                      <li style="margin-bottom: 8px;"><strong>Cookie</strong>：
+                        <ul>
+                          <li><strong>设置：</strong>由<strong>服务端</strong>通过 HTTP 响应头 <code>Set-Cookie</code> 下发，例如 <code>Set-Cookie: session_id=abc123; HttpOnly; Secure; SameSite=Lax; Max-Age=3600</code>。</li>
+                          <li><strong>浏览器：</strong>按<strong>域名 / 路径 / 过期策略</strong>把这条键值对持久化在本地，之后访问同一域名/路径时会<strong>自动</strong>在请求头中附带 <code>Cookie: session_id=abc123</code> 回传给服务端。</li>
+                          <li><strong>本质：</strong>一个容量较小、受作用域限制的<strong>“随请求自动发送的键值对存储”</strong>，可用 <code>HttpOnly</code>（JS 无法访问，防 XSS）、<code>Secure</code>（仅 HTTPS 发送）、<code>SameSite</code>（辅助防 CSRF）、<code>Max-Age/Expires</code>（控制有效期）等属性强化安全性。</li>
+                          <li><strong>认证：</strong>Cookie 名称可以自定义，但在认证场景下<strong>应只存不可伪造的随机会话标识（如 session_id）</strong>，不要直接存 <code>user_id</code> 这类业务身份字段，否则被篡改后会造成严重越权问题。</li>
+                          <li><strong>时机：</strong>首次访问创建匿名会话、登录成功后建立/升级会话、Session 续期或刷新的时候，框架都会自动下发或更新携带 <code>session_id</code> 的 Cookie。</li>
+                        </ul>
+                      </li>
+                      <li style="margin-top: 8px; margin-bottom: 8px;"><strong>Session</strong>：
+                        <ul>
+                          <li><strong>设置：</strong>当建立会话或登录成功时，服务器会在内存 / Redis / 数据库中为该浏览器创建一条 Session 记录，例如 <code>{ session_id: "abc123", user_id: 123|null, is_login: true|false, expire_at: 1710000000 }</code>，本质上是一个<strong>承载用户状态的容器</strong></li>
+                          <li><strong>浏览器：</strong>服务器生成随机 <code>session_id</code>，通过 <code>Set-Cookie: session_id=xyz; HttpOnly; Secure</code> 发给浏览器，之后每次请求浏览器都会自动带上 <code>Cookie: session_id=xyz</code>。</li>
+                          <li><strong>请求：</strong>服务器解析 Cookie 取出 <code>session_id</code> → 查 Redis / 内存 / 数据库 → 还原出“这是谁、是否登录、权限有哪些”，敏感数据始终只保留在后端受控环境中，不直接暴露给客户端。</li>
+                          <li><strong>安全实践：</strong>推荐在<strong>登录成功后废弃旧的 session_id、颁发新的 session_id 绑定登录用户</strong>（即 Regenerate Session），以防止 Session Fixation（会话固定攻击）。</li>
+                        </ul>
+                      </li>
+                      <li style="margin-bottom: 8px;"><strong>JWT</strong>：
+                        <ul>
+                          <li><strong>本质：</strong>把用户标识与权限声明打包成一段<strong>自包含的 Token</strong>。JWT 字符串形如 <code>xxxxx.yyyyy.zzzzz</code>——用<strong>两个点</strong>切成三段 <code>header.payload.signature</code>，由服务器用密钥签名后发给前端；后续请求在请求头里带上 <code>Authorization: Bearer &lt;token&gt;</code>，后端<strong>校验签名</strong>即可确认用户身份。
+                            <ul>
+                              <li><strong>1）拆解三段：</strong>
+                                <ul>
+                                  <li><strong>Header（头部）：</strong>描述这枚令牌的基本信息，常见如类型为 JWT、签名算法（例如 <code>HS256</code>）。<strong>通俗理解：</strong>像身份证上的“发证机关说明”——告诉大家：这是一张用什么算法做出来的证件。</li>
+                                  <li><strong>Payload（负载）：</strong>存放声明（Claims），例如用户 ID、用户名、角色、过期时间 <code>exp</code> 等。<strong>注意：</strong>常见实现里这部分往往只是 <strong>Base64 编码</strong>，<strong>不是加密</strong>，任何人解码都能看到明文，因此<strong>绝对不能放密码</strong>等敏感机密。<strong>通俗理解：</strong>像身份证正面——姓名、角色、到期日都写在上面。</li>
+                                  <li><strong>Signature（签名）：</strong>服务器把 Header 与 Payload 按约定规则拼接，再混入只有服务端掌握的<strong>密钥（Secret Key）</strong>（非对称场景下则用私钥签名、公钥验签），用 Header 里声明的算法算出一串摘要。<strong>通俗理解：</strong>像证件背面的防伪镭射水印——没有密钥就伪造不出一致的水印。</li>
+                                </ul>
+                              </li>
+                              <li><strong>2）不再依赖 Session 存储？</strong>
+                                <ul>
+                                  <li><strong>Session：</strong>前端拿 session_id 这张编号来查询”；后端必须去 Redis/数据库里核对这张编号对应的是谁、是否仍有效。<strong>结论：</strong>服务端<strong>必须持久保存</strong>会话状态，否则认不出人。</li>
+                                  <li><strong>JWT：</strong>前端拿整张 JWT 证件来办事；后端只用自己掌握的密钥，对收到的 Header+Payload <strong>重算一遍签名</strong>，与 Token 上的 Signature 一致，则说明令牌真实且 Payload <strong>未被篡改</strong>，再直接读取其中的 <code>user_id</code> 等字段即可。<strong>结论：</strong>服务端<strong>只需安全保管密钥/公钥配置</strong>，不必为每一次会话在库里常驻一条记录（仍可用黑名单、短过期、refresh 等做风控，见下文代价）。</li>
+                                </ul>
+                              </li>
+                              <li><strong>3）核心优势</strong>
+                                <ul>
+                                  <li>Session 需要依赖中心化存储，多机部署时Session 模式常要<strong>共享 Redis</strong>，否则在 A 机登录、请求落到 B 机会“认不出”，每次请求都要“Cookie → session_id → 查 Redis”带来网络 IO 与性能损耗；在微服务中，每个服务都要访问同一 Session 存储，架构耦合度高；同时强依赖浏览器 Cookie，对 App、CLI、第三方调用和跨域场景都不够友好；JWT 模式下，各实例只要配置<strong>同一密钥或信任同一套公钥</strong>，同一枚令牌在App、CLI、第三方调用可统一用 Authorization: Bearer，到哪台机器都能<strong>本地验签</strong>。</li>
+                                </ul>
+                              </li>
+                            </ul>
+                          </li>
+                          <li><strong>同源策略与跨域：</strong>前端 Origin 和后端 Origin 不同（比如 Next.js 跑在 <code>http://localhost:3000</code>，FastAPI 跑在 <code>http://localhost:8000</code>；协议/域名/端口有一个不一样），浏览器的同源策略与跨域：就会把这次跨域请求当成“有风险”，如果后端没显式允许默认不让你的前端自由访问后端资源。</li>
+                          <li><strong>解决方案：</strong>需要让后端（如 FastAPI）通过 CORS 中间件显式声明“哪些 Origin 可以带着 JWT 来访问我”，例如：
+                            <code>allow_origins=['http://localhost:3000']</code>、<code>allow_methods=['*']</code>、<code>allow_headers=['*']</code>；这相当于给来自指定源的浏览器请求发了一张“通行证”，告诉它“这是可信前端，可以带着 JWT 来调用接口”。</li>
+                          <li><strong>JWT 的代价与场景决策：</strong>Token 一旦签发，除非过期或配合黑名单，很难像 Session 那样立即撤销；一旦泄露，攻击者可在有效期内直接调用 API；payload 可读、体积也比 <code>session_id</code> 大；因此在<strong>单体、强安全、并发压力一般的后台</strong>里仍然适合用 Cookie + Session，而在<strong>前后端分离、微服务、高并发 API、移动端/第三方接入、需要跨域的系统</strong>里，JWT 带来的“无状态、高扩展、跨端统一”优势更大，通常会选用“短期 access_token（JWT）+ 较长期 refresh_token”的组合方案。</li>
+                        </ul>
+                      </li>
+                      <li style="margin-bottom: 6px;"><strong>OAuth2</strong>：
+                        <ul>
+                          <li><strong>总结：</strong>OAuth 2.0是主流的<strong>授权（Authorization）</strong>标准：在<strong>不把用户密码交给第三方</strong>的前提下，让第三方应用获得对用户资源的<strong>有限访问权限</strong></li>
+                          <li><strong>类比理解：</strong>你在柜台（授权服务器）出示身份证并确认入住 → 拿到房卡（<code>access_token</code>）→ 用房卡开门（访问资源）。门锁只认卡，不需要你反复出示身份证。</li>
+                          <li><strong>核心角色：</strong>
+                            <ul>
+                              <li><strong>资源所有者：</strong>用户，本人拥有数据。</li>
+                              <li><strong>客户端：</strong>想访问你数据的第三方应用。</li>
+                              <li><strong>授权服务器：</strong>负责登录、征得同意、签发令牌（如微信/Google/GitHub）。</li>
+                              <li><strong>资源服务器：</strong>托管受保护资源并验证令牌（如用户信息、头像、通讯录 API）。</li>
+                            </ul>
+                          </li>
+                          <li><strong>标准流程：</strong>
+                            <ul>
+                              <li><strong>① 发起授权：</strong>客户端把用户重定向到授权服务器</li>
+                              <li><strong>② 用户登录并同意：</strong>用户在授权服务器完成身份验证，并确认授权范围。</li>
+                              <li><strong>③ 返回授权码：</strong>授权服务器重定向回客户端回调地址，并附带一次性、短有效期的 <code>code</code>。</li>
+                              <li><strong>④ 后台换取令牌：</strong>客户端服务器端（不经浏览器）用 <code>code</code> + <code>client_secret</code> 发送给授权服务器，授权服务器 把 Access Token 直接塞给你的后端（在 OAuth2 的体系中，授权服务器通常拥有一个专门的处理端点，技术上称为 Token Endpoint令牌端点。）。</li>
+                              <li><strong>⑤ 获得令牌：</strong>拿到 <code>access_token</code>（常配 <code>refresh_token</code> 用于续期）。</li>
+                              <li><strong>⑥ 访问资源：</strong>调用资源接口时带 <code>Authorization: Bearer &lt;access_token&gt;</code>，资源服务器验证后返回数据。</li>
+                            </ul>
+                          </li>
+                          <li><strong>Token 补充：</strong>OAuth2 不强制令牌格式，但工程里 <code>access_token</code> 常用 <strong>JWT</strong>。
+                            <ul>
+                              <li><strong>好处：</strong>资源服务器可用公钥/共享密钥<strong>本地验签</strong>判断合法性，无需每次都回授权服务器询问。</li>
+                              <li><strong>为什么要先给 code 再换 token？</strong>把令牌从“浏览器前台传递”挪到“服务端后台交换”：减少令牌泄露（URL、历史记录、Referer）风险，并用 <code>client_secret</code> 让授权服务器确认“真的是这个客户端”来换取令牌。</li>
+                            </ul>
+                          </li>
+                          </ul>
+                      </li>
+                    </ul>
+                  </li>
+                </ul>
+              </li>
+              <li><strong>二）灰度策略</strong>
+                <ul>
+                  <li><strong>核心目标：</strong>在真实生产流量下测试新版本，但<strong>把出问题的范围控制在可接受的极小比例</strong>，并且能一键回滚。</li>
+                  <li><strong>常见分流维度：</strong>
+                    <ul>
+                      <li><strong>按用户 ID / 设备 ID 取模：</strong>例如 <code>uid % 10 &lt; 1</code> 的用户进入新版本，可以保证同一用户每次访问都稳定落在同一版本。</li>
+                      <li><strong>按权重随机：</strong>例如 5% 流量走 v2，95% 走 v1；随着观测指标稳定，逐步把 5% → 20% → 50% → 100%。</li>
+                      <li><strong>按特定属性：</strong>只对“内部员工”“测试用户”或某个地区/渠道开放新版本。</li>
+                      <li><strong>按 Header：</strong>通过特定 Header把请求路由到新版本，方便自动化测试或灰度探针。</li>
+                    </ul>
+                  </li>
+                </ul>
+              </li>
+              <li><strong>三）地域就近接入（Geo-proximity Routing）</strong>
+                <ul>
+                  <li><strong>核心目标：</strong>让“广州的用户请求广州的机房”，减少跨洲/跨国传输时间，同时满足数据合规与容灾需求。</li>
+                  <li><strong>实现原理：</strong>
+                    <ul>
+                      <li><strong>智能 DNS：</strong>DNS 服务器根据客户端 IP 所属地区，返回最近 Region 的 IP，例如华北用户解析到北京集群，华南用户解析到深圳集群。</li>
+                      <li><strong>ECS：</strong>在 DNS 查询中携带客户端子网信息，让权威 DNS 更准确地感知终端位置。</li>
+                      <li><strong>Anycast IP：</strong>多个机房对外暴露相同 IP，由网络基础设施把流量路由到“就近”的节点。</li>
+                    </ul>
+                  </li>
+                  <li><strong>带来的价值：</strong>
+                    <ul>
+                      <li><strong>更低延迟：</strong>物理距离更近、网络跳数更少，首屏时间和接口响应显著改善。</li>
+                      <li><strong>合规：</strong>配合 Region 级数据隔离，满足“数据不出境”等监管要求。</li>
+                      <li><strong>容灾隔离：</strong>单个 Region 故障时，可通过 DNS/路由策略把流量切到其他健康 Region，实现跨地域容灾。</li>
+                    </ul>
+                  </li>
+                </ul>
+              </li>
+            </ul>
+          </div>
+        </div>
+        <div class="step" id="step-2">
+          <div class="index">2</div>
+          <div>
+            <strong>CDN / WAF / Rate Limit</strong>
+            <div style="display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px; margin-top:8px;">
+              <div style="padding:10px; border:1px solid rgba(148,163,184,.2); border-radius:10px; background:rgba(15,23,42,.55);">
+                <strong style="font-size:12px; margin-bottom:6px; display:block; color:#67e8f9;">CDN（内容分发）</strong>
+                <p style="font-size:11.5px; color:var(--muted); line-height:1.7; margin:0;">
+                  将静态资源缓存到边缘节点，用户就近访问，显著降低首包时间与跨地域时延；
+                  其中“边缘节点”是部署在离用户更近网络位置的 CDN 服务器，用于在源站之外提前响应内容请求；
+                  源站是内容的权威来源与回源入口（负责生成/更新数据），CDN 服务器是其缓存与分发副本（命中则直接返回，未命中再回源拉取）；
+                  同时 CDN 还能吸收大规模突发流量，减少源站带宽与连接压力。
+                </p>
+              </div>
+              <div style="padding:10px; border:1px solid rgba(148,163,184,.2); border-radius:10px; background:rgba(15,23,42,.55);">
+                <strong style="font-size:12px; margin-bottom:6px; display:block; color:#c084fc;">WAF（Web 应用防火墙）</strong>
+                <p style="font-size:11.5px; color:var(--muted); line-height:1.7; margin:0;">
+                  基于规则与行为分析拦截 SQL 注入、XSS、命令注入、恶意爬虫等应用层攻击；
+                  通过虚拟补丁与策略更新，在业务未发版时快速降低漏洞暴露风险。
+                </p>
+              </div>
+              <div style="padding:10px; border:1px solid rgba(148,163,184,.2); border-radius:10px; background:rgba(15,23,42,.55);">
+                <strong style="font-size:12px; margin-bottom:6px; display:block; color:#fb7185;">Rate Limit（流量限速）</strong>
+                <p style="font-size:11.5px; color:var(--muted); line-height:1.7; margin:0;">
+                  按 IP、用户、Token、接口维度施加 QPS/并发阈值（
+                  令牌桶<span class="tip-icon" tabindex="0" aria-label="令牌桶说明" data-tip="令牌桶（Token Bucket）
+
+逻辑：系统以恒定速率（比如每秒 10 个）往桶里放令牌；桶有容量上限（比如最多 50 个），满了就不再累积。请求必须先拿到令牌才能通过，拿不到就被限流。
+解决的问题：支持突发流量（Burst）。系统空闲时可积攒令牌，突发请求可短时通过；令牌耗尽后，请求速率会被拉回到系统设定的稳定速率。
+">!</span>、漏桶、
+                  滑动窗口<span class="tip-icon" tabindex="0" aria-label="滑动窗口说明" data-tip="滑动窗口（Sliding Window）
+
+逻辑：把 1 分钟大窗口拆成多个小窗口（例如 6 个 10 秒）。时间向前滑动时，丢掉最老小窗口，加入最新小窗口；限流判断永远基于“当前窗口覆盖范围”的总请求数。
+解决的问题：避免固定窗口的临界突发。固定窗口可能出现“前 1 秒 100 + 后 1 秒 100”这种 2 秒 200 的尖峰；滑动窗口会把这两秒都纳入统计，从而及时触发限流。
+核心风格：严格控制总量，超过阈值立即限流。窗口切分越细，限流越平滑">?</span>）；
+                  抑制刷接口、暴力破解与突发洪峰，保障核心接口可用并防止下游雪崩。
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="step" id="step-3">
+          <div class="index">3</div>
+          <div>
+            <strong>API Gateway / Ingress（Nginx 反向代理）</strong>
+            <ul>
+              <li><strong>核心角色：</strong>
+                <ul>
+                  <li>Nginx 在前后端分离架构中最重要的定位是<strong>反向代理</strong>，即系统的<strong>统一入口</strong>。浏览器只访问 <code>example.com</code>，由 Nginx 决定请求最终落到哪个服务。</li>
+                </ul>
+              </li>
+              <li><strong>请求分流逻辑：</strong>
+                <ul>
+                  <li>访问 <code>example.com/</code>（或 <code>/about</code>、<code>/dashboard</code>）→ 转发到 Next.js（如 <code>127.0.0.1:3000</code>）。</li>
+                  <li>访问 <code>example.com/api/...</code> → 转发到 FastAPI（如 <code>127.0.0.1:8000</code>）。</li>
+                </ul>
+              </li>
+              <li><strong>为什么在 Next.js + FastAPI 中很关键：</strong>
+                <ul>
+                  <li><strong>1）隐藏后端拓扑：</strong>用户无需感知 3000/8000 端口，内部服务位置被隐藏，暴露面更小。</li>
+                  <li><strong>2）统一同源入口：</strong>浏览器视角下页面和 API 都来自同一域名与端口（80/443），线上可显著简化跨域问题。</li>
+                  <li><strong>3）HTTPS 统一终止：</strong>证书安装与续期集中在 Nginx 层（SSL Termination），后端服务可专注业务处理。</li>
+                  <li><strong>4）负载均衡与弹性：</strong>FastAPI 可横向扩容为多实例，由 Nginx 按策略分配流量。</li>
+                  <li><strong>5）静态资源效率：</strong>Nginx 对静态文件传输和连接复用做了深度优化，可作为高效静态分发入口。</li>
+                </ul>
+              </li>
+              <li><strong>CORS 边界说明：</strong>
+                <ul>
+                  <li><strong>线上经 Nginx 统一域名时：</strong>通常是同源访问，浏览器不再把 3000/8000 视为两个外部来源。</li>
+                  <li><strong>仍需配置 CORS 的场景：</strong>本地开发直连不同端口（3000 ↔ 8000）。</li>
+                  <li>因此工程上常见做法是：<strong>本地保留 FastAPI 的 CORSMiddleware 以便开发联调，线上主路径通过 Nginx 统一入口降低跨域复杂度</strong>。</li>
+                </ul>
+              </li>
+            </ul>
+          </div>
+        </div>
+        <div class="step" id="step-4">
+          <div class="index">4</div>
+          <div>
+            <strong>微服务 / BFF / GraphQL</strong>
+            <ul>
+              <li><strong>核心定义：</strong>把“大而全的单体系统”拆成“按业务能力分工的小团队服务”，再用 BFF/GraphQL 给前端一个更好用的统一取数入口。</li>
+              <li><strong>通俗类比：</strong>像餐厅后厨分工——炒菜、甜品、饮品各有工位（微服务）；前台服务员按“堂食/外卖/自提”整理菜品再一次端给顾客（BFF）；顾客只点自己要的菜，不必把整本菜单全买走（GraphQL 按需取数）。</li>
+              <li><strong>分工：</strong>
+                <ul>
+                  <li><strong>微服务：</strong>按领域拆分（用户、订单、支付、内容等），各自独立开发、部署和扩容，避免“一个模块改动牵一发动全身”。</li>
+                  <li><strong>BFF：</strong>面向不同终端（Web / App / 小程序）做接口聚合与裁剪，减少前端多次请求和数据拼装成本。</li>
+                  <li><strong>GraphQL：</strong>由客户端声明“要哪些字段”，后端按需返回，减少过度返回与接口版本膨胀，适合复杂页面聚合查询。</li>
+                </ul>
+              </li>
+            </ul>
+          </div>
+        </div>
+        <div class="step" id="step-5">
+          <div class="index">5</div>
+          <div>
+            <strong>消息队列 / 事件流</strong>
+            <ul>
+              <li><strong>核心定义：</strong>把“同步调用”改成“异步投递”，让生产者只负责发消息，消费者按自己的节奏处理。</li>
+              <li><strong>典型场景：</strong>
+                <ul>
+                  <li><strong>削峰填谷：</strong>秒杀下单先写队列，后端慢慢处理，避免峰值把数据库打爆。</li>
+                  <li><strong>系统解耦：</strong>下单后发“订单创建”事件，支付、库存、物流各自订阅处理，彼此不强绑定。</li>
+                  <li><strong>异步通知：</strong>短信、邮件、日志落库、风控计算等非强实时任务异步化。</li>
+                </ul>
+            </ul>
+          </div>
+        </div>
+        <div class="step" id="step-6">
+          <div class="index">6</div>
+          <div>
+            <strong>服务发现 / 配置中心</strong>
+            <ul>
+              <li><strong>核心：</strong>
+                <ul>
+                  <li><strong>服务发现：</strong>实例启动后注册到注册中心，并定期心跳续约：注册中心无法“主动感知”实例是否还活着，必须靠心跳来证明存活；一旦实例宕机、网络断连或进程卡死导致心跳超时，租约会自动过期并被摘除，调用方就不会继续把流量打到失效节点。调用方先查可用实例，再做负载均衡，从而保障高可用与故障自愈。</li>
+                  <li><strong>配置中心：</strong>把数据库连接、开关阈值、灰度比例、限流参数等从代码中抽离，统一托管并按环境/应用/版本下发，支持变更审计与一键回滚。</li>
+                </ul>
+              </li>
+              <li><strong>核心功能：</strong>
+                <ul>
+                  <li><strong>1）动态感知：</strong>服务扩缩容、重启、迁移后，调用方无需改代码即可获取最新地址。</li>
+                  <li><strong>2）健康治理：</strong>基于心跳与探针自动摘除不健康实例，提升调用成功率。</li>
+                </ul>
+              </li>
+            </ul>
+          </div>
+        </div>
+        <div class="step" id="step-7">
+          <div class="index">7</div>
+          <div>
+            <strong>Redis Cluster / KV</strong>
+            <ul>
+              <li><strong>核心定义：</strong>Redis 是高性能内存型 KV 存储，用来“把高频数据放到离 CPU 最近的地方”，用空间换时间，降低数据库压力并提升系统吞吐。</li>
+              <li><strong>Redis Cluster：</strong>
+                <ul>
+                  <li><strong>1）数据分片：16384 个槽位（Hash Slots）</strong>
+                    <ul>
+                      <li><strong>通俗理解：</strong>先固定好 16384 个“储物格”，再把这些格子分给不同机器管理，而不是直接“按机器分数据”。</li>
+                      <li><strong>为什么这样设计：</strong>如果直接按机器分（A/B/C 三台），新增第 4 台时往往要大规模重算和搬迁；而按槽位分时，新增机器只需从原机器各迁一部分槽位给新机器，迁移更平滑、影响更小。</li>
+                      <li><strong>示例：</strong>A 管 <code>0-5000</code>，B 管 <code>5001-10000</code>，C 管 <code>10001-16383</code>。扩容到 D 时，只迁部分槽位给 D，而不是全量洗牌。</li>
+                    </ul>
+                  </li>
+                  <li><strong>2）主从复制与读写分离</strong>
+                    <ul>
+                      <li><strong>Replication 的本质：</strong>
+                        <ul>
+                          <li><strong>主节点（Master）：</strong>负责写请求，同时也具备读能力。</li>
+                          <li><strong>从节点（Replica）：</strong>不接受写，通过复制链路持续同步主节点数据（复制偏移、复制积压缓冲区等机制保障同步连续性）。</li>
+                        </ul>
+                      </li>
+                      <li><strong>为什么很多系统仍是“主读 + 主写”：</strong>
+                        <ul>
+                          <li><strong>一致性优先：</strong>复制通常存在延迟，若刚写完立刻读从，可能读到旧值；强一致读应走主节点。</li>
+                          <li><strong>复杂度更低：</strong>小中型系统把所有请求打主库，架构简单、排障直接。</li>
+                          <li><strong>兜底能力：</strong>当从节点异常或延迟过大时，主节点必须能独立承接全部读写。</li>
+                        </ul>
+                      </li>
+                      <li><strong>读写分离是扩展策略：</strong>当读压力升高时，常采用“写进主、读走从（可负载均衡）”来扩展查询吞吐；但需配套处理复制延迟带来的读旧问题（如读主兜底、读你所写策略、关键查询强制主读）。</li>
+                      <li><strong>故障转移怎么发生：</strong>主节点故障后，Redis Cluster 基于Raft算法把某个从节点提升为新主节点，并接管对应槽位服务。业务通常表现为短暂抖动后恢复。</li>
+                    </ul>
+                  </li>
+                  <li><strong>3）客户端路由与同槽策略</strong>
+                    <ul>
+                      <li><strong>路由公式：</strong>客户端先算 <code>slot = CRC16(key) % 16384</code>，再把请求直接发到负责该槽位的节点。</li>
+                      <li><strong>同槽策略：</strong>多 Key 操作必须在同一槽位上执行，若落在不同槽位会触发跨槽限制，无法直接执行。</li>
+                      <li><strong>破解方式：</strong>用 <code>{}</code> 指定同一哈希标签，例如 <code>{user100}:order</code> 与 <code>{user100}:balance</code>，Redis 只对 <code>{user100}</code> 计算槽位，因此两者必然落到同一槽位，便于多 Key 操作。</li>
+                    </ul>
+                  </li>
+                </ul>
+              </li>
+              <li><strong>核心使用场景：</strong>
+                <ul>
+                  <li><strong>1）缓存加速：</strong>缓存热点读，降低 DB QPS。</li>
+                  <li><strong>2）共享状态：</strong>会话、验证码、幂等标记、任务进度等短时状态集中存放。</li>
+                  <li><strong>3）流量治理：</strong>令牌桶/滑动窗口限流，保护下游接口。</li>
+                  <li><strong>4）分布式协作：</strong>分布式锁、延迟队列、计数器、排行榜等。</li>
+                </ul>
+              </li>
+              <li><strong>工程风险：</strong>
+                <ul>
+                  <li><strong>缓存穿透：</strong>大量请求访问<strong>根本不存在</strong>的 Key，缓存未命中后每次都打到数据库，最终把 DB 拖慢。
+                    <ul>
+                      <li><strong>完整流程：</strong>请求到来 → Redis 未命中 → DB 返回 <code>Null</code> → 回写“空记录”（如 <code>value=empty</code>）→ 设置短 TTL。</li>
+                      <li><strong>短 TTL：</strong>短期内可拦截重复无效请求、保护数据库；同时又能在数据后续被创建时尽快过期，避免用户长时间读到“假空值”，兼顾防打库与一致性。</li>
+                      <li><strong>两道防线：</strong>先用布隆过滤器<span class="tip-icon" tabindex="0" aria-label="布隆过滤器说明" data-tip="布隆过滤器（Bloom Filter）
+
+1. 神奇结论
+- 如果它说“不存在”：一定不存在。
+- 如果它说“存在”：只是可能存在（有误判率）。
+
+2. 核心原理：位数组 + 多哈希
+- 位数组：一条很长的 0/1 数组。
+- 多哈希函数：同一个 Key 经过 f1/f2/f3... 计算出多个位置。
+- 写入：把这些位置都置为 1。
+- 查询：再算同样的位置；只要有一个位是 0 -> 一定不存在；若全部是 1 -> 可能存在（也可能是别的 Key“撞”出来的）。
+
+3. 优点与代价
+- 优点：极省空间（只存 bit，不存原始值）、查询极快（O(K)，K 为哈希函数个数）。
+- 代价：有误判；数据越满误判率越高；天然不擅长删除（直接把位改回 0 可能误伤其他 Key）。"></span>做低成本粗筛（判不存在就直接拦截），再用空值缓存兜底处理误判或漏网请求，在性能、准确性与一致性之间取得平衡。</li>
+                    </ul>
+                  </li>
+                  <li><strong>缓存击穿：</strong>某个<strong>超级热点 Key</strong>在过期瞬间被高并发同时访问，所有请求同时回源，DB 压力瞬间飙升。
+                    <ul>
+                      <li><strong>方案1：互斥锁 / SingleFlight：</strong>第一个请求发现缓存失效后先抢锁；抢到锁的人负责查库并回填缓存，没抢到锁的人短暂等待后重试。
+                        <br/>优点：数据库保护最稳、拿到的数据通常最新；缺点：高并发下部分请求会有等待感。</li>
+                      <li><strong>方案2：逻辑过期 + 异步刷新：</strong>不给 Redis 设置真实 TTL，而是在 Value 里存 <code>expire_at</code>；请求发现逻辑过期时，先返回旧值保证秒回，再异步线程/任务刷新缓存。
+                        <br/>优点：用户几乎零等待、数据库压力小；缺点：短时间内可能读到旧值（弱一致）。</li>
+                      <li><strong>如何选型：</strong>强一致场景（支付、余额、库存）优先互斥锁；可容忍短暂旧数据的场景（新闻详情、社交动态、统计报表）优先逻辑过期 + 异步刷新。</li>
+                    </ul>
+                  </li>
+                  <li><strong>缓存雪崩：</strong>大量请求在同一时刻“穿过缓存”直打数据库，导致数据库瞬时过载甚至雪崩。
+                    <ul>
+                      <li><strong>触发原因：</strong>
+                        <ul>
+                          <li><strong>大规模 Key 同时过期：</strong>例如活动场景里 10 万个缓存统一设置 2 小时 TTL，到点一起失效，请求同时回源。</li>
+                          <li><strong>Redis 集群故障：</strong>断网、内存溢出、节点宕机等导致缓存层不可用，请求被迫全部打到 DB。</li>
+                        </ul>
+                      </li>
+                      <li><strong>预防层：过期时间加随机抖动：</strong>不要固定 60 分钟，可用 <code>60 ± rand(1,10)</code> 分钟，把失效时间打散，避免同一秒集中回源。</li>
+                      <li><strong>分流层：多级缓存（L1 + L2）：</strong>应用本地缓存（L1）保存最热数据，Redis（L2）保存海量数据；即使 Redis 抖动，L1 也能扛住第一波冲击。</li>
+                      <li><strong>保命层：限流 + 降级 + 兜底：</strong>当 DB 承载上限为 1000 QPS，就限制放行速率；超出部分返回“系统繁忙”或默认数据（Fallback），通过“丢卒保车”保证核心链路不宕机。</li>
+                    </ul>
+                  </li>
+                  <li><strong>一致性问题：</strong>数据库（DB）和缓存（Redis）是两个独立系统，更新无法天然原子化，链路里任一步骤失败或乱序都可能导致脏读/旧读。
+                    <ul>
+                      <li><strong>成因：</strong>DB 成功不代表缓存一定成功（网络抖动、超时、重试失败都可能发生），并发更新时还会出现后发先至，导致“DB 新、缓存旧”或相反。</li>
+                      <li><strong>风险：</strong>先更 DB 再更缓存时，若缓存更新失败或发生乱序回写，会残留旧值；先删缓存再更 DB 时，在 DB 更新完成前的窗口期，读请求可能回源旧值并脏回填。</li>
+                      <li><strong>基线策略：</strong>工程上通常采用<strong>先更新数据库，再删除缓存</strong>（而非更新缓存），并配合 TTL、重试/补偿，降低不一致概率与影响窗口。</li>
+                      <li><strong>手段与选型：</strong>可结合延时双删、Binlog 异步清理、版本号校验等机制做增强；强一致场景关键读走主库并配合锁/版本控制，弱一致场景优先性能与吞吐。</li>
+                    </ul>
+                  </li>
+                </ul>
+              </li>
+            </ul>
+          </div>
+        </div>
+        <div class="step" id="step-8">
+          <div class="index">8</div>
+          <div>
+            <strong>分库分表 / 读写分离</strong><span class="tip-icon" tabindex="0" aria-label="分库分表概念关系说明" data-tip="概念关系速记（分区键 / 分片键 / 路由层 / 规则）
+
+1）分区键（单库内）
+- PostgreSQL 原生分区表使用的键（如 created_at、user_id）。
+- DB 内部可基于分区裁剪（partition pruning）定位目标分区。
+
+2）分片键（多库间）
+- 应用决定把数据写到哪台库（shard_0、shard_1...）所依据的键。
+
+3）路由层
+- 输入 SQL + 分片键值，输出目标库表（把请求发到正确分片）。
+
+4）规则
+- 路由层内部采用的策略（哈希、范围、映射表）。
+- 例子：
+  - 哈希：shard = user_id % 4
+  - 范围：2026-01 ~ 2026-03 -> shard_a">!</span>
+            <ul>
+              <li><strong>核心定义：</strong>当单库在容量、QPS、并发连接上接近上限时，把数据横向拆开（分库分表）并把读流量分摊出去（读写分离），以换取更高吞吐与可用性。</li>
+              <li><strong>为什么要拆：</strong>单库上堆机器（纵向扩容）成本高且有天花板；横向拆分能把写入压力、存储容量和索引体积分散到多节点。</li>
+              <li><strong>分库分表：</strong>先在一台 PostgreSQL 里做分区（例如订单按月拆分），如果机器还是扛不住，再把数据拆到多台库；这时需要路由层，例如规则设为 <code>user_id % 4</code>，查 <code>user_id=1001</code> 时会直接命中第 1 号分片，只查一个库，不会 4 个库全扫。</li>
+              <li><strong>分片键：</strong>好的分片键是每个库都差不多忙且符合查询习惯。实操上优先选 <code>user_id/tenant_id</code> 这类高基数字段；如果业务大多按用户查询，就优先按用户分片；时间字段更适合做分区裁剪，通常不单独作为唯一分片键。</li>
+              <li><strong>读写分离（PostgreSQL）：</strong>
+                <ul>
+                  <li><strong>WAL：</strong>WAL（预写日志）。一次 <code>INSERT/UPDATE/DELETE</code> 发生时，系统先把变更顺序追加到 WAL 并落盘，然后才允许事务提交。</li>
+                  <li><strong>脏页：</strong>脏页是“内存中已被修改、但磁盘文件里仍是旧版本”的数据页；它会由后台进程稍后异步刷回表文件。</li>
+                  <li><strong>为什么异步落脏页：</strong>先写 WAL 是顺序追加，磁盘处理顺序写通常比随机写更高效；事务提交时只需确认 WAL 已落盘，不必等待所有数据页写回，所以响应更快；脏页交给后台进程按批次刷盘，能把零散写合并、减少 I/O 抖动；如果机器突然宕机，数据库还能根据 WAL 把已提交事务重放回来，即使当时部分脏页还没落盘，也能恢复到一致状态。</li>
+                  <li><strong>checkpoint / bgwriter：</strong><code>bgwriter</code> 会持续地把共享缓冲区里的部分脏页提前刷盘，目的是在业务高峰时减少后端进程自己刷盘的概率，降低抖动；<code>checkpoint</code> 会周期性（或 WAL 达到阈值）触发，把某个时间点之前必须持久化的脏页推进到磁盘，并写入 checkpoint 记录。恢复时数据库从最近 checkpoint 开始回放 WAL，恢复窗口更短。简单说：bgwriter 负责平时分摊写压力，checkpoint 负责定期收口与缩短崩溃恢复时间。</li>
+                  <li><strong>主从复制怎么来的：</strong>pg流复制下，主库持续产生日志、从库持续回放日志，因此从库是“追日志”的，天然会有复制延迟。</li>
+                </ul>
+              </li>
+            </ul>
+          </div>
+        </div>
+        <div class="step" id="step-9">
+          <div class="index">9</div>
+          <div>
+            <strong>对象/文件存储</strong>
+            <ul>
+              <li><strong>核心定义：</strong>对象/文件存储就是把图片、音视频、附件这类“非结构化数据”放到专门的存储系统里，而不是直接塞进数据库表。数据库更擅长存“记录”，对象存储更擅长存“大文件”。</li>
+              <li><strong>各司其职：</strong>如果把大量图片/视频直接放进数据库，库会迅速膨胀，备份恢复慢、索引效率下降、成本也高；分离后，数据库压力更小，文件访问也能走 CDN 做就近加速。</li>
+              <li><strong>对象存储能配 CDN、数据库通常不适合：</strong>CDN 适合缓存“可通过 URL 直接访问、内容相对稳定、基于 HTTP/HTTPS 传输”的静态资源。对象存储天然满足这些条件：每个对象有稳定路径、协议兼容 CDN、图片/视频上传后通常变化不频繁；而数据库查询结果往往是动态生成（同一接口对不同用户返回不同数据）、数据库协议也不是 HTTP（如 PostgreSQL 二进制协议），再加上数据高频变更带来一致性要求，因此不适合直接用 CDN 全局缓存。实践上让 PostgreSQL 只保存文件元数据与 URL，对象存储保存文件本体，CDN 负责就近分发，是性能、成本和一致性的最优平衡。</li>
+              <li><strong>治理：</strong>通过冷热分层和生命周期策略控制成本——热数据放高性能层，冷数据自动迁移到低成本层；过期文件自动归档或删除，避免“垃圾文件”长期占用存储。</li>
+              <li><strong>工程实践要点：</strong>上传通常走“预签名 URL 直传”；下载走 CDN；文件访问权限用短期签名控制；元数据（owner、content_type、hash、状态）落库，便于审计与防重复上传。</li>
+            </ul>
+          </div>
+        </div>
+        <div class="step" id="step-10">
+          <div class="index">10</div>
+          <div><strong>Kubernetes / 多 AZ</strong><p>负责部署弹性与跨 AZ 容灾。</p></div>
+        </div>
+        <div class="step" id="step-11">
+          <div class="index">11</div>
+          <div><strong>日志 / 指标 / 链路追踪</strong><p>统一观测系统健康与故障定位。</p></div>
+        </div>
+        <div class="step" id="step-12">
+          <div class="index">12</div>
+          <div><strong>etcd / Consul（配置 / 注册 / 租约）</strong><p>作为配置、注册与租约治理底座。</p></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="flow">
+      <h2>分布式系统</h2>
+      <div class="timeline">
+        <div class="step">
+          <div class="index">1</div>
+          <div>
+            <strong>分布式锁（Distributed Lock）</strong>
+            <p>把分布式锁想成“连锁店里洗手间的唯一钥匙”：同一时间只能有一个人拿到钥匙进入。</p>
+            <ul>
+              <li><strong>本质：</strong>互斥（同一时刻只有一个持有者）+ 可恢复（持有者宕机能释放）+ 可证明（能证明“我是锁的主人”）。</li>
+              <li><strong>常见坑：</strong>
+                <ul>
+                  <li><strong>锁过期：</strong>任务做太久，锁自动失效，第二个人也进来了（并发进入）。</li>
+                  <li><strong>误删他人锁：</strong>A 以为自己是主人，结果把 B 的锁删了（必须用 token 校验）。</li>
+                </ul>
+              </li>
+              <li><strong>实现方案：</strong>Redis（<code>SET NX PX</code> + <code>owner token</code> + Lua 原子删锁）、etcd（<code>lease</code> + <code>txn</code> 原子比较交换）、ZK（临时顺序节点）。</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="index">2</div>
+          <div>
+            <strong>分布式事务（Distributed Transaction）</strong>
+            <p>把分布式事务想成“点餐”：收银（服务 A）收了钱，后厨（服务 B）必须出餐；钱收了餐没出就是事故。跨服务要做到“要么都成功，要么都失败”，代价通常很高。</p>
+            <ul>
+              <li><strong>2PC / XA：</strong>领班两轮确认“都准备好了再一起提交”。<strong>优点</strong>强一致；<strong>缺点</strong>阻塞、超时复杂、吞吐差。</li>
+              <li><strong>Saga（补偿）：</strong>失败就“退钱/撤销”。注意补偿不一定可逆（比如库存扣减好补，发券/发货就更难）。</li>
+              <li><strong>TCC：</strong><code>Try</code> 预留资源 → <code>Confirm</code> 确认 → <code>Cancel</code> 取消；一致性更强但对业务改造大。</li>
+              <li><strong>Outbox / CDC：</strong>先在本地库“写账单+写发件箱”，再异步投递到下游；靠<strong>幂等</strong>与<strong>去重</strong>实现最终一致。</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="index">3</div>
+          <div>
+            <strong>分布式计算（Distributed Compute）</strong>
+            <p>把分布式计算想成“切土豆”：100 斤土豆一个人切很久，10 个人并行能快很多。系统要做的不止是并行，还要能容错（有人中途停工怎么办）与控流（别让订单堆成山）。</p>
+            <ul>
+              <li><strong>在线计算：</strong>像前台接待，追求低延迟；靠缓存、限流、熔断、降级兜底。</li>
+              <li><strong>离线 / 流式：</strong>像流水线，追求稳定吞吐；关键是 <code>checkpoint</code>（断点续做）与一致处理语义（at-least-once / exactly-once 的成本边界）。</li>
+              <li><strong>反压（Backpressure）：</strong>后厨忙不过来，就要让前台少接单：网关 → 队列 → 消费者 → 下游依赖要“层层控速”。</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="index">4</div>
+          <div>
+            <strong>分布式数据库（Distributed Database）</strong>
+            <p>把数据库想成“菜单”：一张纸写不下就分成多本（分片），怕丢就复印多份（复制）。你获得的是更高可用与更大容量，但要接受更复杂的一致性与查询成本。</p>
+            <ul>
+              <li><strong>分库分表（Sharding）：</strong>写入与容量横向扩展，但跨分片 <code>join</code>/事务很贵（通常需要在业务层改写）。</li>
+              <li><strong>读写分离（Replication）：</strong>主库写、从库读；代价是复制延迟导致“读到旧数据”，需要读一致策略（读你所写/会话一致）。</li>
+              <li><strong>NewSQL：</strong>通过共识复制在扩展性与强一致之间取得更好平衡，但工程与运维门槛更高。</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="index">5</div>
+          <div>
+            <strong>分布式部署（Distributed Deployment）</strong>
+            <p>把发布想成“新菜试卖”：不可能一夜之间全城门店全部换菜单。生产发布的核心是<strong>控制风险半径</strong>：先小范围试、观察指标、随时回滚。</p>
+            <ul>
+              <li><strong>金丝雀 / 灰度：</strong>先让少量门店试卖（按用户/地域/比例切流），指标稳再扩大。</li>
+              <li><strong>蓝绿发布：</strong>两套环境并存，切流几乎“一键”；回滚也最快。</li>
+              <li><strong>多 AZ：</strong>门店分布在不同供电区，一个区故障，另一个区继续营业（容灾）。</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="index">6</div>
+          <div>
+            <strong>分布式存储（Distributed Storage）</strong>
+            <p>把分布式存储想成“海量食材仓库”：不止要存得下，还要取用快、坏了不丢、成本可控。不同存储形态各司其职：对象存储更适合大文件，块存储更适合数据库，分布式文件系统更适合共享读写。</p>
+            <ul>
+              <li><strong>副本 vs 纠删码：</strong>副本=多买几份备货（简单快但占空间）；纠删码=拆分+校验恢复（省空间但重建复杂）。</li>
+              <li><strong>一致性取舍：</strong>强一致更“准”，但写放大与延迟更高；最终一致更“快”，但可能短时间读旧。</li>
+              <li><strong>热点问题：</strong>爆款食材窗口排队很长；要靠分片键、哈希打散、热点隔离与缓存分层来“分流”。</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </section>
+
+  <script>
+    const mkSvgHelpers = (canvas) => {
+      const svg = canvas.querySelector(".flow-lines");
+      const getPoint = (el, edge, override) => {
+        const canvasBox = canvas.getBoundingClientRect();
+        const box = el.getBoundingClientRect();
+        const x =
+          edge === "left"
+            ? box.left - canvasBox.left
+            : edge === "right"
+              ? box.right - canvasBox.left
+              : box.left - canvasBox.left + box.width / 2;
+        const y = box.top - canvasBox.top + box.height / 2;
+        const xFinal = typeof override?.x === "number" ? override.x : x;
+        const yFinal = typeof override?.y === "number" ? override.y : y;
+        return { x: xFinal, y: yFinal };
+      };
+
+      const buildIntraPath = (start, end) => {
+        const dx = end.x - start.x;
+        const gap = Math.max(10, Math.abs(dx));
+        const k = Math.min(22, gap * 0.35);
+        const sign = dx >= 0 ? 1 : -1;
+        return `M${start.x} ${start.y} C ${start.x + sign * k} ${start.y}, ${end.x - sign * k} ${end.y}, ${end.x} ${end.y}`;
+      };
+
+      const buildFlowPath = (start, end, bend = 0.18) => {
+        const dx = end.x - start.x;
+        const dy = end.y - start.y;
+        // Stronger curvature for long inter-lane diagonals:
+        // make the horizontal handle longer and also curve vertically.
+        const offset = Math.max(48, Math.abs(dx) * bend);
+        const v = Math.max(10, Math.min(46, Math.abs(dy) * 0.28));
+        const cx1 = start.x + offset;
+        const cy1 = start.y + (dy >= 0 ? v : -v);
+        const cx2 = end.x - offset;
+        const cy2 = end.y - (dy >= 0 ? v : -v);
+        return `M${start.x} ${start.y} C ${cx1} ${cy1}, ${cx2} ${cy2}, ${end.x} ${end.y}`;
+      };
+
+      const buildOuterElbowPath = (start, end, side, canvasWidth, radius = 28, margin = 14) => {
+        const dirY = end.y >= start.y ? 1 : -1;
+        const xOutRaw = side === "right" ? canvasWidth - margin : margin;
+        const xOut = Math.max(margin, Math.min(canvasWidth - margin, xOutRaw));
+        const r = Math.max(10, Math.min(radius, Math.abs(end.y - start.y) / 2));
+
+        if (side === "right") {
+          const x1 = xOut - r;
+          const y1 = start.y;
+          const y2 = end.y - dirY * r;
+          const x2 = xOut - r;
+          const y3 = end.y;
+          return [
+            `M${start.x} ${start.y}`,
+            `L${x1} ${y1}`,
+            `A${r} ${r} 0 0 ${dirY > 0 ? 1 : 0} ${xOut} ${start.y + dirY * r}`,
+            `L${xOut} ${y2}`,
+            `A${r} ${r} 0 0 ${dirY > 0 ? 1 : 0} ${x2} ${y3}`,
+            `L${end.x} ${end.y}`,
+          ].join(" ");
+        }
+
+        // left
+        const x1 = xOut + r;
+        const y1 = start.y;
+        const y2 = end.y - dirY * r;
+        const x2 = xOut + r;
+        const y3 = end.y;
+        return [
+          `M${start.x} ${start.y}`,
+          `L${x1} ${y1}`,
+          `A${r} ${r} 0 0 ${dirY > 0 ? 0 : 1} ${xOut} ${start.y + dirY * r}`,
+          `L${xOut} ${y2}`,
+          `A${r} ${r} 0 0 ${dirY > 0 ? 0 : 1} ${x2} ${y3}`,
+          `L${end.x} ${end.y}`,
+        ].join(" ");
+      };
+
+      const createPath = (d, className, markerId) => {
+        const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+        path.setAttribute("d", d);
+        path.setAttribute("fill", "none");
+        path.setAttribute("marker-end", `url(#${markerId})`);
+        path.classList.add(className);
+        return path;
+      };
+
+      const resetSvg = () => {
+        const defs = svg.querySelector("defs");
+        svg.innerHTML = "";
+        svg.appendChild(defs);
+      };
+
+      return { svg, getPoint, buildIntraPath, buildFlowPath, buildOuterElbowPath, createPath, resetSvg };
+    };
+
+    const drawLaneDiagram = (canvasId, gridId, opts = {}) => {
+      const canvas = document.getElementById(canvasId);
+      const grid = document.getElementById(gridId);
+      if (!canvas || !grid) return;
+
+      const { svg, getPoint, buildIntraPath, buildFlowPath, buildOuterElbowPath, createPath, resetSvg } = mkSvgHelpers(canvas);
+      const markerId = opts.markerId ?? "arrowTipTiny";
+
+      const isLaneReversed = (lane, laneIndex) => {
+        if (typeof opts.isLaneReversed === "function") return !!opts.isLaneReversed(lane, laneIndex);
+        // default: zigzag (0-based). lane 0 LTR, lane 1 RTL, lane 2 LTR...
+        return laneIndex % 2 === 1;
+      };
+
+      const cardsByVisualOrder = (lane) => {
+        const cards = Array.from(lane.querySelectorAll(".lane-cards .card"));
+        const scored = cards
+          .map((c) => {
+            const r = c.getBoundingClientRect();
+            return { c, x: r.left + r.width / 2, y: r.top + r.height / 2 };
+          })
+          .sort((a, b) => (Math.abs(a.y - b.y) < 10 ? a.x - b.x : a.y - b.y));
+        return scored.map((s) => s.c);
+      };
+
+      const draw = () => {
+        const lanes = grid.querySelectorAll(".lane");
+        if (!lanes.length) return;
+
+        const canvasBox = canvas.getBoundingClientRect();
+        const gridBox = grid.getBoundingClientRect();
+        const svgHeight = Math.max(220, gridBox.bottom - canvasBox.top + 18);
+        svg.style.height = `${svgHeight}px`;
+        svg.setAttribute("viewBox", `0 0 ${canvasBox.width} ${svgHeight}`);
+
+        resetSvg();
+
+        // Inter-lane: end of current (per direction) -> start of next (per direction)
+        for (let i = 0; i < lanes.length - 1; i++) {
+          const fromLane = lanes[i];
+          const toLane = lanes[i + 1];
+          const fromVisual = cardsByVisualOrder(fromLane);
+          const toVisual = cardsByVisualOrder(toLane);
+          if (!fromVisual.length || !toVisual.length) continue;
+
+          const fromRev = isLaneReversed(fromLane, i);
+          const toRev = isLaneReversed(toLane, i + 1);
+          const fromEnd = fromRev ? fromVisual[0] : fromVisual[fromVisual.length - 1];
+          const toStart = toRev ? toVisual[toVisual.length - 1] : toVisual[0];
+
+          // Zigzag inter-lane links: connect lane "exit side" to next lane "entry side"
+          // LTR lane exits from right edge; RTL lane exits from left edge.
+          // Next lane entry is the opposite: LTR lane enters from left edge; RTL lane enters from right edge.
+          const startEdge = fromRev ? "left" : "right";
+          const endEdge = toRev ? "right" : "left";
+
+          const start0 = getPoint(fromEnd, startEdge);
+          const end0 = getPoint(toStart, endEdge);
+          const start = getPoint(fromEnd, startEdge, { x: start0.x + (startEdge === "right" ? 1 : -1) });
+          const end = getPoint(toStart, endEdge, { x: end0.x + (endEdge === "left" ? -1 : 1) });
+          const side = startEdge === "right" ? "right" : "left";
+          const path = buildOuterElbowPath(start, end, side, canvasBox.width, 34, 14);
+          svg.appendChild(createPath(path, "lane-down", markerId));
+        }
+
+        // Intra-lane: connect cards following lane direction (zigzag aware)
+        const laneStrokeByIndex = opts.laneStrokeByIndex ?? [
+          "rgba(34, 211, 238, 0.75)",
+          "rgba(168, 85, 247, 0.75)",
+          "rgba(52, 211, 153, 0.75)",
+          "rgba(249, 115, 22, 0.78)",
+        ];
+
+        Array.from(lanes).forEach((lane, laneIndex) => {
+          const visual = cardsByVisualOrder(lane);
+          if (visual.length < 2) return;
+          const rev = isLaneReversed(lane, laneIndex);
+          const cards = rev ? visual.slice().reverse() : visual;
+
+          for (let i = 0; i < cards.length - 1; i++) {
+            const a = cards[i];
+            const b = cards[i + 1];
+            const aBox = a.getBoundingClientRect();
+            const bBox = b.getBoundingClientRect();
+            const bToRight = (bBox.left + bBox.width / 2) >= (aBox.left + aBox.width / 2);
+            const startEdge = bToRight ? "right" : "left";
+            const endEdge = bToRight ? "left" : "right";
+
+            const start = getPoint(a, startEdge);
+            const end = getPoint(b, endEdge);
+            if (Math.abs(end.x - start.x) < 2) continue;
+            const p = createPath(buildIntraPath(start, end), "intra-link", markerId);
+            p.style.stroke = laneStrokeByIndex[laneIndex] ?? "rgba(226, 232, 240, 0.62)";
+            svg.appendChild(p);
+          }
+        });
+
+      };
+
+      const schedule = () => requestAnimationFrame(draw);
+      window.addEventListener("load", schedule);
+      window.addEventListener("resize", schedule);
+      new ResizeObserver(schedule).observe(canvas);
+    };
+
+    drawLaneDiagram("distCanvas", "distGrid", { markerId: "arrowTipTiny" });
+
+    const floatingTip = document.createElement("div");
+    floatingTip.className = "floating-tip";
+    document.body.appendChild(floatingTip);
+
+    const placeTip = (icon) => {
+      const pad = 12;
+      const gap = 10;
+      const rect = icon.getBoundingClientRect();
+      const vw = window.innerWidth;
+      const vh = window.innerHeight;
+
+      floatingTip.style.left = "0px";
+      floatingTip.style.top = "0px";
+      const tipRect = floatingTip.getBoundingClientRect();
+
+      let left = rect.left;
+      if (left + tipRect.width > vw - pad) left = vw - pad - tipRect.width;
+      if (left < pad) left = pad;
+
+      let top = rect.top - tipRect.height - gap;
+      if (top < pad) {
+        top = rect.bottom + gap;
+        if (top + tipRect.height > vh - pad) top = Math.max(pad, vh - pad - tipRect.height);
+      }
+
+      floatingTip.style.left = `${left}px`;
+      floatingTip.style.top = `${top}px`;
+    };
+
+    const hideTip = () => {
+      floatingTip.classList.remove("show");
+    };
+
+    document.querySelectorAll(".tip-icon").forEach((icon) => {
+      const show = () => {
+        floatingTip.textContent = icon.getAttribute("data-tip") || "";
+        floatingTip.classList.add("show");
+        placeTip(icon);
+      };
+      icon.addEventListener("mouseenter", show);
+      icon.addEventListener("focus", show);
+      icon.addEventListener("mouseleave", hideTip);
+      icon.addEventListener("blur", hideTip);
+    });
+
+    window.addEventListener("scroll", hideTip, true);
+    window.addEventListener("resize", hideTip);
+
+    const jumpTo = (selector) => {
+      const el = document.querySelector(selector);
+      if (!el) return;
+      el.scrollIntoView({ behavior: "smooth", block: "start" });
+      el.classList.add("jump-highlight");
+      window.setTimeout(() => el.classList.remove("jump-highlight"), 1200);
+    };
+
+    document.querySelectorAll("[data-jump]").forEach((card) => {
+      const sel = card.getAttribute("data-jump");
+      if (!sel) return;
+      card.addEventListener("click", () => jumpTo(sel));
+      card.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          jumpTo(sel);
+        }
+      });
+    });
+  </script>
+</body>
+</html>
