@@ -61,9 +61,9 @@
     });
 
     // Tables
-    $(".content table").forEach((el) => add(el, "tw-scroll-x block my-2 w-full rounded-xl border border-white/10"));
+    $(".content table").forEach((el) => add(el, "tw-scroll-x block my-2 w-full rounded-xl border border-white/20"));
     $(".content thead").forEach((el) => add(el, "bg-white/[0.04]"));
-    $(".content th,.content td").forEach((el) => add(el, "border-t border-white/10 px-3 py-2 align-top text-xs"));
+    $(".content th,.content td").forEach((el) => add(el, "border border-white/20 px-3 py-2 align-top text-xs"));
     $(".content th").forEach((el) => add(el, "text-slate-100 font-semibold"));
     $(".content td").forEach((el) => add(el, "text-slate-200/90"));
 

@@ -25,3 +25,27 @@ svg {
   scrollbar-gutter: stable;
 }
 
+/* Keep list markers visible and readable across reset-heavy pages */
+.content ul {
+  list-style: disc outside;
+}
+
+.content ul ul {
+  list-style: circle outside;
+}
+
+.content ol {
+  list-style: decimal outside;
+}
+
+.content li::marker {
+  color: rgba(148, 163, 184, 0.95);
+}
+
+/* Table lines fallback */
+.content table,
+.content th,
+.content td {
+  border-color: rgba(148, 163, 184, 0.22);
+}
+
