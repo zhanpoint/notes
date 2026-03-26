@@ -16,12 +16,13 @@
     $(".hero").forEach((el) =>
       add(
         el,
-        "mb-3 rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3 shadow-[0_1px_0_rgba(255,255,255,0.06),_0_20px_50px_rgba(0,0,0,0.55)]"
+        "mb-3 px-1"
       )
     );
+    $(".page-head").forEach((el) => add(el, "mb-3 px-1"));
 
     // Headings and meta
-    $("h1").forEach((el) => add(el, "m-0 text-lg md:text-xl font-semibold tracking-wide"));
+    $("h1").forEach((el) => add(el, "m-0 text-center text-lg md:text-xl font-semibold tracking-wide"));
     $(".page-updated,.subtitle,.desc,.meta").forEach((el) => add(el, "mt-1 text-xs text-slate-400"));
 
     // QA list / details cards
@@ -35,15 +36,16 @@
         "cursor-pointer select-none px-4 py-3 text-sm font-medium text-slate-100 bg-white/[0.04] hover:bg-white/[0.06] border-b border-white/10"
       )
     );
-    $(".content").forEach((el) => add(el, "px-4 py-3 text-[13px] leading-6 text-slate-200"));
+    // Slightly dimmer body text (less bright on dark backgrounds)
+    $(".content").forEach((el) => add(el, "px-4 py-3 text-[13px] leading-6 text-slate-200/90"));
 
     // Typography inside content (conservative: don't fight existing structure)
     $(".content h2,.content h3,.content h4").forEach((el) =>
       add(el, "mt-3 mb-1.5 text-xs font-semibold tracking-wide text-slate-100")
     );
-    $(".content p").forEach((el) => add(el, "my-1.5 text-slate-200"));
+    $(".content p").forEach((el) => add(el, "my-1.5 text-slate-200/85"));
     $(".content ul,.content ol").forEach((el) => add(el, "my-2 pl-5"));
-    $(".content li").forEach((el) => add(el, "my-1 text-slate-200"));
+    $(".content li").forEach((el) => add(el, "my-1 text-slate-200/85"));
 
     // Inline code + code blocks
     $(".content code").forEach((el) =>
@@ -63,7 +65,7 @@
     $(".content thead").forEach((el) => add(el, "bg-white/[0.04]"));
     $(".content th,.content td").forEach((el) => add(el, "border-t border-white/10 px-3 py-2 align-top text-xs"));
     $(".content th").forEach((el) => add(el, "text-slate-100 font-semibold"));
-    $(".content td").forEach((el) => add(el, "text-slate-200"));
+    $(".content td").forEach((el) => add(el, "text-slate-200/90"));
 
     // Common callouts from existing pages
     $(".tip").forEach((el) => add(el, "my-2 rounded-lg border border-emerald-400/20 bg-emerald-400/10 px-3 py-2 text-slate-100"));

@@ -168,15 +168,20 @@
 
     .nav-group-title::after {
       content: "▾";
-      font-size: 12px;
+      font-size: 14px;
       line-height: 1;
       color: rgba(148, 163, 184, 0.9);
       transform: rotate(0deg);
-      transition: transform 120ms ease, color 120ms ease;
+      transition: transform 180ms ease, color 150ms ease, translate 150ms ease;
     }
 
     details.nav-group:not([open]) > .nav-group-title::after {
       transform: rotate(-90deg);
+    }
+
+    .nav-group-title:hover::after {
+      color: rgba(226, 232, 240, 0.95);
+      translate: 0 -1px;
     }
 
     .nav-link {
@@ -185,21 +190,33 @@
       gap: 10px;
       padding: 7px 10px;
       border-radius: 10px;
-      border: 1px solid transparent;
       background: transparent;
       color: rgba(226, 232, 240, 0.92);
       font-size: 12px;
       line-height: 1.25;
-      transition: background 120ms ease, border-color 120ms ease, transform 120ms ease;
+      transition: background 140ms ease, color 140ms ease, transform 140ms ease;
+      position: relative;
     }
     .nav-link:hover {
       background: rgba(255, 255, 255, 0.06);
-      border-color: rgba(255, 255, 255, 0.08);
+      transform: translateY(-1px);
     }
     .nav-link[data-active="true"] {
-      background: rgba(56, 189, 248, 0.12);
-      border-color: rgba(56, 189, 248, 0.24);
+      background: rgba(255, 255, 255, 0.06);
       color: rgba(226, 232, 240, 1);
+    }
+
+    .nav-link[data-active="true"]::before {
+      content: "";
+      position: absolute;
+      left: 6px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 2px;
+      height: 16px;
+      border-radius: 999px;
+      background: rgba(56, 189, 248, 0.9);
+      box-shadow: 0 0 14px rgba(56, 189, 248, 0.25);
     }
   </style>
 
