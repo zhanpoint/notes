@@ -717,54 +717,5 @@
 
     </section>
   </div>
-
-  <script>
-    (function () {
-      const STORAGE_KEY = 'redis_faq_open_details_v1';
-      const detailsList = Array.from(document.querySelectorAll('.qa-list > details'));
-      if (!detailsList.length) return;
-
-      detailsList.forEach((el, idx) => {
-        el.setAttribute('data-faq-id', String(idx + 1));
-      });
-
-      function saveState() {
-        const openIds = detailsList
-          .filter((el) => el.open)
-          .map((el) => el.getAttribute('data-faq-id'));
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(openIds));
-      }
-
-      function restoreState() {
-        try {
-          const raw = localStorage.getItem(STORAGE_KEY);
-          if (!raw) return false;
-          const openIds = JSON.parse(raw);
-          if (!Array.isArray(openIds)) return false;
-
-          detailsList.forEach((el) => {
-            const id = el.getAttribute('data-faq-id');
-            el.open = openIds.includes(id);
-          });
-          return true;
-        } catch (e) {
-          return false;
-        }
-      }
-
-      const restored = restoreState();
-      if (!restored) {
-        detailsList.forEach((el, idx) => {
-          el.open = idx === 0;
-        });
-      }
-
-      detailsList.forEach((el) => {
-        el.addEventListener('toggle', saveState);
-      });
-
-      window.addEventListener('beforeunload', saveState);
-    })();
-  </script>
 </body>
 </html>

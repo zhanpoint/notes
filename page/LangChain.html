@@ -1,0 +1,583 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LangChain</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="../assets/page-tailwind.css" />
+  <script defer src="../assets/page-shell.js"></script>
+</head>
+<body>
+  <div class="container">
+    <header class="page-head">
+      <h1>LangChain</h1>
+    </header>
+
+    <section class="qa-list article-body">
+      <details open>
+        <summary>一、LangChain 生态</summary>
+        <div class="content">
+          <h4>1) 一张表对齐</h4>
+          <div class="tw-scroll-x">
+            <table>
+              <thead>
+                <tr>
+                  <th>维度</th>
+                  <th>代理框架</th>
+                  <th>代理运行时</th>
+                  <th>代理工具</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><b>价值</b></td>
+                  <td><b>抽象</b>与<b>集成</b>：统一模型、工具、消息与 Agent 循环的写法，降低上手成本。</td>
+                  <td><b>持久执行</b>、<b>流式</b>、<b>人工干预</b>、状态<b>持久化</b>、<b>低级别</b>编排控制。</td>
+                  <td><b>预定义工具</b>、<b>提示与子代理</b>等开箱能力，面向复杂、长程任务。</td>
+                </tr>
+                <tr>
+                  <td><b>场景</b></td>
+                  <td>快速做 Demo / 内部工具；需要<b>标准化</b>团队构建方式；代理逻辑相对直白、编排不极端复杂。</td>
+                  <td><b>长期运行、强状态</b>的工作流与代理；要把<b>确定性步骤</b>与 Agent 步骤<b>混编</b>；要上生产的图执行与检查点。</td>
+                  <td>更<b>自主</b>的代理；面对<b>复杂、非确定性</b>、需规划分解与多工件（搜索摘要、脚本、中间状态）的任务。</td>
+                </tr>
+                <tr>
+                  <td><b>业界选项</b></td>
+                  <td><b>LangChain</b>、Vercel AI SDK、CrewAI、OpenAI Agents SDK、Google ADK、LlamaIndex 等。</td>
+                  <td><b>LangGraph</b>、Temporal、Inngest 等持久/工作流引擎。</td>
+                  <td><b>Deep Agents SDK</b>、Claude Agent SDK、Manus、各类「编码向」CLI Agent 等。</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <h4>2) 分层：从协议到封装</h4>
+          <div class="tw-scroll-x">
+            <table>
+              <thead>
+                <tr>
+                  <th>层级</th>
+                  <th>组件</th>
+                  <th>核心职能</th>
+                  <th>主要依赖</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>底层协议（地基）</td>
+                  <td><b>langchain-core</b></td>
+                  <td><b>Runnable</b>、<b>BaseMessage</b>、抽象模型类等契约；LCEL 管道建立在其上。</td>
+                  <td>无（生态内最底抽象）</td>
+                </tr>
+                <tr>
+                  <td>外部集成（砖块）</td>
+                  <td><b>langchain-community</b></td>
+                  <td>向量库、Loader、Tool 等<b>第三方</b>集成实现。</td>
+                  <td><b>langchain-core</b></td>
+                </tr>
+                <tr>
+                  <td>逻辑编排（骨架）</td>
+                  <td><b>LangGraph</b></td>
+                  <td>有状态图执行：<b>循环</b>、分支、<b>Checkpointing</b>、人机协同等<b>运行时</b>能力。</td>
+                  <td><b>langchain-core</b></td>
+                </tr>
+                <tr>
+                  <td>应用框架（大楼）</td>
+                  <td><b>LangChain</b></td>
+                  <td>Chain、RAG、新版 Agent（如 <code>create_react_agent</code>）等高层 API；<b>LangChain 1.0 构建在 LangGraph 之上</b>，但日常用 LangChain <b>不必</b>先精通 LangGraph。</td>
+                  <td><b>core</b>、<b>community</b>、<b>pydantic</b> 等</td>
+                </tr>
+                <tr>
+                  <td>高级封装</td>
+                  <td><b>Deep Agents</b></td>
+                  <td>基于 LangGraph 的<b>约定式</b>高层封装，减少手写节点与边。</td>
+                  <td><b>LangChain</b>、<b>LangGraph</b></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <p>官方/厂商包不在 社区包langchain-community 之内，而是与 community 并列的独立包。</p>
+
+          <h4>3) 代理框架（以 LangChain 为例）</h4>
+          <ul>
+            <li>希望<b>较快</b>搭出代理或半自主应用。</li>
+            <li>需要模型、工具、Agent 循环的<b>团队级标准抽象</b>。</li>
+            <li>要<b>合理默认、上手友好</b>的框架，又不必一上来就做极重编排。</li>
+            <li>应用形态偏<b>简单代理</b>，没有复杂长程状态机需求（或愿意先不碰底层图）。</li>
+          </ul>
+
+          <h4>4) 代理运行时（以 LangGraph 为例）</h4>
+          <p>运行时解决的是<b>在生产里怎么跑</b>，常见能力包括：</p>
+          <ul>
+            <li><b>持久执行</b>：故障后可恢复，长任务从中断点继续。</li>
+            <li><b>流式</b>：工作流与模型输出流式透出。</li>
+            <li><b>人工干预</b>：检查、改写代理状态，再交回执行。</li>
+            <li><b>持久化</b>：线程内与跨线程的状态管理策略。</li>
+            <li><b>低级别控制</b>：不依赖高层糖衣，直接编排节点与边。</li>
+          </ul>
+          <p><b>LangGraph</b> 是面向长期运行、有状态代理的<b>低级别编排 + 运行时</b>；它适合反思、重试、多轮工具调用。</p>
+
+          <h4>5) 代理工具 / 深度代理 SDK（以 Deep Agents 为例）</h4>
+          <ul>
+            <li><b>规划</b>：待办列表式跟踪多任务进度。</li>
+            <li><b>任务委派</b>：子代理分担子任务，主上下文更干净。</li>
+            <li><b>文件系统</b>：对可插拔存储后端做读写抽象。</li>
+            <li><b>令牌管理</b>：对话摘要、超大工具结果驱逐等上下文工程。</li>
+          </ul>
+          <p><b>Deep Agents</b> 构建在 LangGraph 之上，面向需要<b>规划与分解</b>的复杂多步任务（搜索工件、脚本、中间状态并存）。</p>
+          <p><b>何时优先用 Deep Agents</b>：</p>
+          <ul>
+            <li>代理<b>运行时间长</b>、步骤多。</li>
+            <li>任务<b>复杂、非确定性</b>强，需要内置规划与上下文治理。</li>
+            <li>想直接用<b>预置工具</b>（如文件、bash 类能力、自动上下文工程）。</li>
+            <li>希望沿用<b>预置提示与子代理</b>模式，少从零搭图。</li>
+          </ul>
+
+        </div>
+      </details>
+
+      <details id="lc-component-arch" open>
+        <summary>二、LangChain 组件架构</summary>
+        <div class="content">
+          <h4>1) 核心组件如何串成应用</h4>
+          <div class="lc-diagram-viewport my-3">
+            <div class="lc-diagram-panzoom">
+              <div class="mermaid lc-mermaid">
+flowchart TB
+    subgraph LC_IN["输入处理 Input"]
+        A["Text input"] --> B["Document loaders"]
+        B --> C["Text splitters"]
+        C --> D["Documents"]
+    end
+
+    subgraph LC_ES["嵌入与存储 Embedding"]
+        D --> E["Embedding models"]
+        E --> F["Vectors"]
+        F --> G[("Vector stores")]
+    end
+
+    subgraph LC_RV["检索 Retrieval"]
+        H["User query"] --> I["Embedding models"]
+        I --> J["Query vector"]
+        J --> K["Retrievers"]
+        K --> G
+        G --> L["Relevant context"]
+    end
+
+    subgraph LC_GN["生成 Generation"]
+        M["Chat models"] --> N["Tools"]
+        N --> O["Tool results"]
+        O --> M
+        L --> M
+        M --> P["AI response"]
+    end
+
+    subgraph LC_OC["编排 Orchestration"]
+        Q["Agents"] --> M
+        Q --> N
+        Q --> K
+        Q --> Mem["Memory"]
+    end
+
+    classDef trigger fill:#DCFCE7,stroke:#16A34A,stroke-width:2px,color:#14532D
+    classDef process fill:#DBEAFE,stroke:#2563EB,stroke-width:2px,color:#1E3A8A
+    classDef output fill:#F3E8FF,stroke:#9333EA,stroke-width:2px,color:#581C87
+    classDef neutral fill:#F3F4F6,stroke:#9CA3AF,stroke-width:2px,color:#374151
+
+    class A,H trigger
+    class B,C,E,I,K,M,N,Q process
+    class D,F,J,L,O,P,Mem neutral
+    class G output
+              </div>
+            </div>
+          </div>
+
+          <h4>2) 核心流程</h4>
+          <ol class="list-decimal pl-5 space-y-2">
+            <li><b>输入处理</b>：把原始数据变成结构化 <code>Document</code>。</li>
+            <li><b>嵌入与存储</b>：将文本变为可检索的向量并存入向量库。</li>
+            <li><b>检索</b>：按用户问题召回相关上下文。</li>
+            <li><b>生成</b>：由 Chat 模型生成回答，并可与工具循环交互。</li>
+            <li><b>编排</b>：相对「用户问题 → <b>Retrievers</b> → <b>Relevant context</b> → <b>Chat models</b>」的单次流水线，<b>Agents</b> 根据观察决定何时调用 <b>Retrievers</b>、何时调用 <b>Tools</b>（如联网搜索）；<b>Chat models</b> 综合 <b>Relevant context</b> 与 <b>Tool results</b>，若信息不足，<b>Agents</b> 可再次检索或换工具，形成决策闭环。<b>Memory</b> 保存消息历史与状态，在<strong>用户当前问题</strong>进入 <b>Embedding models</b> / <b>Retrievers</b> 前补全会话。</li>
+          </ol>
+
+          <h4>3) 官方组件分类表</h4>
+          <div class="tw-scroll-x">
+            <table>
+              <thead>
+                <tr>
+                  <th>类别</th>
+                  <th>用途</th>
+                  <th>关键组件</th>
+                  <th>典型场景</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><b>Models</b></td>
+                  <td>推理与生成</td>
+                  <td>Chat models、LLMs、Embedding models</td>
+                  <td>文本生成、推理、语义理解</td>
+                </tr>
+                <tr>
+                  <td><b>Tools</b></td>
+                  <td>外部能力</td>
+                  <td>API、数据库等</td>
+                  <td>联网搜索、取数、计算</td>
+                </tr>
+                <tr>
+                  <td><b>Agents</b></td>
+                  <td>编排与推理</td>
+                  <td>ReAct、tool-calling agents</td>
+                  <td>非确定性工作流、决策</td>
+                </tr>
+                <tr>
+                  <td><b>Memory</b></td>
+                  <td>保留上下文</td>
+                  <td>Message history、custom state</td>
+                  <td>多轮对话、有状态交互</td>
+                </tr>
+                <tr>
+                  <td><b>Retrievers</b></td>
+                  <td>信息访问</td>
+                  <td>Vector retrievers、web retrievers</td>
+                  <td>RAG、知识库检索</td>
+                </tr>
+                <tr>
+                  <td><b>Document processing</b></td>
+                  <td>数据摄入</td>
+                  <td>Loaders、splitters、transformers</td>
+                  <td>PDF、爬虫等</td>
+                </tr>
+                <tr>
+                  <td><b>Vector Stores</b></td>
+                  <td>语义检索</td>
+                  <td>Chroma、Pinecone、FAISS 等</td>
+                  <td>相似度搜索、向量持久化</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <h4>4) 常见模式（示意）</h4>
+          <p><b>RAG（检索增强生成）</b></p>
+          <div class="lc-diagram-viewport lc-diagram-viewport--sm my-2">
+            <div class="lc-diagram-panzoom">
+              <div class="mermaid lc-mermaid">
+graph LR
+    A["User question"] --> B["Retriever"]
+    B --> C["Relevant docs"]
+    C --> D["Chat model"]
+    A --> D
+    D --> E["Informed response"]
+
+    classDef trigger fill:#DCFCE7,stroke:#16A34A,stroke-width:2px,color:#14532D
+    classDef process fill:#DBEAFE,stroke:#2563EB,stroke-width:2px,color:#1E3A8A
+    classDef neutral fill:#F3F4F6,stroke:#9CA3AF,stroke-width:2px,color:#374151
+
+    class A trigger
+    class B,D process
+    class C,E neutral
+              </div>
+            </div>
+          </div>
+
+          <p><b>带工具的 Agent</b></p>
+          <div class="lc-diagram-viewport lc-diagram-viewport--sm my-2">
+            <div class="lc-diagram-panzoom">
+              <div class="mermaid lc-mermaid">
+graph LR
+    A["User request"] --> B["Agent"]
+    B --> C{"Need tool?"}
+    C -->|Yes| D["Call tool"]
+    D --> E["Tool result"]
+    E --> B
+    C -->|No| F["Final answer"]
+
+    classDef trigger fill:#DCFCE7,stroke:#16A34A,stroke-width:2px,color:#14532D
+    classDef process fill:#DBEAFE,stroke:#2563EB,stroke-width:2px,color:#1E3A8A
+    classDef decision fill:#FEF3C7,stroke:#F59E0B,stroke-width:2px,color:#78350F
+    classDef neutral fill:#F3F4F6,stroke:#9CA3AF,stroke-width:2px,color:#374151
+
+    class A trigger
+    class B,D process
+    class C decision
+    class E,F neutral
+              </div>
+            </div>
+          </div>
+
+          <p><b>Agent 与 Memory：如何把环节串成「有状态的」应用</b></p>
+          <div class="lc-diagram-viewport my-2">
+            <div class="lc-diagram-panzoom">
+              <div class="mermaid lc-mermaid">
+flowchart TB
+    subgraph compare["仅作对照：线性 RAG"]
+        direction LR
+        u0["用户当前问题"] --> r0["Retrievers"]
+        r0 --> v0[("Vector stores")]
+        v0 --> ctx0["Relevant context"]
+        ctx0 --> m0["Chat models"]
+        u0 --> m0
+        m0 --> p0["AI response"]
+    end
+
+    subgraph dyn["编排：Agents + Memory 决策环"]
+        direction TB
+        MEM["Memory\n消息历史 / thread state"]
+        U["用户当前问题"]:::trigger
+        MEM -.->|"指代消解、拼上轮对话"| U
+        AG["Agents 调度"]:::process
+        U --> AG
+        AG --> K["Retrievers"]:::process
+        K --> G2[("Vector stores")]:::output
+        G2 --> L2["Relevant context"]:::neutral
+        AG --> N2["Tools\n外部搜索等"]:::process
+        N2 --> O2["Tool results"]:::neutral
+        L2 --> CH["Chat models"]:::process
+        O2 --> CH
+        CH -->|"信息够？不够则再决策"| AG
+        CH --> P2["AI response"]:::neutral
+    end
+
+    subgraph eg["动态例子（多轮）"]
+        direction TB
+        e1["追问含指代：这种检索在 10 万租户下怎优化？"]
+        e2["Memory 提示：「这种」= 上轮的向量检索"]
+        e3["Agents：先 Retrievers 拿 HNSW 等私有资料"]
+        e4["仍不足：再调 Tools 搜 multi-tenancy 实践"]
+        e5["Chat models：合并私有 Relevant context 与外部 Tool results → 产出 AI response"]
+        e1 --> e2 --> e3 --> e4 --> e5
+    end
+
+    classDef trigger fill:#DCFCE7,stroke:#16A34A,stroke-width:2px,color:#14532D
+    classDef process fill:#DBEAFE,stroke:#2563EB,stroke-width:2px,color:#1E3A8A
+    classDef output fill:#F3E8FF,stroke:#9333EA,stroke-width:2px,color:#581C87
+    classDef neutral fill:#F3F4F6,stroke:#9CA3AF,stroke-width:2px,color:#374151
+              </div>
+            </div>
+          </div>
+        </div>
+      </details>
+
+      <details id="lc-memory">
+        <summary>三、LangChain Memory</summary>
+        <div class="content">
+          <h4>1) Memory 是什么</h4>
+          <p><b>Memory</b>是让系统记住先前交互信息的机制。对 AI Agent 而言，记忆能保留对话脉络、从反馈中学习并适应用户偏好；任务越复杂、交互越多，记忆越影响效率与体验。</p>
+          <p>按<b>召回范围</b>可分为两大类：</p>
+          <ul>
+            <li><b>短期记忆</b>：又称 <b>thread（线程）范围</b>记忆——在同一会话内维护消息与状态；由 <b>LangGraph</b> 纳入 Agent 的 <b>state</b>，通过 <b>checkpointer</b> 持久化，使线程可随时恢复。图每执行一步会更新 state，下一步开始时会读取该 state。</li>
+            <li><b>长期记忆</b>：跨会话、跨 thread 共享的用户级或应用级数据；可在<b>任意时刻、任意 thread</b> 中召回；按自定义 <b>namespace</b> 划分，不限于单一 thread id。LangGraph 通过 <b>Store</b>。</li>
+          </ul>
+
+          <h4>2) 短期记忆与管理</h4>
+          <p>短期记忆让应用在<b>单个 thread / 会话</b>内记住先前轮次。<b>Thread</b> 将多次交互组织在一起。LangGraph 把短期记忆作为 Agent state 的一部分，用 <b>thread 粒度的 checkpoint</b> 持久化；state 中除对话历史外，还可包含上传文件、检索结果、生成工件等，从而在隔离不同 thread 的同时为当前对话提供完整上下文。</p>
+          <p><b>为何要主动管理对话历史？</b>全文历史可能超出上下文窗口导致报错；即使模型支持超长上下文，过长历史也常带来分心、变慢与成本上升。因此需要在工程上裁剪、摘要或遗忘陈旧内容。</p>
+
+          <div class="tw-scroll-x my-3">
+            <figure class="m-0 inline-block min-w-0">
+              <img src="https://mintcdn.com/langchain-5e9cc07a/-_xGPoyjhyiDWTPJ/oss/images/filter.png?fit=max&amp;auto=format&amp;n=-_xGPoyjhyiDWTPJ&amp;q=85&amp;s=89c50725dda7add80732bd2096e07ef2" alt="消息过滤与管理（官方示意图）" width="594" height="200" loading="lazy" class="rounded-lg border border-white/10 max-w-full h-auto" decoding="async" />
+            </figure>
+          </div>
+
+          <h4>3) 长期记忆</h4>
+          <div class="tw-scroll-x">
+            <table>
+              <thead>
+                <tr>
+                  <th>类型</th>
+                  <th>存什么</th>
+                  <th>人类例子</th>
+                  <th>Agent 例子</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><b>Semantic（语义记忆）</b></td>
+                  <td>事实与概念</td>
+                  <td>学校里学到的知识</td>
+                  <td>关于用户的稳定事实</td>
+                </tr>
+                <tr>
+                  <td><b>Episodic（情节记忆）</b></td>
+                  <td>经历与事件</td>
+                  <td>我做过的事</td>
+                  <td>过去 Agent 行为轨迹</td>
+                </tr>
+                <tr>
+                  <td><b>Procedural（程序记忆）</b></td>
+                  <td>规则与做法</td>
+                  <td>本能或熟练技能</td>
+                  <td>系统提示、代码与「如何做」</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <h4>4) 语义记忆</h4>
+          <p><b>注意</b>：心理学意义上的「语义记忆」≠ 工程里的「语义检索（semantic search）」；后者是用向量等手段按含义检索，前者指存事实与知识。</p>
+          <p><b>Profile</b>：单一、持续更新的实体画像（如用户/组织），常为受控 schema 的 JSON；每次在旧 profile 上用模型生成新 profile 或 JSON Patch 更新。体量大时易出错，可考虑拆文档或强制结构化解码。</p>
+          <div class="tw-scroll-x my-3">
+            <figure class="m-0 inline-block min-w-0">
+              <img src="https://mintcdn.com/langchain-5e9cc07a/ybiAaBfoBvFquMDz/oss/images/update-profile.png?fit=max&amp;auto=format&amp;n=ybiAaBfoBvFquMDz&amp;q=85&amp;s=8843788f6afd855450986c4cc4cd6abf" alt="Update profile memory（官方示意图）" width="507" height="516" loading="lazy" class="rounded-lg border border-white/10 max-w-full h-auto" decoding="async" />
+            </figure>
+          </div>
+          <p><b>Collection</b>：多条独立记忆文档，随时间追加；单条更窄、更易模型生成，一般更容易保留信息、下游召回更好，但需处理删除/更新与「过增/过改」倾向；检索侧依赖 Store 的语义搜索与过滤。多碎片可能不如单一 profile 那样自带全局语境，组合进 prompt 时需自行设计。</p>
+          <div class="tw-scroll-x my-3">
+            <figure class="m-0 inline-block min-w-0">
+              <img src="https://mintcdn.com/langchain-5e9cc07a/ybiAaBfoBvFquMDz/oss/images/update-list.png?fit=max&amp;auto=format&amp;n=ybiAaBfoBvFquMDz&amp;q=85&amp;s=38851b242981cc87128620091781f7c9" alt="Update list / collection memory（官方示意图）" width="483" height="491" loading="lazy" class="rounded-lg border border-white/10 max-w-full h-auto" decoding="async" />
+            </figure>
+          </div>
+
+          <h4>5) 情节记忆与程序记忆</h4>
+          <p><b>情节记忆</b>：常通过 <b>few-shot 示例</b> 把「过去怎么做」注入提示；可选用 Store 存示例，或用 <a href="https://docs.langchain.com/langsmith/manage-datasets" target="_blank" rel="noopener noreferrer">LangSmith Dataset</a> 自建检索逻辑。</p>
+          <p><b>程序记忆</b>：权重、代码与（尤其）<b>系统提示</b>共同决定行为；实践中多见用 <b>Reflection / meta-prompting</b> 迭代系统提示。官方给出基于 Store 更新 instructions 的伪代码思路：<code>call_model</code> 从 Store 读当前指令；<code>update_instructions</code> 结合对话与旧指令生成新指令并 <code>store.put</code> 回去。</p>
+          <div class="tw-scroll-x my-3">
+            <figure class="m-0 inline-block min-w-0">
+              <img src="https://mintcdn.com/langchain-5e9cc07a/ybiAaBfoBvFquMDz/oss/images/update-instructions.png?fit=max&amp;auto=format&amp;n=ybiAaBfoBvFquMDz&amp;q=85&amp;s=13644c954ed79a45b8a1a762b3e39da1" alt="Update instructions / procedural memory（官方示意图）" width="493" height="515" loading="lazy" class="rounded-lg border border-white/10 max-w-full h-auto" decoding="async" />
+            </figure>
+          </div>
+          <pre><code># 官方文档伪代码示意（节点拆分）
+def call_model(state: State, store: BaseStore):
+    namespace = ("agent_instructions", )
+    instructions = store.get(namespace, key="agent_a")[0]
+    prompt = prompt_template.format(instructions=instructions.value["instructions"])
+    ...
+
+def update_instructions(state: State, store: BaseStore):
+    namespace = ("instructions",)
+    instructions = store.search(namespace)[0]
+    prompt = prompt_template.format(
+        instructions=instructions.value["instructions"],
+        conversation=state["messages"])
+    output = llm.invoke(prompt)
+    new_instructions = output['new_instructions']
+    store.put(("agent_instructions",), "agent_a", {"instructions": new_instructions})
+    ...</code></pre>
+
+          <h4>6) 写入记忆：</h4>
+          <ul>
+            <li><b>热路径</b>：运行中即时写入——新记忆马上用于后续轮次、可对用户透明；但可能增加工具与推理复杂度、拉高延迟，且与「主要任务」争用注意力。</li>
+            <li><b>后台</b>：异步提炼记忆——主路径延迟低、职责分离；但确定记忆写入的频率变得至关重要，因为不频繁的更新可能会导致其他线程没有新的上下文。确定何时触发记忆形成也很重要。常见的策略包括在设置的时间段后安排（如果发生新的事件则重新安排），使用 cron 计划，或允许用户或应用程序逻辑手动触发。</li>
+          </ul>
+          <div class="tw-scroll-x my-3">
+            <figure class="m-0 inline-block min-w-0">
+              <img src="https://mintcdn.com/langchain-5e9cc07a/dL5Sn6Cmy9pwtY0V/oss/images/hot_path_vs_background.png?fit=max&amp;auto=format&amp;n=dL5Sn6Cmy9pwtY0V&amp;q=85&amp;s=edd006d6189dc29a2edcba57c41fd744" alt="Hot path vs background memory writing（官方示意图）" width="842" height="418" loading="lazy" class="rounded-lg border border-white/10 max-w-full h-auto" decoding="async" />
+            </figure>
+          </div>
+
+          <h4>7) 存储结构（Store）</h4>
+          <p>长期记忆在 LangGraph 中以 <b>JSON 文档</b> 存入 <b>store</b>：<b>namespace</b>（类似目录）+ <b>key</b>（类似文件名）；namespace 常含 user id、org id 等便于分层与检索。可跨 namespace 用内容过滤等策略搜索。</p>
+          <pre><code>from langgraph.store.memory import InMemoryStore
+
+def embed(texts: list[str]) -> list[list[float]]:
+    return [[1.0, 2.0] * len(texts)]
+
+store = InMemoryStore(index={"embed": embed, "dims": 2})
+user_id = "my-user"
+application_context = "chitchat"
+namespace = (user_id, application_context)
+store.put(
+    namespace,
+    "a-memory",
+    {
+        "rules": [
+            "User likes short, direct language",
+            "User only speaks English and python",
+        ],
+        "my-key": "my-value",
+    },
+)
+item = store.get(namespace, "a-memory")
+items = store.search(
+    namespace, filter={"my-key": "my-value"}, query="language preferences"
+)</code></pre>
+        </div>
+      </details>
+
+      <details id="lc-context">
+        <summary>四、LangChain 上下文</summary>
+        <div class="content">
+          <h4>1) 上下文工程</h4>
+          <p>
+            <b>上下文工程（context engineering）</b>指搭建动态系统，在正确时机以正确格式提供正确信息与工具，使应用能完成任务。描述「上下文」常用两个维度：
+          </p>
+          <ul>
+            <li><b>可变性</b>：<b>静态</b>上下文在执行中不变（用户元数据、数据库连接、工具注册等）；<b>动态</b>上下文随运行演变（对话历史、中间结果、工具观测等）。</li>
+            <li><b>生命周期</b>：<b>运行时</b>限定在单次 invoke/单次运行内；<b>跨会话</b>则在多轮对话、多 thread 之间持久存在。</li>
+          </ul>
+
+          <h4>2) 分清：</h4>
+          <p>强调：<b>运行时上下文</b>是代码侧的依赖与数据，<b>不是</b>：</p>
+          <ul>
+            <li>写进 LLM <b>提示</b>里的那段文字（「LLM 上下文」）；</li>
+            <li>模型能接收的 <b>最大 token 数</b>（「上下文窗口」）。</li>
+          </ul>
+          <p>运行时上下文更像一种<b>依赖注入</b>：在 invoke/stream 时把用户 ID、客户端、连接等传给工具与节点，再按需写入真正的提示或状态。</p>
+
+          <h4>3) LangGraph 管理上下文的三种方式</h4>
+          <div class="tw-scroll-x">
+            <table>
+              <thead>
+                <tr>
+                  <th>类型</th>
+                  <th>含义</th>
+                  <th>可变</th>
+                  <th>生命周期</th>
+                  <th>典型访问方式</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><b>静态运行时上下文</b></td>
+                  <td>启动时注入、运行中不变（元数据、工具、DB 连接等）</td>
+                  <td>静态</td>
+                  <td>单次运行</td>
+                  <td><code>invoke</code> / <code>stream</code> 的 <code>context</code> 参数；代理里 <code>context_schema</code>；图节点里 <code>Runtime[...]</code>；工具里 <code>ToolRuntime[...]</code></td>
+                </tr>
+                <tr>
+                  <td><b>动态运行时上下文（状态）</b></td>
+                  <td>单次运行内可变：消息、中间量、工具产出等</td>
+                  <td>动态</td>
+                  <td>单次运行</td>
+                  <td>LangGraph <b>state</b>（短期记忆、与 checkpoint 配合可持久到 thread）</td>
+                </tr>
+                <tr>
+                  <td><b>动态跨会话上下文（存储）</b></td>
+                  <td>跨对话持久：画像、偏好、历史事实等</td>
+                  <td>动态</td>
+                  <td>跨会话</td>
+                  <td>LangGraph <b>Store</b>（长期记忆）</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <h4>4) 静态运行时上下文</h4>
+          <p>在调用图或代理时通过 <code>context=...</code> 传入；类型可用 <code>@dataclass</code> 等声明为 <code>context_schema</code>。工具与节点通过 <code>runtime.context</code> 读取，避免把连接与用户标识硬编码进工具体。</p>
+          <pre><code>@dataclass
+class ContextSchema:
+    user_name: str
+
+graph.invoke(
+    {"messages": [{"role": "user", "content": "hi!"}]},
+    context={"user_name": "John Smith"},
+)</code></pre>
+          <p>代理侧可为中间件动态拼系统提示（<code>request.runtime.context</code>）；图节点签名为 <code>def node(state, runtime: Runtime[ContextSchema])</code>；工具侧常用 <code>ToolRuntime[ContextSchema]</code> 注入依赖。</p>
+
+          <h4>5) 动态运行时上下文（状态）</h4>
+          <p>由 LangGraph 的 <b>state</b> 承载，在一次运行内读写；对应「短期记忆」与多步编排中的中间结果。需要跨多次调用持久化同一 thread 时，结合 Memory 一节中的 <b>checkpointer</b>。</p>
+
+          <h4>6) 动态跨会话上下文（存储）</h4>
+          <p>由 <b>Store</b> 管理跨 thread、跨会话的数据，对应长期记忆；与上一节「长期记忆 / namespace」一致，可与静态、运行时状态配合：静态上下文决定「谁在读」，存储里放「跨会话记住了什么」。</p>
+        </div>
+      </details>
+
+    </section>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.min.js"></script>
+  <script src="https://unpkg.com/@panzoom/panzoom@4.4.1/dist/panzoom.min.js"></script>
+</body>
+</html>

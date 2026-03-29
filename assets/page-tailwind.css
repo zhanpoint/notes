@@ -1,5 +1,29 @@
 /* Shared Tailwind-ish refinements for topic pages (no <style> tags in pages). */
 
+/* Topic pages: hide main column until page-shell.js finishes (avoids FOUC of unstyled tables/details). */
+@media (scripting: enabled) {
+  html:not(.shell-ready) .container {
+    opacity: 0;
+  }
+  html.shell-ready .container {
+    opacity: 1;
+    transition: opacity 0.12s ease-out;
+  }
+}
+
+/* Better Chinese-first reading typography */
+html,
+body {
+  font-family: "Inter", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", "Segoe UI", Roboto, Arial, sans-serif;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: #2f3348;
+  /* Firefox scrollbar */
+  scrollbar-width: thin;
+  scrollbar-color: rgba(148, 163, 184, 0.42) rgba(47, 51, 72, 0.82);
+}
+
 /* Make details/summary look consistent across browsers */
 summary::-webkit-details-marker {
   display: none;
@@ -9,12 +33,135 @@ details > summary {
   list-style: none;
 }
 
+/* QA cards: make borders clearer and show expand/collapse affordance */
+.qa-list > details {
+  border-color: rgba(148, 163, 184, 0.34);
+}
+
+.qa-list > details > summary {
+  position: relative;
+  padding-right: 2rem;
+}
+
+.qa-list > details > summary::after {
+  content: "";
+  display: block;
+  position: absolute;
+  right: 0.95rem;
+  top: 50%;
+  width: 0.45rem;
+  height: 0.45rem;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: translateY(-58%) rotate(45deg);
+  color: rgba(226, 232, 240, 0.9);
+  transition: transform 160ms ease, color 140ms ease;
+}
+
+.qa-list > details:not([open]) > summary::after {
+  transform: translateY(-48%) rotate(-45deg);
+}
+
+.qa-list > details > summary:hover::after {
+  color: rgba(248, 250, 252, 0.98);
+}
+
 /* Prevent long code/tables from breaking layout */
 pre,
 code,
 table,
 svg {
   max-width: 100%;
+}
+
+/* LangChain-style Mermaid: pan/zoom stage (svg may exceed viewport) */
+.lc-diagram-viewport {
+  position: relative;
+  height: min(72vh, 560px);
+  overflow: hidden;
+  border-radius: 0.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: linear-gradient(160deg, rgba(15, 23, 42, 0.92) 0%, rgba(30, 41, 59, 0.72) 55%, rgba(15, 23, 42, 0.88) 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  touch-action: none;
+  user-select: none;
+}
+
+.lc-diagram-viewport--sm {
+  height: min(48vh, 360px);
+}
+
+.lc-diagram-reset {
+  position: absolute;
+  top: 10px;
+  right: 12px;
+  z-index: 5;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  padding: 0;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 50%;
+  background: #1a2233;
+  color: #f8fafc;
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.05),
+    0 4px 14px rgba(0, 0, 0, 0.4);
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.lc-diagram-reset svg {
+  width: 0.75rem;
+  height: 0.75rem;
+  flex-shrink: 0;
+}
+
+.lc-diagram-reset:hover {
+  background: #222b3d;
+  border-color: rgba(255, 255, 255, 0.22);
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.08),
+    0 6px 18px rgba(0, 0, 0, 0.45);
+}
+
+.lc-diagram-reset:active {
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.06),
+    0 2px 10px rgba(0, 0, 0, 0.35);
+}
+
+.lc-diagram-viewport:active {
+  cursor: grabbing;
+}
+
+.lc-diagram-panzoom {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: grab;
+}
+
+.lc-diagram-panzoom .mermaid {
+  margin: 0;
+}
+
+.lc-diagram-panzoom svg {
+  max-width: none !important;
+  width: auto !important;
+  height: auto !important;
+  filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.35));
+}
+
+.lc-diagram-hint {
+  font-size: 0.75rem;
+  line-height: 1.35;
+  color: rgba(148, 163, 184, 0.95);
+  margin-bottom: 0.35rem;
 }
 
 /* Smooth scrolling for overflow wrappers */
@@ -42,10 +189,184 @@ svg {
   color: rgba(148, 163, 184, 0.95);
 }
 
+/* Long-form article readability */
+.article-body {
+  max-width: 120ch;
+  margin-inline: auto;
+}
+
+.article-body h3 {
+  margin-top: 1.1rem;
+  margin-bottom: 0.65rem;
+  font-size: 0.9rem;
+  line-height: 1.55;
+  letter-spacing: 0.01em;
+}
+
+.article-body h4 {
+  margin-top: 0.9rem;
+  margin-bottom: 0.5rem;
+  font-size: 0.76rem;
+  line-height: 1.55;
+}
+
+.article-body p {
+  margin-top: 0.4rem;
+  margin-bottom: 0.4rem;
+  font-size: 0.76rem;
+  line-height: 1.95;
+}
+
+.article-body li {
+  margin-top: 0.22rem;
+  margin-bottom: 0.22rem;
+  font-size: 0.8rem;
+  line-height: 1.9;
+}
+
+/* Indent body under lettered steps (e.g. A. 数据处理 → 清洗、分块) */
+.article-body .article-subsection,
+.content .article-subsection {
+  margin-top: 0.25rem;
+  margin-bottom: 0.5rem;
+  margin-left: 0.35rem;
+  padding-left: 0.9rem;
+  border-left: 2px solid rgba(148, 163, 184, 0.32);
+}
+
+/* Peer lines under A：清洗与「分块」标题同一左缘（与 ul 项目符号缩进区分） */
+.article-body .article-subsection .subsection-peer,
+.content .article-subsection .subsection-peer {
+  margin-top: 0.2rem;
+  margin-bottom: 0.2rem;
+  padding-left: 0;
+  margin-left: 0;
+}
+
+/* RAG 生命周期 A–D：成组面板 + 紧凑行高（避免嵌套 details 被当成独立大卡片） */
+.article-body .lifecycle-stack,
+.content .lifecycle-stack {
+  margin-top: 0.3rem;
+  margin-bottom: 0.55rem;
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  border-radius: 8px;
+  overflow: hidden;
+  background: rgba(15, 23, 42, 0.22);
+}
+
+.article-body .lifecycle-stack .lifecycle-collapsible,
+.content .lifecycle-stack .lifecycle-collapsible {
+  margin: 0;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  overflow: visible;
+}
+
+.article-body .lifecycle-stack .lifecycle-collapsible + .lifecycle-collapsible,
+.content .lifecycle-stack .lifecycle-collapsible + .lifecycle-collapsible {
+  border-top: 1px solid rgba(148, 163, 184, 0.14);
+}
+
+.article-body .lifecycle-stack .lifecycle-collapsible > summary,
+.content .lifecycle-stack .lifecycle-collapsible > summary {
+  cursor: pointer;
+  list-style: none;
+  font-size: 0.76rem;
+  line-height: 1.35;
+  margin: 0;
+  padding: 0.32rem 1.45rem 0.32rem 0.55rem;
+  position: relative;
+  user-select: none;
+  color: rgba(248, 250, 252, 0.96);
+  background: transparent;
+  border: none;
+  transition: background-color 120ms ease, color 120ms ease;
+}
+
+.article-body .lifecycle-stack .lifecycle-collapsible > summary:hover,
+.content .lifecycle-stack .lifecycle-collapsible > summary:hover {
+  color: rgba(255, 255, 255, 1);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.article-body .lifecycle-stack .lifecycle-collapsible[open] > summary,
+.content .lifecycle-stack .lifecycle-collapsible[open] > summary {
+  background: rgba(255, 255, 255, 0.03);
+  border-bottom: 1px solid rgba(148, 163, 184, 0.12);
+}
+
+.article-body .lifecycle-stack .lifecycle-collapsible > summary::-webkit-details-marker,
+.content .lifecycle-stack .lifecycle-collapsible > summary::-webkit-details-marker {
+  display: none;
+}
+
+.article-body .lifecycle-stack .lifecycle-collapsible > summary::after,
+.content .lifecycle-stack .lifecycle-collapsible > summary::after {
+  content: "";
+  display: block;
+  position: absolute;
+  right: 0.45rem;
+  top: 50%;
+  width: 0.32rem;
+  height: 0.32rem;
+  border-right: 1.5px solid rgba(203, 213, 225, 0.75);
+  border-bottom: 1.5px solid rgba(203, 213, 225, 0.75);
+  transform: translateY(-56%) rotate(45deg);
+  transition: transform 150ms ease, border-color 140ms ease;
+}
+
+.article-body .lifecycle-stack .lifecycle-collapsible:not([open]) > summary::after,
+.content .lifecycle-stack .lifecycle-collapsible:not([open]) > summary::after {
+  transform: translateY(-50%) rotate(-45deg);
+}
+
+.article-body .lifecycle-stack .lifecycle-collapsible > summary:hover::after,
+.content .lifecycle-stack .lifecycle-collapsible > summary:hover::after {
+  border-color: rgba(248, 250, 252, 0.9);
+}
+
+/* 展开区内边距略收紧，与 summary 连成一体 */
+.article-body .lifecycle-stack .lifecycle-collapsible > .article-subsection,
+.content .lifecycle-stack .lifecycle-collapsible > .article-subsection {
+  margin-top: 0.35rem;
+  margin-bottom: 0.45rem;
+}
+
 /* Table lines fallback */
 .content table,
 .content th,
 .content td {
   border-color: rgba(148, 163, 184, 0.22);
+}
+
+/* WebKit scrollbar: slim, rounded, low-contrast dark style */
+html::-webkit-scrollbar,
+body::-webkit-scrollbar,
+.tw-scroll-x::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+html::-webkit-scrollbar-track,
+body::-webkit-scrollbar-track,
+.tw-scroll-x::-webkit-scrollbar-track {
+  background: rgba(47, 51, 72, 0.78);
+  border-radius: 999px;
+}
+
+html::-webkit-scrollbar-thumb,
+body::-webkit-scrollbar-thumb,
+.tw-scroll-x::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.38);
+  border-radius: 999px;
+  border: 2px solid rgba(47, 51, 72, 0.78);
+}
+
+html::-webkit-scrollbar-thumb:hover,
+body::-webkit-scrollbar-thumb:hover,
+.tw-scroll-x::-webkit-scrollbar-thumb:hover {
+  background: rgba(148, 163, 184, 0.56);
 }
 

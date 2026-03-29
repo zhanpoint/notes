@@ -1782,39 +1782,9 @@ def say_hello(name: Annotated[str, "display name"]) -> str:
 
   <script>
     (function () {
-      const STORAGE_KEY = 'python_faq_open_details_v1';
       const NOTE_STORAGE_KEY = 'python_faq_open_notes_v1';
-      const detailsList = Array.from(document.querySelectorAll('.qa-list > details'));
       const chipBtns = Array.from(document.querySelectorAll('.chip-note-btn[aria-controls]'));
-      if (!detailsList.length) return;
-
-      detailsList.forEach((el, idx) => {
-        el.setAttribute('data-faq-id', String(idx + 1));
-      });
-
-      function saveDetailsState() {
-        const openIds = detailsList
-          .filter((el) => el.open)
-          .map((el) => el.getAttribute('data-faq-id'));
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(openIds));
-      }
-
-      function restoreDetailsState() {
-        try {
-          const raw = localStorage.getItem(STORAGE_KEY);
-          if (!raw) return false;
-          const openIds = JSON.parse(raw);
-          if (!Array.isArray(openIds)) return false;
-
-          detailsList.forEach((el) => {
-            const id = el.getAttribute('data-faq-id');
-            el.open = openIds.includes(id);
-          });
-          return true;
-        } catch (e) {
-          return false;
-        }
-      }
+      if (!chipBtns.length) return;
 
       function saveNotesState() {
         const openNoteIds = chipBtns
@@ -1845,17 +1815,6 @@ def say_hello(name: Annotated[str, "display name"]) -> str:
         }
       }
 
-      const restored = restoreDetailsState();
-      if (!restored) {
-        detailsList.forEach((el, idx) => {
-          el.open = idx === 0;
-        });
-      }
-
-      detailsList.forEach((el) => {
-        el.addEventListener('toggle', saveDetailsState);
-      });
-
       chipBtns.forEach((chipBtn) => {
         const panelId = chipBtn.getAttribute('aria-controls');
         if (!panelId) return;
@@ -1870,11 +1829,7 @@ def say_hello(name: Annotated[str, "display name"]) -> str:
       });
 
       restoreNotesState();
-
-      window.addEventListener('beforeunload', () => {
-        saveDetailsState();
-        saveNotesState();
-      });
+      window.addEventListener('beforeunload', saveNotesState);
     })();
   </script>
 </body>

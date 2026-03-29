@@ -26,7 +26,7 @@ body {
   font-family: "Source Han Sans CN", system-ui, sans-serif;
   color: var(--ink);
   line-height: var(--text-lh);
-  background: #020617;
+  background: #2f3348;
   min-height: 100vh;
   padding: 18px 24px 26px;
   overflow-x: hidden;

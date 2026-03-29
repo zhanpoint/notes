@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>个人笔记</title>
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml" />
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
@@ -17,11 +18,11 @@
     };
   </script>
 </head>
-<body class="bg-slate-950 text-slate-100 antialiased">
+<body class="bg-[#2f3348] text-slate-100 antialiased">
   <div class="min-h-screen">
     <div class="mx-auto max-w-[1400px]">
       <!-- Top bar (mobile) -->
-      <header class="sticky top-0 z-30 border-b border-white/10 bg-slate-950/80 backdrop-blur md:hidden">
+      <header class="sticky top-0 z-30 border-b border-white/10 bg-[rgba(47,51,72,0.86)] backdrop-blur md:hidden">
         <div class="flex items-center justify-between px-4 py-3">
           <div class="flex items-center gap-2">
             <span class="inline-flex h-2 w-2 rounded-full bg-sky-400 shadow-[0_0_20px_rgba(56,189,248,0.65)]"></span>
@@ -36,42 +37,81 @@
       <div id="splitRoot" class="relative flex min-h-[calc(100vh-0px)]">
         <!-- Sidebar -->
         <aside id="sidebar" class="hidden md:block md:sticky md:top-0 md:h-screen md:border-r md:border-white/10" style="width: var(--sidebar-w, 280px);">
-          <div class="flex h-full flex-col px-4 py-5">
-            <div class="mb-4 hidden items-center gap-2 md:flex">
+          <div id="sidebarInner" class="flex h-full flex-col px-4 py-5">
+            <div class="mb-4 hidden items-center gap-2 md:flex flex-none">
               <span class="inline-flex h-2 w-2 rounded-full bg-sky-400 shadow-[0_0_20px_rgba(56,189,248,0.65)]"></span>
               <div class="text-sm font-semibold tracking-wide text-slate-100">个人笔记</div>
+              <button
+                id="themeToggle"
+                type="button"
+                aria-label="切换浅色主题"
+                title="切换浅色主题"
+                class="ml-auto inline-flex h-7 w-7 items-center justify-center rounded-xl bg-white/10 text-slate-100 shadow-soft backdrop-blur hover:bg-white/15"
+              >
+                <svg viewBox="0 0 20 20" fill="none" class="h-4 w-4" aria-hidden="true">
+                  <circle cx="10" cy="10" r="3.5" stroke="currentColor" stroke-width="1.5"/>
+                  <path d="M10 2.5v2M10 15.5v2M2.5 10h2M15.5 10h2M4.7 4.7l1.4 1.4M13.9 13.9l1.4 1.4M15.3 4.7l-1.4 1.4M6.1 13.9l-1.4 1.4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                </svg>
+              </button>
             </div>
+            <div class="mb-3 hidden gap-2 md:flex flex-none">
+              <button type="button" data-nav-action="expand" data-nav-target="#sidebar" aria-label="全部展开" title="全部展开" class="inline-flex h-7 w-7 items-center justify-center rounded-md text-slate-300 hover:bg-white/10">
+                <svg viewBox="0 0 20 20" fill="none" class="h-3.5 w-3.5" aria-hidden="true">
+                  <path d="M5 7h10M5 10h10M5 13h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                  <path d="M10 4v12M7 7l3-3 3 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </button>
+              <button type="button" data-nav-action="collapse" data-nav-target="#sidebar" aria-label="全部折叠" title="全部折叠" class="inline-flex h-7 w-7 items-center justify-center rounded-md text-slate-300 hover:bg-white/10">
+                <svg viewBox="0 0 20 20" fill="none" class="h-3.5 w-3.5" aria-hidden="true">
+                  <path d="M5 7h10M5 10h10M5 13h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                  <path d="M7 13l3 3 3-3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </button>
+            </div>
+            <div class="mb-3 hidden border-b border-white/25 shadow-[0_1px_0_rgba(255,255,255,0.06)] md:block flex-none"></div>
 
-            <details class="nav-group" open>
-              <summary class="nav-group-title">Python</summary>
-              <nav class="mt-2 space-y-1">
-                <a class="nav-link" data-src="page/Python.html" href="page/Python.html">Python 基础与进阶</a>
-              </nav>
-            </details>
+            <div id="sidebarNav" class="min-h-0 flex-1 overflow-y-auto">
+              <details class="nav-group" open>
+                <summary class="nav-group-title">Python</summary>
+                <nav class="mt-2 space-y-1">
+                  <a class="nav-link" data-src="page/Python.html" href="page/Python.html">Python基础</a>
+                </nav>
+              </details>
 
-            <details class="nav-group" open>
-              <summary class="nav-group-title">数据库</summary>
-              <nav class="mt-2 space-y-1">
-                <a class="nav-link" data-src="page/Postgresql.html" href="page/Postgresql.html">PostgreSQL 高频面试</a>
-                <a class="nav-link" data-src="page/Redis.html" href="page/Redis.html">Redis 高频面试</a>
-              </nav>
-            </details>
+              <details class="nav-group" open>
+                <summary class="nav-group-title">数据库</summary>
+                <nav class="mt-2 space-y-1">
+                  <a class="nav-link" data-src="page/Postgresql.html" href="page/Postgresql.html">PostgreSQL基础</a>
+                  <a class="nav-link" data-src="page/Redis.html" href="page/Redis.html">Redis基础</a>
+                </nav>
+              </details>
 
-            <details class="nav-group" open>
-              <summary class="nav-group-title">后端</summary>
-              <nav class="mt-2 space-y-1">
-                <a class="nav-link" data-src="page/Fastapi.html" href="page/Fastapi.html">FastAPI 体系</a>
-                <a class="nav-link" data-src="page/celery-lifecycle.html" href="page/celery-lifecycle.html">Celery 生命周期</a>
-                <a class="nav-link" data-src="page/Distributed.html" href="page/Distributed.html">分布式专题</a>
-              </nav>
-            </details>
+              <details class="nav-group" open>
+                <summary class="nav-group-title">后端</summary>
+                <nav class="mt-2 space-y-1">
+                  <a class="nav-link" data-src="page/Fastapi.html" href="page/Fastapi.html">FastAPI基础</a>
+                  <a class="nav-link" data-src="page/celery-lifecycle.html" href="page/celery-lifecycle.html">Celery基础</a>
+                  <a class="nav-link" data-src="page/Distributed.html" href="page/Distributed.html">分布式基础</a>
+                </nav>
+              </details>
+
+              <details class="nav-group" open>
+                <summary class="nav-group-title">Agent</summary>
+                <nav class="mt-2 space-y-1">
+                  <a class="nav-link" data-src="page/LLM.html" href="page/LLM.html">LLM原理</a>
+                  <a class="nav-link" data-src="page/PromptEngineering.html" href="page/PromptEngineering.html">提示词工程</a>
+                  <a class="nav-link" data-src="page/RAG.html" href="page/RAG.html">RAG</a>
+                  <a class="nav-link" data-src="page/LangChain.html" href="page/LangChain.html">LangChain</a>
+                </nav>
+              </details>
+            </div>
           </div>
         </aside>
 
         <!-- Resizer -->
         <div class="hidden md:block">
           <div
-            id="splitter"
+            id="splitter" 
             class="group relative h-screen w-px bg-white/10"
             role="separator"
             aria-orientation="vertical"
@@ -88,55 +128,160 @@
         <!-- Mobile sidebar (drawer) -->
         <div id="mobileDrawer" class="fixed inset-0 z-40 hidden md:hidden">
           <div id="drawerBackdrop" class="absolute inset-0 bg-black/60"></div>
-          <div class="absolute left-0 top-0 h-full w-[86vw] max-w-sm border-r border-white/10 bg-slate-950 shadow-soft">
-            <div class="flex items-center justify-between border-b border-white/10 px-4 py-3">
+          <div id="drawerPanel" class="absolute left-0 top-0 flex h-full max-h-screen w-[86vw] max-w-sm flex-col border-r border-white/10 bg-[#2f3348] shadow-soft">
+            <div class="flex flex-shrink-0 items-center justify-between border-b border-white/10 px-4 py-3">
               <div class="text-sm font-semibold tracking-wide text-slate-100">导航</div>
               <button id="drawerClose" type="button" class="rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-sm text-slate-100 hover:bg-white/10">
                 关闭
               </button>
             </div>
-            <div class="px-4 py-4">
-              <details class="nav-group" open>
-                <summary class="nav-group-title">Python</summary>
-                <nav class="mt-2 space-y-1">
-                  <a class="nav-link" data-src="page/Python.html" href="page/Python.html">Python 基础与进阶</a>
-                </nav>
-              </details>
-              <details class="nav-group" open>
-                <summary class="nav-group-title">数据库</summary>
-                <nav class="mt-2 space-y-1">
-                  <a class="nav-link" data-src="page/Postgresql.html" href="page/Postgresql.html">PostgreSQL 高频面试</a>
-                  <a class="nav-link" data-src="page/Redis.html" href="page/Redis.html">Redis 高频面试</a>
-                </nav>
-              </details>
-              <details class="nav-group" open>
-                <summary class="nav-group-title">后端</summary>
-                <nav class="mt-2 space-y-1">
-                  <a class="nav-link" data-src="page/Fastapi.html" href="page/Fastapi.html">FastAPI 体系</a>
-                  <a class="nav-link" data-src="page/celery-lifecycle.html" href="page/celery-lifecycle.html">Celery 生命周期</a>
-                  <a class="nav-link" data-src="page/Distributed.html" href="page/Distributed.html">分布式专题</a>
-                </nav>
-              </details>
+            <div id="drawerInner" class="flex min-h-0 flex-1 flex-col px-4 py-4">
+              <div class="mb-3 flex flex-shrink-0 gap-2">
+                <button type="button" data-nav-action="expand" data-nav-target="#mobileDrawer" aria-label="全部展开" title="全部展开" class="inline-flex h-7 w-7 items-center justify-center rounded-md text-slate-300 hover:bg-white/10">
+                  <svg viewBox="0 0 20 20" fill="none" class="h-3.5 w-3.5" aria-hidden="true">
+                    <path d="M5 7h10M5 10h10M5 13h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                    <path d="M10 4v12M7 7l3-3 3 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                </button>
+                <button type="button" data-nav-action="collapse" data-nav-target="#mobileDrawer" aria-label="全部折叠" title="全部折叠" class="inline-flex h-7 w-7 items-center justify-center rounded-md text-slate-300 hover:bg-white/10">
+                  <svg viewBox="0 0 20 20" fill="none" class="h-3.5 w-3.5" aria-hidden="true">
+                    <path d="M5 7h10M5 10h10M5 13h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                    <path d="M7 13l3 3 3-3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                </button>
+              </div>
+              <div class="mb-3 flex-shrink-0 border-b border-white/25 shadow-[0_1px_0_rgba(255,255,255,0.06)]"></div>
+              <div id="drawerNav" class="min-h-0 flex-1 overflow-y-auto overscroll-contain pb-[env(safe-area-inset-bottom,0px)]">
+                <details class="nav-group" open>
+                  <summary class="nav-group-title">Python</summary>
+                  <nav class="mt-2 space-y-1">
+                    <a class="nav-link" data-src="page/Python.html" href="page/Python.html">Python基础</a>
+                  </nav>
+                </details>
+                <details class="nav-group" open>
+                  <summary class="nav-group-title">数据库</summary>
+                  <nav class="mt-2 space-y-1">
+                    <a class="nav-link" data-src="page/Postgresql.html" href="page/Postgresql.html">PostgreSQL基础</a>
+                    <a class="nav-link" data-src="page/Redis.html" href="page/Redis.html">Redis基础</a>
+                  </nav>
+                </details>
+                <details class="nav-group" open>
+                  <summary class="nav-group-title">后端</summary>
+                  <nav class="mt-2 space-y-1">
+                    <a class="nav-link" data-src="page/Fastapi.html" href="page/Fastapi.html">FastAPI基础</a>
+                    <a class="nav-link" data-src="page/celery-lifecycle.html" href="page/celery-lifecycle.html">Celery基础</a>
+                    <a class="nav-link" data-src="page/Distributed.html" href="page/Distributed.html">分布式基础</a>
+                  </nav>
+                </details>
+                <details class="nav-group" open>
+                  <summary class="nav-group-title">Agent</summary>
+                  <nav class="mt-2 space-y-1">
+                    <a class="nav-link" data-src="page/LLM.html" href="page/LLM.html">LLM原理</a>
+                    <a class="nav-link" data-src="page/PromptEngineering.html" href="page/PromptEngineering.html">提示词工程</a>
+                    <a class="nav-link" data-src="page/RAG.html" href="page/RAG.html">RAG</a>
+                    <a class="nav-link" data-src="page/LangChain.html" href="page/LangChain.html">LangChain</a>
+                  </nav>
+                </details>
+              </div>
             </div>
           </div>
         </div>
 
         <!-- Content -->
         <main class="min-w-0 flex-1">
-          <div class="h-[calc(100vh-0px)] px-0 py-0 md:px-0 md:py-0">
+          <div id="contentViewport" class="relative h-[calc(100vh-0px)] px-0 py-0 md:px-0 md:py-0">
             <iframe
               id="contentFrame"
               title="content"
-              class="h-screen w-full bg-slate-950"
-              src="page/Python.html"
+              class="h-screen w-full bg-[#2f3348]"
+              src="about:blank"
             ></iframe>
+            <div id="frameMask" class="pointer-events-none absolute inset-0 bg-[#2f3348] opacity-0 transition-opacity duration-150"></div>
           </div>
         </main>
       </div>
     </div>
   </div>
+  <!-- themeToggle moved into sidebar header -->
 
   <style>
+    html, body {
+      transition: background-color 180ms ease, color 180ms ease;
+    }
+
+    /* Allow nav sections to scroll when content exceeds viewport (header保持固定) */
+    #sidebarNav {
+      scrollbar-width: thin;
+      scrollbar-color: rgba(148, 163, 184, 0.7) transparent;
+    }
+
+    #sidebarNav::-webkit-scrollbar {
+      width: 6px;
+    }
+    #sidebarNav::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    #sidebarNav::-webkit-scrollbar-thumb {
+      background: rgba(148, 163, 184, 0.7);
+      border-radius: 999px;
+    }
+
+    #drawerNav {
+      scrollbar-width: thin;
+      scrollbar-color: rgba(148, 163, 184, 0.7) transparent;
+    }
+    #drawerNav::-webkit-scrollbar {
+      width: 6px;
+    }
+    #drawerNav::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    #drawerNav::-webkit-scrollbar-thumb {
+      background: rgba(148, 163, 184, 0.7);
+      border-radius: 999px;
+    }
+
+    html[data-theme="light"] body {
+      background: #faf9f5;
+      color: #334155;
+    }
+
+    html[data-theme="light"] header.sticky {
+      border-color: rgba(15, 23, 42, 0.14);
+      background: rgba(250, 249, 245, 0.9);
+    }
+
+    html[data-theme="light"] #sidebar,
+    html[data-theme="light"] #drawerPanel,
+    html[data-theme="light"] #drawerPanel > div:first-child {
+      border-color: rgba(15, 23, 42, 0.14);
+    }
+
+    /* Light mode: make divider lines inside panels visible */
+    html[data-theme="light"] #sidebar .border-b,
+    html[data-theme="light"] #drawerPanel .border-b {
+      border-color: rgba(15, 23, 42, 0.16) !important;
+    }
+
+    html[data-theme="light"] #drawerPanel {
+      background: #faf9f5;
+      box-shadow: 0 12px 32px rgba(15, 23, 42, 0.12);
+    }
+
+    html[data-theme="light"] #frameMask {
+      background: #faf9f5;
+    }
+
+    html[data-theme="light"] #splitter {
+      background: rgba(15, 23, 42, 0.14);
+    }
+
+    html[data-theme="light"] .text-slate-100,
+    html[data-theme="light"] .text-slate-200,
+    html[data-theme="light"] .text-slate-300 {
+      color: rgb(51 65 85 / 1) !important;
+    }
+
     .nav-group {
       margin-top: 14px;
     }
@@ -155,7 +300,6 @@
       list-style: none;
       font-size: 11px;
       font-weight: 700;
-      text-transform: uppercase;
       letter-spacing: 0.12em;
       color: rgba(148, 163, 184, 0.95);
       padding: 6px 6px;
@@ -218,6 +362,24 @@
       background: rgba(56, 189, 248, 0.9);
       box-shadow: 0 0 14px rgba(56, 189, 248, 0.25);
     }
+
+    html[data-theme="light"] .nav-group-title {
+      color: rgba(71, 85, 105, 0.96);
+    }
+
+    html[data-theme="light"] .nav-group-title::after {
+      color: rgba(71, 85, 105, 0.9);
+    }
+
+    html[data-theme="light"] .nav-link {
+      color: rgba(30, 41, 59, 0.92);
+    }
+
+    html[data-theme="light"] .nav-link:hover,
+    html[data-theme="light"] .nav-link[data-active="true"] {
+      background: rgba(15, 23, 42, 0.06);
+      color: rgba(30, 41, 59, 1);
+    }
   </style>
 
   <script>
@@ -226,6 +388,130 @@
     const splitRoot = document.getElementById("splitRoot");
     const splitter = document.getElementById("splitter");
     const sidebar = document.getElementById("sidebar");
+    const themeToggle = document.getElementById("themeToggle");
+    const frameMask = document.getElementById("frameMask");
+    let activeNavTitle = "";
+    const LAST_PAGE_KEY = "notes.lastPage";
+    const THEME_KEY = "notes.theme";
+    const NAV_GROUPS_KEY = "notes.navGroupsOpen.v1";
+
+    function readNavGroupState(root) {
+      const state = {};
+      if (!root) return state;
+      root.querySelectorAll("details.nav-group").forEach((d) => {
+        const t = d.querySelector(".nav-group-title")?.textContent?.trim() || "";
+        if (t) state[t] = d.open;
+      });
+      return state;
+    }
+
+    function applyNavGroupState(state) {
+      ["#sidebarNav", "#drawerNav"].forEach((sel) => {
+        const r = document.querySelector(sel);
+        if (!r) return;
+        r.querySelectorAll("details.nav-group").forEach((d) => {
+          const t = d.querySelector(".nav-group-title")?.textContent?.trim() || "";
+          if (t && Object.prototype.hasOwnProperty.call(state, t)) d.open = !!state[t];
+        });
+      });
+    }
+
+    function persistNavGroupState() {
+      try {
+        const state = readNavGroupState(document.getElementById("sidebarNav"));
+        if (Object.keys(state).length) localStorage.setItem(NAV_GROUPS_KEY, JSON.stringify(state));
+      } catch (_) {}
+    }
+
+    function restoreNavGroupState() {
+      try {
+        const raw = localStorage.getItem(NAV_GROUPS_KEY);
+        if (!raw) return;
+        const state = JSON.parse(raw);
+        if (!state || typeof state !== "object") return;
+        applyNavGroupState(state);
+      } catch (_) {}
+    }
+
+    function onNavGroupToggle(e) {
+      const detailsEl = e.target;
+      if (!(detailsEl instanceof HTMLDetailsElement) || !detailsEl.matches("details.nav-group")) return;
+      const root = detailsEl.closest("#sidebarNav, #drawerNav");
+      if (!root) return;
+      const state = readNavGroupState(root);
+      applyNavGroupState(state);
+      persistNavGroupState();
+    }
+
+    function normalizeSrc(src) {
+      try {
+        const u = new URL(src, window.location.href);
+        return `${u.pathname}${u.search}${u.hash}`;
+      } catch (_) {
+        return src || "";
+      }
+    }
+
+    function applyThemeToFrame(theme) {
+      try {
+        const doc = frame.contentDocument;
+        if (!doc) return;
+        const bg = theme === "light" ? "#faf9f5" : "#2f3348";
+        doc.documentElement.style.backgroundColor = bg;
+        doc.body.style.backgroundColor = bg;
+        const STYLE_ID = "notes-host-theme-override";
+        let styleEl = doc.getElementById(STYLE_ID);
+        if (!styleEl) {
+          styleEl = doc.createElement("style");
+          styleEl.id = STYLE_ID;
+          doc.head?.appendChild(styleEl);
+        }
+        if (theme === "light") {
+          styleEl.textContent = `
+            html, body { color: #334155 !important; background: #faf9f5 !important; }
+            .text-slate-100, .text-slate-200, .text-slate-300, .text-slate-400 { color: #334155 !important; }
+            .content p, .content li, .content code, .content td, .content th { color: #334155 !important; }
+            .content pre { background: #f3f0e7 !important; color: #334155 !important; border-color: rgba(15,23,42,0.12) !important; }
+            .content code { background: #f3f0e7 !important; border-color: rgba(15,23,42,0.12) !important; }
+            .content details, .qa-list > details, .content table, details { border-color: rgba(15,23,42,0.2) !important; }
+            .qa-list > details > summary::after { color: rgba(51,65,85,0.92) !important; }
+          `;
+        } else {
+          styleEl.textContent = "";
+        }
+      } catch (_) {}
+    }
+
+    function setThemeIcon(theme) {
+      if (!themeToggle) return;
+      if (theme === "light") {
+        themeToggle.title = "切换深色主题";
+        themeToggle.setAttribute("aria-label", "切换深色主题");
+        themeToggle.innerHTML = `
+          <svg viewBox="0 0 20 20" fill="none" class="h-4 w-4" aria-hidden="true">
+            <path d="M13.8 13.8a6.5 6.5 0 1 1-7.6-7.6 5.5 5.5 0 1 0 7.6 7.6Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
+          </svg>
+        `;
+      } else {
+        themeToggle.title = "切换浅色主题";
+        themeToggle.setAttribute("aria-label", "切换浅色主题");
+        themeToggle.innerHTML = `
+          <svg viewBox="0 0 20 20" fill="none" class="h-4 w-4" aria-hidden="true">
+            <circle cx="10" cy="10" r="3.5" stroke="currentColor" stroke-width="1.5"/>
+            <path d="M10 2.5v2M10 15.5v2M2.5 10h2M15.5 10h2M4.7 4.7l1.4 1.4M13.9 13.9l1.4 1.4M15.3 4.7l-1.4 1.4M6.1 13.9l-1.4 1.4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+          </svg>
+        `;
+      }
+    }
+
+    function applyTheme(theme) {
+      const next = theme === "light" ? "light" : "dark";
+      document.documentElement.setAttribute("data-theme", next);
+      frame.style.backgroundColor = next === "light" ? "#faf9f5" : "#2f3348";
+      setThemeIcon(next);
+      applyThemeToFrame(next);
+      try { localStorage.setItem(THEME_KEY, next); } catch (_) {}
+    }
 
     function setActiveBySrc(src) {
       for (const a of navLinks) {
@@ -236,8 +522,19 @@
 
     function navigate(a) {
       const src = a.getAttribute("data-src") || a.getAttribute("href");
+      const current = normalizeSrc(frame.getAttribute("src") || frame.src);
+      const next = normalizeSrc(src);
+      if (current === next) {
+        setActiveBySrc(src);
+        return;
+      }
+      activeNavTitle = (a.textContent || "").trim();
+      if (frameMask) frameMask.style.opacity = "1";
       frame.src = src;
       setActiveBySrc(src);
+      try {
+        localStorage.setItem(LAST_PAGE_KEY, src);
+      } catch (_) {}
     }
 
     for (const a of navLinks) {
@@ -249,14 +546,47 @@
       });
     }
 
-    // Initial active state
-    setActiveBySrc(frame.getAttribute("src"));
+    // Initial active state (restore last visited page if available)
+    let initialSrc = frame.getAttribute("src");
+    try {
+      const saved = localStorage.getItem(LAST_PAGE_KEY);
+      if (saved) {
+        frame.src = saved;
+        initialSrc = saved;
+      }
+    } catch (_) {}
+    setActiveBySrc(initialSrc);
+    const initialActive = navLinks.find((a) => a.getAttribute("data-src") === initialSrc);
+    activeNavTitle = (initialActive?.textContent || "").trim();
+
+    restoreNavGroupState();
+    document.getElementById("sidebarNav")?.addEventListener("toggle", onNavGroupToggle, true);
+    document.getElementById("drawerNav")?.addEventListener("toggle", onNavGroupToggle, true);
 
     function cleanupLoadedPage() {
       try {
         const doc = frame.contentDocument;
         if (!doc) return;
         doc.querySelectorAll(".page-updated").forEach((el) => el.remove());
+        const h1 = doc.querySelector("h1");
+        if (h1 && activeNavTitle) {
+          h1.textContent = activeNavTitle;
+          h1.style.textAlign = "center";
+        }
+        try {
+          if (frame.src) {
+            const u = new URL(frame.src, window.location.href);
+            if (u.origin === window.location.origin) {
+              localStorage.setItem(LAST_PAGE_KEY, `${u.pathname}${u.search}${u.hash}`);
+            }
+          }
+        } catch (_) {}
+        applyThemeToFrame(document.documentElement.getAttribute("data-theme") || "dark");
+        if (frameMask) {
+          requestAnimationFrame(() => {
+            frameMask.style.opacity = "0";
+          });
+        }
       } catch (_) {
         // ignore cross-origin/permission issues
       }
@@ -342,6 +672,38 @@
     if (navToggle) navToggle.addEventListener("click", openDrawer);
     if (drawerClose) drawerClose.addEventListener("click", closeDrawer);
     if (drawerBackdrop) drawerBackdrop.addEventListener("click", closeDrawer);
+
+    const savedTheme = (() => {
+      try {
+        return localStorage.getItem(THEME_KEY);
+      } catch (_) {
+        return null;
+      }
+    })();
+    applyTheme(savedTheme === "light" ? "light" : "dark");
+    if (themeToggle) {
+      themeToggle.addEventListener("click", () => {
+        const current = document.documentElement.getAttribute("data-theme");
+        applyTheme(current === "light" ? "dark" : "light");
+      });
+    }
+
+    // Batch expand/collapse nav groups（桌面与抽屉同步，并持久化）
+    function setNavGroupsOpen(_containerSelector, isOpen) {
+      document.querySelectorAll("#sidebarNav details.nav-group, #drawerNav details.nav-group").forEach((el) => {
+        el.open = isOpen;
+      });
+      persistNavGroupState();
+    }
+
+    document.querySelectorAll("[data-nav-action]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const action = btn.getAttribute("data-nav-action");
+        const target = btn.getAttribute("data-nav-target");
+        if (!target) return;
+        setNavGroupsOpen(target, action === "expand");
+      });
+    });
   </script>
 </body>
 </html>
