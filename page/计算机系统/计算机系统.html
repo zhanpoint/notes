@@ -1,0 +1,267 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>计算机系统</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="../../assets/page-tailwind.css" />
+  <link rel="stylesheet" href="../../assets/svg-diagrams.css" />
+  <script defer src="../../assets/page-shell.js"></script>
+</head>
+<body>
+  <div class="container">
+    <header class="page-head">
+      <h1>计算机系统</h1>
+    </header>
+
+    <section class="qa-list">
+      <details>
+        <summary>1. window &amp; linux 多进程机制</summary>
+        <div class="content">
+          <h3>1. 进程创建机制：Fork vs. Spawn</h3>
+          <div class="tw-scroll-x"><table>
+          <thead>
+          <tr>
+          <th><b>特性</b></th>
+          <th><b>Linux / macOS (fork)</b></th>
+          <th><b>Windows (spawn)</b></th>
+          </tr>
+          </thead>
+          <tbody>
+          <tr>
+          <td><b>创建速度</b></td>
+          <td><b>极快</b>。利用“写时复制”技术。</td>
+          <td><b>较慢</b>。需启动全新的 Python 解释器。</td>
+          </tr>
+          <tr>
+          <td><b>初始状态</b></td>
+          <td>父进程的<b>镜像副本</b>（包含内存、变量）。</td>
+          <td><b>空白状态</b>。需重新加载模块、初始化环境。</td>
+          </tr>
+          <tr>
+          <td><b>内存占用</b></td>
+          <td><b>低</b>。初始阶段与父进程共享物理内存。</td>
+          <td><b>高</b>。每个子进程都有独立的内存消耗。</td>
+          </tr>
+          <tr>
+          <td><b>数据传递</b></td>
+          <td>直接访问父进程资源（逻辑隔离，物理共享）。</td>
+          <td>必须通过 <b>Pickle 序列化</b>进行 IPC 通信。</td>
+          </tr>
+          </tbody>
+          </table></div>
+          <hr />
+          <h3>2. 核心技术：写时复制 (Copy-on-Write, COW)</h3>
+          <p><code>fork</code> 所谓的“内存共享”本质上是一种<b>延迟拷贝</b>的策略：</p>
+          <ul>
+          <li>
+          <p><b>初始阶段（假共享）</b>：父子进程的虚拟地址指向同一块<b>只读</b>物理内存，创建过程几乎不耗时。</p>
+          </li>
+          <li>
+          <p><b>触发阶段（页错误）</b>：当任意进程尝试<b>修改</b>内存时，CPU 触发中断。</p>
+          </li>
+          <li>
+          <p><b>执行阶段（真隔离）</b>：内核仅为被修改的那一页数据分配新物理空间并复制内容。</p>
+          </li>
+          <li>
+          <p><b>优势</b>：极大减少了不必要的内存拷贝，提升了系统响应速度。</p>
+          </li>
+          </ul>
+          <hr />
+          <h3>3. 性能差距的实际影响</h3>
+          <ul>
+          <li>
+          <p><b>启动开销</b>：在 Windows 上，频繁创建/销毁进程（如处理大量小任务）会导致严重的性能抖动。在 Linux 上，进程创建的廉价性使其更接近线程的体验。</p>
+          </li>
+          <li>
+          <p><b>序列化限制</b>：<code>spawn</code> 要求所有传递的参数必须可序列化（Picklable）。如果对象涉及复杂的 C 扩展或未绑定的方法，在 Windows 上会报错，而在 Linux 上则能直接运行。</p>
+          </li>
+          </ul>
+          <hr />
+          <h3>4. 跨平台最佳实践（避坑指南）</h3>
+          <h4>🛡️ <code>if __name__ == '__main__':</code> 保护块</h4>
+          <ul>
+          <li>
+          <p><b>原因</b>：Windows 的 <code>spawn</code> 会重新导入主模块。如果没有此保护块，子进程导入时会再次触发创建子进程的代码，导致<b>无限递归循环</b>。</p>
+          </li>
+          <li>
+          <p><b>结论</b>：无论在什么平台，始终将启动代码放入此块中是标准规范。</p>
+          </li>
+          </ul>
+          <h4>🚀 任务量级匹配</h4>
+          <ul>
+          <li>
+          <p><b>短平快任务</b>：在 Windows 上避免使用多进程，启动开销可能远超计算耗时。</p>
+          </li>
+          <li>
+          <p><b>长耗时任务</b>：多进程在两平台均能显著提升性能。</p>
+          </li>
+          </ul>
+          <hr />
+          <h3>5. 总结比喻</h3>
+          <ul>
+          <li>
+          <p><b>Linux (fork)</b> 像<b>细胞分裂</b>：瞬间一分为二，初始状态一模一样，只有后续生长（修改数据）时才各过各的。</p>
+          </li>
+          <li>
+          <p><b>Windows (spawn)</b> 像<b>克隆工厂</b>：重新建一个工厂（解释器），再把图纸（数据）打包快递（序列化）过去。</p>
+          </li>
+          </ul>
+        </div>
+      </details>
+      <details>
+        <summary>2. 进程，线程，事件循环，协程</summary>
+        <div class="content">
+          <h3>进程（Process）</h3>
+          <ul>
+          <li><b>作用</b>：操作系统级“隔离的执行单元”。提供独立的内存空间、文件描述符表、资源隔离与崩溃隔离。  </li>
+          <li><b>执行范围</b>：一个进程内包含自己的地址空间与资源；进程之间默认不共享内存（需要 IPC/共享内存等）。</li>
+          <li><b>执行数量</b>：一个程序可起 <b>多个进程</b>；常见 Web 部署用 “N 个 worker 进程” 来利用多核与隔离故障。</li>
+          <li><b>执行流程（概念）</b>：<ul>
+          <li>OS 创建进程 → 装载程序 → 分配资源 → 进程内启动一个或多个线程运行代码 → 进程结束释放资源。</li>
+          </ul>
+          </li>
+          </ul>
+          <hr />
+          <h3>线程（Thread）</h3>
+          <ul>
+          <li><b>作用</b>：进程内的“并发执行单元”。线程共享进程内存与大部分资源，用于并发执行或隐藏 I/O 等待。  </li>
+          <li><b>执行范围</b>：同一进程的线程共享堆/全局变量/打开的文件等；每个线程有自己的栈与寄存器上下文。</li>
+          <li><b>执行数量</b>：一个进程可有 <b>多个线程</b>。  <ul>
+          <li>Python 里线程能并发做 I/O；但 <b>CPU 密集并行</b>受 GIL 影响（同一进程内同一时刻通常只有一个线程在执行 Python 字节码）。</li>
+          </ul>
+          </li>
+          <li><b>执行流程（概念）</b>：<ul>
+          <li>线程创建 → OS 调度线程时间片 → 线程运行/阻塞/唤醒 → 上下文切换 → 线程退出。</li>
+          </ul>
+          </li>
+          </ul>
+          <hr />
+          <h3>事件循环（Event Loop）</h3>
+          <ul>
+          <li><b>作用</b>：在<b>单个线程</b>中，用“调度 + 轮询 I/O 就绪事件”的方式，驱动大量并发的异步任务。  </li>
+          <li><b>执行范围</b>：通常 <b>一个事件循环绑定一个线程</b>（最常见）。该线程负责：<ul>
+          <li>运行协程的“继续执行片段”</li>
+          <li>等待/处理 I/O 就绪（socket、定时器等）</li>
+          <li>调度回调/任务切换</li>
+          </ul>
+          </li>
+          <li><b>执行数量</b>：常见是：<ul>
+          <li>每个进程 1 个事件循环（Web 服务器 worker 模型里很常见）</li>
+          <li>也可以一个进程多个事件循环（分别在不同线程里），但复杂度更高。</li>
+          </ul>
+          </li>
+          <li><b>执行流程（概念）</b>：<ul>
+          <li>循环开始 → 取出“可运行任务”执行一小段 → 遇到 <code>await</code>/I/O 等待则挂起任务 → 轮询 I/O 就绪与定时器 → 就绪后恢复对应任务 → 反复。</li>
+          </ul>
+          </li>
+          </ul>
+          <hr />
+          <h3>协程（Coroutine / async task）</h3>
+          <ul>
+          <li><b>作用</b>：是一种可中断且可恢复的特殊函数,它不像普通函数那样“一走到底”，而是在执行到特定标记（如 <code>await</code>）时，将当前状态（变量、执行位置）挂起，并将控制权交还给事件循环（Event Loop）,这种挂起是非阻塞的，保存的上下文让它能在稍后被事件循环重新唤醒并从断点继续。</li>
+          <li><b>执行范围</b>：协程<b>不由 OS 直接调度</b>，而是由<b>事件循环</b>所在某个线程里调度执行。协程的代码始终运行在“承载它的事件循环线程”上（除非显式丢到线程池/进程池）。</li>
+          <li><b>执行数量</b>：通常可以是 <b>成千上万</b>（远多于线程）。具体受内存、连接数、任务结构影响。</li>
+          <li><b>执行流程（概念）</b>：<ul>
+          <li>创建协程对象 → 被事件循环包装成 Task → 运行到第一个 <code>await</code> 前的同步段 → <code>await</code> 时挂起并注册等待条件（I/O/定时器/另一个任务）→ 条件满足后继续执行 → 结束返回结果/异常。</li>
+          </ul>
+          </li>
+          </ul>
+          <h3>时间循环与协程注意点：</h3>
+          <ul>
+          <li>
+          <p><b>Event Loop 的最小单位</b>：事件循环不直接调度“协程对象”，它调度的是 <b>Task（任务）</b>。</p>
+          </li>
+          <li>
+          <p><b>await coroutine（伪异步/同步等待）</b>： 如果你直接 <code>await func()</code>，当前协程会停下来<b>原地等待</b> <code>func</code> 执行完。虽然它在事件循环里，但并没有产生“并发”效果，依然是线性顺序。</p>
+          </li>
+          <li>
+          <p><b>await task（真正的并发）</b>： 当你使用 <code>asyncio.create_task(coro)</code> 时，协程被包装成 Task 并<b>立即</b>注册到事件循环的就绪队列中。此时，Task 已经开始独立排队执行。当你随后 <code>await task</code> 时，你只是在检查它的运行结果，而在此之前，它可能已经利用你处理其他逻辑的时间运行了一半。</p>
+          </li>
+          </ul>
+          <div class="tw-scroll-x"><table>
+          <thead>
+          <tr>
+          <th><b>特性</b></th>
+          <th><b>进程/线程 (Process/Thread)</b></th>
+          <th><b>协程 (Coroutine)</b></th>
+          </tr>
+          </thead>
+          <tbody>
+          <tr>
+          <td><b>调度权</b></td>
+          <td><b>操作系统 (OS)</b> 强制掌控。</td>
+          <td><b>程序代码 (User)</b> 自主掌控。</td>
+          </tr>
+          <tr>
+          <td><b>切换方式</b></td>
+          <td><b>抢占式 (Preemptive)</b>：OS 定时器强制中断当前线程（如 GIL 的 5ms 切换）。</td>
+          <td><b>协作式 (Cooperative)</b>：通过 <code>await</code> 明确表示“我现在没空，控制权还你”。</td>
+          </tr>
+          <tr>
+          <td><b>上下文切换开销</b></td>
+          <td><b>高</b>：涉及内核态切换、寄存器与栈的大规模保存。</td>
+          <td><b>极低</b>：仅是简单的函数跳转和对象状态保存。</td>
+          </tr>
+          <tr>
+          <td><b>并发模型</b></td>
+          <td>适合 <b>CPU 密集型</b>（多进程）。</td>
+          <td>适合 <b>I/O 密集型</b>（单线程高并发）。</td>
+          </tr>
+          </tbody>
+          </table></div>
+          <hr />
+          <h3>把四者放在一起看</h3>
+          <ul>
+          <li>
+          <p><b>层级关系</b>：<br />
+          <b>进程</b>（隔离与多核）<br />
+            └── <b>线程</b>（进程内并发；其中一个通常跑事件循环）<br />
+                └── <b>事件循环</b>（调度中心，通常 1 个线程 1 个 loop）<br />
+                    └── <b>协程/Task</b>（海量并发的请求处理单元）</p>
+          </li>
+          <li>
+          <p><b>关键结论</b>：  </p>
+          <ul>
+          <li>协程并发的前提是：<b>事件循环线程不能被阻塞</b>。  </li>
+          <li>所以同步阻塞 I/O 或 CPU 重活要么用<b>异步驱动</b>（让 <code>await</code> 生效），要么丢到<b>线程池/进程池/任务队列</b>，避免把事件循环“卡死”。</li>
+          </ul>
+          </li>
+          </ul>
+          <hr />
+          <h1>注意：</h1>
+          <p><b>1. 事件循环是绑定到线程上的</b>。 
+          “每个进程 1 个事件循环”是工程实践里的<b>常见部署形态</b>，不是说事件循环“绑定到进程”。</p>
+          <p>更精确的表述应该是：
+          - <b>每个进程里通常只有 1 个“事件循环线程”</b><br />
+          - 因为事件循环需要跑在某个线程上，所以就表现为：<b>每个 worker 进程内部有一个线程在跑一个事件循环</b></p>
+          <p>也就是：</p>
+          <blockquote>
+          <p><b>1 进程 →（通常）1 线程跑 event loop → 这个 loop 调度该进程内的所有协程</b></p>
+          </blockquote>
+          <hr />
+          <p><b>2. 为什么会有人说“每个进程一个事件循环”？</b></p>
+          <p>在 Web 服务器常见模型里（例如 uvicorn/gunicorn worker）：</p>
+          <ul>
+          <li>你会起多个 <b>worker 进程</b>（为了多核利用、隔离、稳定性）</li>
+          <li>每个 worker 进程内部，为了简单和高性能，通常只用 <b>一个主线程</b> 跑 <b>一个 event loop</b></li>
+          <li>所以口头上就简化成“每个进程一个 event loop”</li>
+          </ul>
+          <hr />
+          <p><b>3. 能不能“一个进程多个事件循环”？</b></p>
+          <p>可以，但要满足绑定关系：</p>
+          <ul>
+          <li><b>一个线程最多跑一个 event loop</b></li>
+          <li>所以 <b>一个进程多个 event loop</b> 意味着：这个进程里必须有 <b>多个线程</b>，每个线程各跑一个 loop</li>
+          </ul>
+          <p>这种做法在 Python Web 服务里不常见，因为：
+          - 增加复杂度（跨线程共享状态、连接池、上下文）
+          - 很多库的使用方式默认“单 loop 单线程”更简单可靠
+          - 更常见的扩展方式是：<b>多进程</b>（worker 数）而不是“多 loop 多线程</p>
+        </div>
+      </details>
+    </section>
+  </div>
+</body>
+</html>

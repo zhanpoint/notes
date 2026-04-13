@@ -3,30 +3,18 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Celery 生产环境全流程调用链</title>
+  <title>任务队列</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="stylesheet" href="../assets/page-tailwind.css" />
-  <link rel="stylesheet" href="../assets/flow-pages.css" />
+  <link rel="stylesheet" href="../../assets/page-tailwind.css" />
+  <link rel="stylesheet" href="../../assets/flow-pages.css" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Source+Han+Sans+CN:wght@300;400;600;700&display=swap" rel="stylesheet" />
 </head>
 <body>
-  <header>
-    <div>
-      <h1>Celery 异步任务全生命周期调用链</h1>
-      <p class="page-updated">最后更新：2026-03-26</p>
-      <p>
-        生产环境下一个异步任务从“出生”到“消亡”的完整旅程：由客户端触发，进入 Broker 队列，
-        被 Worker 执行并写入 ResultBackend，最终由客户端查询结果。
-      </p>
-    </div>
-    <div class="legend">
-      <span><i class="legend-dot--client"></i>Client</span>
-      <span><i class="legend-dot--broker"></i>Broker</span>
-      <span><i class="legend-dot--worker"></i>Worker</span>
-      <span><i class="legend-dot--backend"></i>ResultBackend</span>
-    </div>
+  <header class="flow-page-header--center">
+    <h1>任务队列</h1>
+    <p class="page-updated">最后更新：2026-03-26</p>
   </header>
 
   <section class="canvas" id="flowCanvas">
@@ -432,6 +420,32 @@
                   </ul>
                 </li>
               </ul>
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="index">3</div>
+        <div>
+          <strong>Q3：<code>delay</code> 与 <code>apply_async</code> 区别？</strong>
+          <p><strong>A：</strong>可先对照 <a href="file:///D:/PKB/2.Interview/4.Docs/celery-lifecycle.html">Celery 全流程架构图</a> 理解任务从调用到入队的环节。<code>delay</code> 是 <code>apply_async</code> 的简化封装，适合<strong>不需要特殊执行配置</strong>的场景；要对路由、定时、队列等做<strong>精细化控制</strong>时用 <code>apply_async</code>。</p>
+          <ul>
+            <li><strong>1) <code>delay</code></strong>
+              <ul>
+                <li><strong>传参方式：</strong>直接像调用普通函数一样传参。</li>
+                <li><strong>局限性：</strong>不支持传递 Celery 的任务运行参数（如倒计时、指定队列等）。</li>
+                <li><strong>代码示例：</strong></li>
+              </ul>
+              <pre><code>add.delay(1, 2)</code></pre>
+            </li>
+            <li><strong>2) <code>apply_async</code></strong>
+              <ul>
+                <li><strong>传参方式：</strong>任务参数放在 <code>args</code>（list/tuple）或 <code>kwargs</code>（dict）中；执行相关选项（如 <code>countdown</code>、<code>queue</code>）作为关键字参数传入。</li>
+                <li><strong>核心功能：</strong>可实现路由决策、定时执行与执行策略自定义。</li>
+                <li><strong>代码示例：</strong></li>
+              </ul>
+              <pre><code>add.apply_async(args=[2, 2], countdown=10, queue='high_priority')</code></pre>
             </li>
           </ul>
         </div>

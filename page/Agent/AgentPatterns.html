@@ -1,0 +1,194 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Agent Patterns</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="../../assets/page-tailwind.css" />
+  <script defer src="../../assets/page-shell.js"></script>
+</head>
+<body>
+  <div class="container">
+    <header class="page-head">
+      <h1>Agent Patterns</h1>
+    </header>
+
+    <section class="content article-body">
+      <h3>一、基础控制流模式（Core Agent Patterns）</h3>
+
+      <h4>1. ReAct 模式（Reason + Act）</h4>
+      <p>最经典、也是当前产品里最常见的默认形态：模型在每一轮决定「再想一想」还是「调用某个工具」，把工具返回写进上下文后继续，直到给出最终答复或达到停止条件。</p>
+      <p><b>机制（论文与实现中的对应关系）：</b></p>
+      <ul>
+        <li><b>Thought</b>：推理下一步（有些实现把思考合并在 assistant 消息里，不单独展示）。</li>
+        <li><b>Action</b>：结构化工具调用（function / tool_calls）。</li>
+        <li><b>Observation</b>：工具结果作为新上下文（常建模为 tool 消息）。</li>
+        <li><b>循环</b>：直到模型不再请求工具或触发上限/策略。</li>
+      </ul>
+      <figure class="my-5 rounded-xl border border-white/10 bg-white/[0.04] p-4">
+        <svg viewBox="0 0 400 160" xmlns="http://www.w3.org/2000/svg" class="mx-auto h-auto max-w-full" aria-labelledby="svg-react-caption" role="img">
+          <title id="svg-react-caption">ReAct：Thought、Action、Observation 形成闭环</title>
+          <defs>
+            <marker id="arrowReAct" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+              <path d="M0,0 L8,4 L0,8 Z" fill="#7dd3fc" />
+            </marker>
+          </defs>
+          <rect x="20" y="48" width="100" height="44" rx="8" fill="#3b425d" stroke="#7dd3fc" stroke-width="1.5" />
+          <text x="70" y="74" text-anchor="middle" fill="#e2e8f0" font-size="13" font-family="system-ui,sans-serif">Thought</text>
+          <line x1="120" y1="70" x2="148" y2="70" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arrowReAct)" />
+          <rect x="150" y="48" width="100" height="44" rx="8" fill="#3b425d" stroke="#7dd3fc" stroke-width="1.5" />
+          <text x="200" y="74" text-anchor="middle" fill="#e2e8f0" font-size="13" font-family="system-ui,sans-serif">Action</text>
+          <line x1="250" y1="70" x2="278" y2="70" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arrowReAct)" />
+          <rect x="280" y="48" width="100" height="44" rx="8" fill="#3b425d" stroke="#7dd3fc" stroke-width="1.5" />
+          <text x="330" y="74" text-anchor="middle" fill="#e2e8f0" font-size="13" font-family="system-ui,sans-serif">Observation</text>
+          <path d="M330 48 Q 330 12 70 12 Q 20 12 20 48" fill="none" stroke="#38bdf8" stroke-width="1.5" stroke-dasharray="5 4" marker-end="url(#arrowReAct)" />
+          <text x="200" y="22" text-anchor="middle" fill="#94a3b8" font-size="11" font-family="system-ui,sans-serif">下一轮 / 直到结束</text>
+          <text x="200" y="138" text-anchor="middle" fill="#64748b" font-size="11" font-family="system-ui,sans-serif">OpenAI：多轮对话 + tools；LangChain：create_agent 封装同类循环</text>
+        </svg>
+        <figcaption class="mt-2 text-center text-xs text-slate-400">ReAct 闭环：观察结果写回上下文，模型再决定下一步。</figcaption>
+      </figure>
+      <p><b>特点：</b></p>
+      <ul>
+        <li>动态推理 + 工具调用，泛化好、接入快。</li>
+        <li>链路过长时易出现错误累积；需靠 <b>工具契约</b>、重试、护栏与评测兜底。</li>
+      </ul>
+      <p><b>适用：</b>问答、检索、API 调用、SQL/代码助手等「边想边查」的任务。</p>
+      <p><b>实践提示：</b> LangChain 文档将 <code>create_agent</code> 作为面向生产的 Agent 入口；旧版 LangGraph 预置 <code>create_react_agent</code> 在 v1 迁移中已被替代方向标注，新建项目宜跟官方迁移指南选型。</p>
+
+      <h4>2. Plan-and-Execute（规划-执行）</h4>
+      <p>把「要做什么」与「怎么做每一步」拆开：<b>Planner</b> 产出可检查的计划（步骤列表、子目标或 TODO），<b>Executor</b> 按序或按需执行，减少模型在每一步重复从零规划的开销。</p>
+      <p><b>结构：</b></p>
+      <ul>
+        <li><b>Planner</b>：生成任务计划（task list / 里程碑）。</li>
+        <li><b>Executor</b>：逐步执行，可将每步结果写回状态供重规划。</li>
+      </ul>
+      <figure class="my-5 rounded-xl border border-white/10 bg-white/[0.04] p-4">
+        <svg viewBox="0 0 420 150" xmlns="http://www.w3.org/2000/svg" class="mx-auto h-auto max-w-full" aria-labelledby="svg-plan-caption" role="img">
+          <title id="svg-plan-caption">规划与执行解耦</title>
+          <defs>
+            <marker id="arrowPlan" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+              <path d="M0,0 L8,4 L0,8 Z" fill="#a78bfa" />
+            </marker>
+          </defs>
+          <rect x="24" y="40" width="96" height="52" rx="8" fill="#3b425d" stroke="#a78bfa" stroke-width="1.5" />
+          <text x="72" y="72" text-anchor="middle" fill="#e2e8f0" font-size="13" font-family="system-ui,sans-serif">Planner</text>
+          <line x1="120" y1="66" x2="152" y2="66" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arrowPlan)" />
+          <rect x="156" y="28" width="120" height="76" rx="8" fill="#2f3650" stroke="#64748b" stroke-width="1.2" />
+          <text x="216" y="50" text-anchor="middle" fill="#cbd5e1" font-size="12" font-family="system-ui,sans-serif">Plan</text>
+          <text x="216" y="70" text-anchor="middle" fill="#94a3b8" font-size="11" font-family="system-ui,sans-serif">① → ② → ③</text>
+          <text x="216" y="90" text-anchor="middle" fill="#64748b" font-size="10" font-family="system-ui,sans-serif">状态可持久化</text>
+          <line x1="276" y1="66" x2="308" y2="66" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arrowPlan)" />
+          <rect x="312" y="40" width="96" height="52" rx="8" fill="#3b425d" stroke="#a78bfa" stroke-width="1.5" />
+          <text x="360" y="72" text-anchor="middle" fill="#e2e8f0" font-size="13" font-family="system-ui,sans-serif">Executor</text>
+          <path d="M360 108 L 360 128 L 72 128 L 72 92" fill="none" stroke="#64748b" stroke-width="1.2" stroke-dasharray="4 3" marker-end="url(#arrowPlan)" />
+          <text x="216" y="142" text-anchor="middle" fill="#64748b" font-size="10" font-family="system-ui,sans-serif">可选：失败或新信息时重规划</text>
+        </svg>
+        <figcaption class="mt-2 text-center text-xs text-slate-400">计划与执行分离；复杂任务常在状态中维护 TODO（如 Deep Agents 场景）。</figcaption>
+      </figure>
+      <p><b>特点：</b>更稳定、易插人审、易做进度展示；代价是至少多一轮规划调用与更复杂的状态设计。</p>
+      <p><b>适用：</b>多步骤编码、数据分析流水线、需向用户展示「任务清单」的长程任务。</p>
+      <p><b>实践提示：</b> 官方文档里与「结构化计划」相关的模式常和 <b>状态里的任务列表</b>、<b>图节点分工</b>一起出现；需要并行分支、重试与检查点时优先用图编排而非单循环硬写。</p>
+
+      <h4>3. Reflection / Self-Refine（自反思）</h4>
+      <p>在首轮答案之后增加 <b>Critic</b>（评审/打分/列缺陷）与 <b>Refine</b>（改写），可固定轮次或由停止条件触发。</p>
+      <p><b>流程：</b></p>
+      <ul>
+        <li>初次输出（draft）。</li>
+        <li>Critic：对照规格、测试、事实或风格约束给反馈。</li>
+        <li>Refine：根据反馈修订；可循环。</li>
+      </ul>
+      <figure class="my-5 rounded-xl border border-white/10 bg-white/[0.04] p-4">
+        <svg viewBox="0 0 400 130" xmlns="http://www.w3.org/2000/svg" class="mx-auto h-auto max-w-full" aria-labelledby="svg-reflect-caption" role="img">
+          <title id="svg-reflect-caption">自反思：生成、批评、优化</title>
+          <defs>
+            <marker id="arrowRef" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+              <path d="M0,0 L8,4 L0,8 Z" fill="#fbbf24" />
+            </marker>
+          </defs>
+          <rect x="16" y="36" width="88" height="48" rx="8" fill="#3b425d" stroke="#fbbf24" stroke-width="1.5" />
+          <text x="60" y="64" text-anchor="middle" fill="#e2e8f0" font-size="12" font-family="system-ui,sans-serif">Draft</text>
+          <line x1="104" y1="60" x2="128" y2="60" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arrowRef)" />
+          <rect x="132" y="36" width="88" height="48" rx="8" fill="#3b425d" stroke="#fbbf24" stroke-width="1.5" />
+          <text x="176" y="64" text-anchor="middle" fill="#e2e8f0" font-size="12" font-family="system-ui,sans-serif">Critic</text>
+          <line x1="220" y1="60" x2="244" y2="60" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arrowRef)" />
+          <rect x="248" y="36" width="88" height="48" rx="8" fill="#3b425d" stroke="#fbbf24" stroke-width="1.5" />
+          <text x="292" y="64" text-anchor="middle" fill="#e2e8f0" font-size="12" font-family="system-ui,sans-serif">Refine</text>
+          <path d="M292 36 Q 292 8 176 8 Q 60 8 60 36" fill="none" stroke="#78716c" stroke-width="1.2" stroke-dasharray="4 3" />
+          <text x="176" y="14" text-anchor="middle" fill="#78716c" font-size="10" font-family="system-ui,sans-serif">未达标则再迭代</text>
+          <line x1="336" y1="60" x2="352" y2="60" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arrowRef)" />
+          <rect x="356" y="36" width="40" height="48" rx="6" fill="#2f3650" stroke="#fbbf24" stroke-width="1.2" />
+          <text x="376" y="64" text-anchor="middle" fill="#e2e8f0" font-size="11" font-family="system-ui,sans-serif">Out</text>
+          <text x="190" y="118" text-anchor="middle" fill="#64748b" font-size="11" font-family="system-ui,sans-serif">适合代码/写作；注意 token 成本与「过度润色」</text>
+        </svg>
+        <figcaption class="mt-2 text-center text-xs text-slate-400">自反思：用独立评审提示或第二个调用扮演 Critic，再收敛到可交付输出。</figcaption>
+      </figure>
+      <p><b>特点：</b>质量上限更高；成本上升；评审标准设计不好会出现「为改而改」。</p>
+
+      <h4>4. Multi-Agent（多 Agent 协作）</h4>
+      <p>多个专用 Agent（或同一模型不同系统提示）分担角色，通过消息、共享状态或调度器协同。编排上常用 <b>层级</b>（主从）、<b>图</b>（条件边、并行）、或 <b>市场/拍卖式</b> 任务分配（研究向较多）。</p>
+      <p><b>典型角色：</b>Planner、Executor、Critic、Tool Agent（专精单一工具域）。</p>
+      <figure class="my-5 rounded-xl border border-white/10 bg-white/[0.04] p-4">
+        <svg viewBox="0 0 360 200" xmlns="http://www.w3.org/2000/svg" class="mx-auto h-auto max-w-full" aria-labelledby="svg-multi-caption" role="img">
+          <title id="svg-multi-caption">多 Agent：中心协调与专职工人</title>
+          <marker id="arrowMulti" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto">
+            <path d="M0,0 L7,3.5 L0,7 Z" fill="#34d399" />
+          </marker>
+          <circle cx="180" cy="56" r="36" fill="#3b425d" stroke="#34d399" stroke-width="1.5" />
+          <text x="180" y="52" text-anchor="middle" fill="#e2e8f0" font-size="12" font-family="system-ui,sans-serif">Orchestrator</text>
+          <text x="180" y="68" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="system-ui,sans-serif">或 Lead Agent</text>
+          <line x1="180" y1="92" x2="72" y2="130" stroke="#94a3b8" stroke-width="1.2" marker-end="url(#arrowMulti)" />
+          <line x1="180" y1="92" x2="180" y2="132" stroke="#94a3b8" stroke-width="1.2" marker-end="url(#arrowMulti)" />
+          <line x1="180" y1="92" x2="288" y2="130" stroke="#94a3b8" stroke-width="1.2" marker-end="url(#arrowMulti)" />
+          <rect x="28" y="136" width="88" height="40" rx="6" fill="#2f3650" stroke="#6ee7b7" stroke-width="1.2" />
+          <text x="72" y="160" text-anchor="middle" fill="#e2e8f0" font-size="11" font-family="system-ui,sans-serif">Executor</text>
+          <rect x="136" y="136" width="88" height="40" rx="6" fill="#2f3650" stroke="#6ee7b7" stroke-width="1.2" />
+          <text x="180" y="160" text-anchor="middle" fill="#e2e8f0" font-size="11" font-family="system-ui,sans-serif">Critic</text>
+          <rect x="244" y="136" width="88" height="40" rx="6" fill="#2f3650" stroke="#6ee7b7" stroke-width="1.2" />
+          <text x="288" y="160" text-anchor="middle" fill="#e2e8f0" font-size="11" font-family="system-ui,sans-serif">Tool Agent</text>
+          <path d="M72 176 Q 180 188 288 176" fill="none" stroke="#475569" stroke-width="1" stroke-dasharray="3 2" marker-end="url(#arrowMulti)" />
+          <text x="180" y="196" text-anchor="middle" fill="#64748b" font-size="10" font-family="system-ui,sans-serif">结果汇总 / 再决策</text>
+        </svg>
+        <figcaption class="mt-2 text-center text-xs text-slate-400">多 Agent：先分清「协调者」与「执行者」，再用图或消息总线约束调用关系。</figcaption>
+      </figure>
+      <p><b>特点：</b>边界清晰、易扩展；调试与观测成本显著上升，需要统一 trace（如 LangSmith）与清晰的消息协议。</p>
+      <p><b>实践提示：</b> LangGraph 适合把多节点协作落成可检查、可持久化的图；不要过早多 Agent——多数场景单 Agent + 好工具 + 好评测更划算。</p>
+
+      <h3>二、如何选型（简表）</h3>
+      <div class="my-4 overflow-x-auto rounded-lg border border-white/10">
+        <table class="w-full min-w-[280px] border-collapse text-left text-sm">
+          <thead>
+            <tr class="border-b border-white/10 bg-white/[0.06]">
+              <th class="px-3 py-2 font-semibold text-slate-200">模式</th>
+              <th class="px-3 py-2 font-semibold text-slate-200">优先解决</th>
+              <th class="px-3 py-2 font-semibold text-slate-200">主要代价</th>
+            </tr>
+          </thead>
+          <tbody class="text-slate-300">
+            <tr class="border-b border-white/5">
+              <td class="px-3 py-2">ReAct</td>
+              <td class="px-3 py-2">灵活工具调用、快速上线</td>
+              <td class="px-3 py-2">长链错误累积</td>
+            </tr>
+            <tr class="border-b border-white/5">
+              <td class="px-3 py-2">Plan-Execute</td>
+              <td class="px-3 py-2">长任务、可展示进度、可重规划</td>
+              <td class="px-3 py-2">状态与编排复杂度</td>
+            </tr>
+            <tr class="border-b border-white/5">
+              <td class="px-3 py-2">Reflection</td>
+              <td class="px-3 py-2">质量敏感输出</td>
+              <td class="px-3 py-2">延迟与 token</td>
+            </tr>
+            <tr>
+              <td class="px-3 py-2">Multi-Agent</td>
+              <td class="px-3 py-2">角色强分工、子域专精</td>
+              <td class="px-3 py-2">系统与观测复杂度</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+</body>
+</html>

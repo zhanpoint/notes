@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Git 基础</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="../../assets/page-tailwind.css" />
+  <link rel="stylesheet" href="../../assets/svg-diagrams.css" />
+  <script defer src="../../assets/page-shell.js"></script>
+</head>
+<body>
+  <div class="container">
+    <header class="page-head">
+      <h1>Git 基础</h1>
+    </header>
+
+    <section class="qa-list article-body">
+      <div class="content">
+        <blockquote>
+          <p>目标：生产环境最常用 Git 命令速查（含 <code>git worktree</code>）。尽量短、尽量稳。</p>
+        </blockquote>
+
+        <hr />
+
+        <h2>0. 日常最常用（先看这块就够）</h2>
+        <pre><code class="language-bash">git status
+git pull --rebase
+git switch -c feat/xxx
+git add -A
+git commit -m "xxx"
+git push -u origin HEAD</code></pre>
+
+        <h2>1. 查看与定位</h2>
+        <pre><code class="language-bash">git status
+git diff
+git diff --staged
+git log --oneline --decorate --graph -n 20
+git show &lt;commit&gt;
+git blame -L 120,180 path/to/file</code></pre>
+        <ul>
+          <li><b>排障思路</b>：先 <code>status</code> 看工作区/暂存区；再 <code>diff</code> 看改动；再 <code>log</code>/<code>show</code> 看提交。</li>
+        </ul>
+
+        <h2>2. 分支（生产最常见操作）</h2>
+        <pre><code class="language-bash">git branch
+git branch -vv
+git switch main
+git switch -c hotfix/xxx
+git fetch --all --prune
+git push -u origin HEAD</code></pre>
+
+        <h2>3. 提交（尽量保持干净）</h2>
+        <pre><code class="language-bash">git add -A
+git commit -m "xxx"
+
+# 只提交部分文件（更安全）
+git add path/to/file1 path/to/file2
+git commit -m "xxx"</code></pre>
+
+        <h2>4. 同步（推荐 rebase 工作流）</h2>
+        <pre><code class="language-bash">git fetch origin
+
+# 把本地分支“挪到”远端最新提交上（历史更直）
+git rebase origin/main
+
+# 或者一条命令：拉取并 rebase
+git pull --rebase</code></pre>
+        <ul>
+          <li><b>冲突处理</b>：解决冲突 → <code>git add -A</code> → <code>git rebase --continue</code>；放弃本次 rebase 用 <code>git rebase --abort</code>。</li>
+        </ul>
+
+        <h2>5. 回退/撤销（生产里务必谨慎）</h2>
+        <pre><code class="language-bash"># 放弃工作区改动（危险：丢改动）
+git restore .
+
+# 放弃某个文件改动
+git restore path/to/file
+
+# 取消暂存（不丢工作区改动）
+git restore --staged .
+
+# 撤销到某个提交（不改历史，适合“已推送”）
+git revert &lt;commit&gt;</code></pre>
+        <div class="tip"><b>建议</b>：已推送到远端/多人协作的分支，优先用 <code>revert</code>；不要轻易用重写历史（如强推）。</div>
+
+        <h2>6. Tag（发布常用）</h2>
+        <pre><code class="language-bash">git tag
+git tag -a v1.2.3 -m "release v1.2.3"
+git push origin v1.2.3</code></pre>
+
+        <hr />
+
+        <h2>7. <code>git worktree</code>（最常用）</h2>
+        <p><b>场景</b>：同一仓库同时开多个工作目录（例如一边修 hotfix、一边跑主分支）。</p>
+
+        <h3>7.1 创建/列出/清理</h3>
+        <pre><code class="language-bash"># 列出现有 worktree
+git worktree list
+
+# 基于已有分支创建一个工作目录
+git worktree add ../wt-hotfix hotfix/xxx
+
+# 创建新分支并生成工作目录（常用）
+git worktree add -b feat/yyy ../wt-feat
+
+# 删除 worktree（先确保没有未提交改动）
+git worktree remove ../wt-hotfix
+
+# 清理已丢失的 worktree 记录（目录被手动删了时）
+git worktree prune</code></pre>
+
+        <h3>7.2 常见注意点</h3>
+        <ul>
+          <li><b>同一分支不能同时绑定两个 worktree</b>：需要就新建分支（<code>-b</code>）。</li>
+          <li><b>别在 worktree 里做破坏性清理</b>：例如随手 <code>git clean -fdx</code>，除非你非常确定目录里没有需要的产物。</li>
+          <li><b>冲突/构建更稳</b>：worktree 能减少“切分支导致的依赖/构建缓存互相污染”。</li>
+        </ul>
+      </div>
+    </section>
+  </div>
+</body>
+</html>

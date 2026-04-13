@@ -1,7 +1,7 @@
-/* Extracted from `page/Distributed.html` and `page/celery-lifecycle.html` inline <style>.
+/* Extracted from `page/后端/分布式基础.html` and `page/后端/任务队列.html` inline <style>.
    Keep this file focused on those two flow/diagram pages. */
 
-/* ===================== Distributed.html (flow) ===================== */
+/* ===================== 分布式基础.html (flow) ===================== */
 :root {
   --bg: #0c0f1a;
   --panel: #111827;
@@ -53,6 +53,22 @@ header p {
   color: var(--muted);
   font-size: 13px;
   line-height: 1.7;
+}
+
+header.flow-page-header--center {
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 6px;
+}
+
+header.flow-page-header--center h1 {
+  margin: 0;
+}
+
+header.flow-page-header--center .page-updated {
+  max-width: none;
 }
 
 .canvas {
@@ -205,6 +221,16 @@ header p {
   margin-bottom: 12px;
 }
 
+.flow h2 code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-size: 13px;
+  color: rgba(226, 232, 240, 0.95);
+  background: rgba(148, 163, 184, 0.12);
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  padding: 1px 6px;
+  border-radius: 6px;
+}
+
 .timeline { display: grid; gap: 12px; }
 
 .step {
@@ -244,6 +270,12 @@ header p {
   line-height: 1.75;
 }
 
+.step a {
+  color: var(--accent);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
 .step ul {
   margin: 10px 0 0;
   padding-left: 18px;
@@ -267,6 +299,28 @@ header p {
   padding: 1px 6px;
   border-radius: 999px;
   white-space: nowrap;
+}
+
+.flow .step pre {
+  margin-top: 8px;
+  padding: 10px 12px;
+  background: rgba(2, 6, 23, 0.85);
+  border-radius: 8px;
+  border: 1px solid rgba(148, 163, 184, 0.15);
+  overflow-x: auto;
+  font-size: 11px;
+  line-height: 1.55;
+  color: rgba(203, 213, 225, 0.95);
+}
+
+.flow .step pre code {
+  display: block;
+  background: transparent !important;
+  border: none !important;
+  padding: 0 !important;
+  border-radius: 0 !important;
+  white-space: pre;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
 }
 
 .tip-icon {
